@@ -29,7 +29,10 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. The Test Sound button plays Phase 3 audio at comfortable mid-range volume on demand
   4. The timer stays accurate over long durations without drift — a 21-minute timer completes within 2 seconds of wall time
   5. The three-phase escalation sequence (soft sound → vibration cue → volume ramp) fires in correct order
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 01-01-PLAN.md — Audio synthesis layer (singing bowl, Phase 3 tone, keepalive, test sound)
+- [ ] 01-02-PLAN.md — AlarmEngine state machine and drift-free wall-clock timer
 
 ### Phase 2: Background Reliability
 **Goal**: The alarm fires reliably when the screen is off or the app is backgrounded, and preset timings are correctly defined
@@ -72,7 +75,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Audio Engine and Timer | 0/? | Not started | - |
+| 1. Audio Engine and Timer | 0/2 | Planned | - |
 | 2. Background Reliability | 0/? | Not started | - |
 | 3. React UI | 0/? | Not started | - |
 | 4. PWA Shell | 0/? | Not started | - |
