@@ -39,7 +39,7 @@
 |----|-------------|------------------|
 | AUD-01 | Phase 1 plays a synthesized singing bowl sound via Web Audio API | Warm bowl synthesis code from bowl-demo.html; OscillatorNode factory pattern; partial ratios confirmed |
 | AUD-02 | Phase 3 ramps volume from 0% to 100% over configurable duration (default 1 min) using `linearRampToValueAtTime` | linearRampToValueAtTime requires prior setValueAtTime; pattern documented below |
-| AUD-03 | Test Sound button plays Phase 3 sound at mid-range volume to verify audio works | Requires AudioContext to be resumed from user gesture; gain capped to ~0.4 for mid-range |
+| AUD-03 | Test Sound button plays Phase 3 sound at mid-range volume to verify audio works | Requires AudioContext to be resumed from user gesture; gain capped to ~0.4 for mid-range. Note: D-07 (locked decision) specifies singing bowl for Test Sound, superseding AUD-03's "Phase 3 sound" wording. Requirement intent is verified audio works; singing bowl satisfies this. |
 | AUD-04 | Silent audio keepalive loop runs during active timer to prevent OS from killing the app | Oscillator → GainNode(gain=0) → destination; must restart on visibilitychange |
 | ALM-01 | Three-phase escalation: soft sound → vibration → volume ramp | State machine with idle/phase1/phase2/phase3/dismissed; transitions driven by wall-clock timer |
 | ALM-04 | Wall-clock timer with drift correction (no setInterval tick counting) | Date.now() delta comparison approach; setTimeout reschedule pattern from web.dev |
@@ -195,6 +195,7 @@ interface AlarmConfig {
   phase1DurationMs: number;
   phase2DurationMs: number;
   phase3RampDurationMs: number;  // default: 60_000
+  phase2to3GapMs: number;        // default: 10_000 — configurable for Phase 2 presets
 }
 
 type PhaseChangeCallback = (phase: AlarmPhase) => void;
@@ -527,22 +528,22 @@ export async function getAudioContext(): Promise<AudioContext> {
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **iOS AudioContext behavior during screen lock**
    - What we know: iOS Safari suspends AudioContext when screen locks regardless of active audio
    - What's unclear: Whether the keepalive oscillator buys any additional time before suspension
-   - Recommendation: Implement keepalive as designed (AUD-04); document iOS limitation in code comment; defer robust solution to Phase 2 (Background Reliability)
+   - RESOLVED: Implement keepalive as designed (AUD-04); document iOS limitation in code comment; defer robust solution to Phase 2 (Background Reliability). The keepalive is a best-effort measure for this phase.
 
 2. **Phase 3 swell looping granularity**
    - What we know: OscillatorNode cannot be restarted; each swell cycle needs a new node
    - What's unclear: Whether frequency scheduling within a single long-running OscillatorNode (using multiple `linearRampToValueAtTime` calls) is smoother than factory-pattern looping
-   - Recommendation: Start with factory-pattern looping (consistent with rest of engine); refine if perceptible gap at loop point
+   - RESOLVED: Start with factory-pattern looping (consistent with rest of engine; 3.2s interval). If a perceptible gap exists at the loop point, refine during implementation by adjusting the overlap timing or switching to scheduled frequency events on a single long-running oscillator.
 
 3. **Test Sound volume calibration**
    - What we know: D-07 specifies "comfortable mid-range volume"; `masterGain = 0.4` is a reasonable starting value
    - What's unclear: Whether 0.4 maps to "comfortable" across device types
-   - Recommendation: Use 0.4 as initial value; expose as a constant for easy tuning during implementation
+   - RESOLVED: Use 0.4 as initial value, exported as `TEST_SOUND_GAIN` constant for easy tuning. The constant is exposed in the barrel export so it can be adjusted without modifying internal modules.
 
 ---
 
