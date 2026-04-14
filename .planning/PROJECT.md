@@ -12,7 +12,10 @@ The alarm must actually wake the user — gently first, reliably always. If the 
 
 ### Validated
 
-(None yet — ship to validate)
+- [x] Synthesized audio via Web Audio API (singing bowl harmonics, sine wave swells) — Validated in Phase 1: Audio Engine and Timer
+- [x] Multi-phase alarm with three escalation stages (soft sound → vibration → volume ramp) — State machine validated in Phase 1
+- [x] Phase 3 volume ramp from 0% to 100% over configurable duration — Validated in Phase 1
+- [x] Test Sound button to verify audio works at comfortable mid-range volume — Validated in Phase 1 (plays singing bowl per D-07)
 
 ### Active
 
@@ -60,7 +63,7 @@ The alarm must actually wake the user — gently first, reliably always. If the 
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Web Audio API for sound synthesis | Avoids copyright issues, no file downloads, works offline natively | — Pending |
+| Web Audio API for sound synthesis | Avoids copyright issues, no file downloads, works offline natively | Validated Phase 1 |
 | No persistent storage | User sets up alarm each session; keeps app simple and stateless | — Pending |
 | System dark/light toggle | Follows OS preference for seamless device integration | — Pending |
 | Full background reliability | Silent audio loop + notification audio to survive screen-off | — Pending |
@@ -83,4 +86,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-14 after initialization*
+*Last updated: 2026-04-14 after Phase 1 completion*
