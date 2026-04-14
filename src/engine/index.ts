@@ -6,7 +6,7 @@
  * a stable public API surface as implementation details evolve.
  *
  * @example
- * import { AlarmEngine, AlarmPhase, AlarmConfig, DEFAULT_CONFIG, getAudioContext, playTestSound, TEST_SOUND_GAIN } from '../engine';
+ * import { AlarmEngine, AlarmPhase, AlarmConfig, DEFAULT_CONFIG, QUICK_NAP_CONFIG, FOCUS_CONFIG } from '../engine';
  */
 
 export { AlarmEngine } from './AlarmEngine';
@@ -15,7 +15,12 @@ export {
   AlarmConfig,
   PhaseChangeCallback,
   DEFAULT_CONFIG,
+  QUICK_NAP_CONFIG,
+  FOCUS_CONFIG,
   validateConfig,
 } from './AlarmState';
 export { getAudioContext } from './AudioContext';
 export { playTestSound, TEST_SOUND_GAIN } from './sounds/testSound';
+export { playTick } from './sounds/tickPulse';
+export { startVibration, stopVibration } from '../platform/vibration';
+export { acquireWakeLock, releaseWakeLock, attachVisibilityReacquire } from '../platform/wakeLock';

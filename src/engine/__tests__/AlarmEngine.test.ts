@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { AlarmEngine } from '../AlarmEngine';
-import { DEFAULT_CONFIG, AlarmConfig } from '../AlarmState';
+import { DEFAULT_CONFIG, AlarmConfig, QUICK_NAP_CONFIG, FOCUS_CONFIG, validateConfig } from '../AlarmState';
 
 // Mock all audio dependencies
 vi.mock('../AudioContext', () => ({
@@ -8,6 +8,15 @@ vi.mock('../AudioContext', () => ({
     currentTime: 0,
     destination: {},
     state: 'running',
+    createGain: vi.fn().mockReturnValue({
+      gain: {
+        setValueAtTime: vi.fn(),
+        linearRampToValueAtTime: vi.fn(),
+        setTargetAtTime: vi.fn(),
+      },
+      connect: vi.fn(),
+      disconnect: vi.fn(),
+    }),
   } as unknown as AudioContext),
 }));
 
@@ -19,6 +28,7 @@ vi.mock('../sounds/phase3Tone', () => ({
   createPhase3Ramp: vi.fn().mockReturnValue({
     gain: { setValueAtTime: vi.fn(), linearRampToValueAtTime: vi.fn(), setTargetAtTime: vi.fn() },
     connect: vi.fn(),
+    disconnect: vi.fn(),
   }),
   startPhase3Swell: vi.fn().mockReturnValue({
     stop: vi.fn(),
@@ -38,6 +48,21 @@ vi.mock('../sounds/keepalive', () => ({
   stopKeepalive: vi.fn(),
 }));
 
+vi.mock('../sounds/tickPulse', () => ({
+  playTick: vi.fn(),
+}));
+
+vi.mock('../../platform/wakeLock', () => ({
+  acquireWakeLock: vi.fn().mockResolvedValue(undefined),
+  releaseWakeLock: vi.fn(),
+  attachVisibilityReacquire: vi.fn().mockReturnValue(vi.fn()), // returns cleanup fn
+}));
+
+vi.mock('../../platform/vibration', () => ({
+  startVibration: vi.fn(),
+  stopVibration: vi.fn(),
+}));
+
 /**
  * Helper: start the engine and flush async operations (getAudioContext promise).
  * Uses vi.runAllTimersAsync() which flushes both timers and microtasks.
@@ -53,11 +78,15 @@ describe('AlarmEngine', () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.clearAllMocks();
+    vi.stubGlobal('navigator', { vibrate: vi.fn() }); // default: vibrate supported
   });
 
   afterEach(() => {
     vi.useRealTimers();
+    vi.unstubAllGlobals();
   });
+
+  // ---- Existing tests ----
 
   it('getPhase() returns idle initially', () => {
     const engine = new AlarmEngine();
@@ -190,5 +219,117 @@ describe('AlarmEngine', () => {
 
     engine.stop();
     expect(stopKeepalive).toHaveBeenCalledTimes(1);
+  });
+
+  // ---- New Phase 2 + Wake Lock tests ----
+
+  it('start() calls acquireWakeLock', async () => {
+    const { acquireWakeLock } = await import('../../platform/wakeLock');
+    const engine = new AlarmEngine();
+
+    await startEngine(engine);
+
+    expect(acquireWakeLock).toHaveBeenCalledTimes(1);
+  });
+
+  it('start() calls attachVisibilityReacquire', async () => {
+    const { attachVisibilityReacquire } = await import('../../platform/wakeLock');
+    const engine = new AlarmEngine();
+
+    await startEngine(engine);
+
+    expect(attachVisibilityReacquire).toHaveBeenCalledTimes(1);
+  });
+
+  it('stop() calls releaseWakeLock', async () => {
+    const { releaseWakeLock } = await import('../../platform/wakeLock');
+    const engine = new AlarmEngine();
+
+    await startEngine(engine);
+    engine.stop();
+
+    expect(releaseWakeLock).toHaveBeenCalledTimes(1);
+  });
+
+  it('Phase 2 transition calls startVibration when navigator.vibrate is available', async () => {
+    const { startVibration } = await import('../../platform/vibration');
+    vi.stubGlobal('navigator', { vibrate: vi.fn() }); // vibrate supported
+
+    const engine = new AlarmEngine();
+    await startEngine(engine);
+
+    // Advance to Phase 2
+    const phase2Time = DEFAULT_CONFIG.phase1DurationMs + DEFAULT_CONFIG.phase2DurationMs + 600;
+    vi.advanceTimersByTime(phase2Time);
+
+    expect(startVibration).toHaveBeenCalledTimes(1);
+  });
+
+  it('Phase 2 transition starts tick loop when navigator.vibrate is NOT available', async () => {
+    const { playTick } = await import('../sounds/tickPulse');
+    vi.stubGlobal('navigator', {}); // no vibrate — iOS/desktop
+
+    const engine = new AlarmEngine();
+    await startEngine(engine);
+
+    // Advance to Phase 2
+    const phase2Time = DEFAULT_CONFIG.phase1DurationMs + DEFAULT_CONFIG.phase2DurationMs + 600;
+    vi.advanceTimersByTime(phase2Time);
+
+    // playTick should have been called at least once (first tick + interval)
+    expect(playTick).toHaveBeenCalled();
+  });
+
+  it('stop() during Phase 2 calls stopVibration', async () => {
+    const { stopVibration } = await import('../../platform/vibration');
+    vi.stubGlobal('navigator', { vibrate: vi.fn() });
+
+    const engine = new AlarmEngine();
+    await startEngine(engine);
+
+    // Advance to Phase 2
+    const phase2Time = DEFAULT_CONFIG.phase1DurationMs + DEFAULT_CONFIG.phase2DurationMs + 600;
+    vi.advanceTimersByTime(phase2Time);
+
+    engine.stop();
+
+    expect(stopVibration).toHaveBeenCalled();
+  });
+
+  it('stop() during Phase 2 tick loop clears the tick interval (no vibrate env)', async () => {
+    const { playTick } = await import('../sounds/tickPulse');
+    vi.stubGlobal('navigator', {}); // no vibrate
+
+    const engine = new AlarmEngine();
+    await startEngine(engine);
+
+    // Advance to Phase 2
+    const phase2Time = DEFAULT_CONFIG.phase1DurationMs + DEFAULT_CONFIG.phase2DurationMs + 600;
+    vi.advanceTimersByTime(phase2Time);
+
+    const callsAtStop = (playTick as ReturnType<typeof vi.fn>).mock.calls.length;
+    engine.stop();
+
+    // Advance more time — tick interval should be cleared, no more calls
+    vi.advanceTimersByTime(2000);
+    expect((playTick as ReturnType<typeof vi.fn>).mock.calls.length).toBe(callsAtStop);
+  });
+
+  // ---- Preset config tests ----
+
+  it('QUICK_NAP_CONFIG passes validateConfig()', () => {
+    expect(() => validateConfig(QUICK_NAP_CONFIG)).not.toThrow();
+  });
+
+  it('FOCUS_CONFIG passes validateConfig()', () => {
+    expect(() => validateConfig(FOCUS_CONFIG)).not.toThrow();
+  });
+
+  it('QUICK_NAP_CONFIG has phase1DurationMs = 300_000', () => {
+    expect(QUICK_NAP_CONFIG.phase1DurationMs).toBe(300_000);
+  });
+
+  it('FOCUS_CONFIG has phase1DurationMs = 1_260_000', () => {
+    expect(FOCUS_CONFIG.phase1DurationMs).toBe(1_260_000);
   });
 });

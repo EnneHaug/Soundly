@@ -6,7 +6,7 @@
  * Phase progression:
  * - idle: Engine not started, no timers running
  * - phase1: Singing bowl strike — gentle audio wake attempt (AUD-01)
- * - phase2: Vibration pattern — tactile escalation (Phase 2 handles vibration logic)
+ * - phase2: Vibration pattern (Android) or tick pulse (iOS) — tactile escalation (ALM-05)
  * - phase3: Rising swell with volume ramp 0→100% — guaranteed wakeup (AUD-02)
  * - dismissed: Alarm acknowledged by user
  *
@@ -16,6 +16,7 @@
  * phase stays 'idle' during the countdown period before Phase 1 fires.
  *
  * @see .planning/phases/01-audio-engine-and-timer/01-RESEARCH.md (Pattern 3)
+ * @see .planning/phases/02-background-reliability/02-RESEARCH.md (Patterns 2, 3, 4)
  */
 
 import {
@@ -33,6 +34,9 @@ import {
   fadeOutGain,
 } from './sounds/phase3Tone';
 import { startKeepalive, stopKeepalive } from './sounds/keepalive';
+import { playTick } from './sounds/tickPulse';
+import { acquireWakeLock, releaseWakeLock, attachVisibilityReacquire } from '../platform/wakeLock';
+import { startVibration, stopVibration } from '../platform/vibration';
 
 export class AlarmEngine {
   private ac: AudioContext | null = null;
@@ -44,6 +48,11 @@ export class AlarmEngine {
   private phase3SwellOsc: OscillatorNode | null = null;
   private phase3LoopTimer: ReturnType<typeof setInterval> | null = null;
   private phaseCallback: PhaseChangeCallback | null = null;
+
+  // Phase 2 state (Background Reliability)
+  private visibilityCleanup: (() => void) | null = null;
+  private tickGain: GainNode | null = null;
+  private tickLoopTimer: ReturnType<typeof setInterval> | null = null;
 
   /** Returns the current alarm phase (read-only) */
   getPhase(): AlarmPhase {
@@ -89,6 +98,10 @@ export class AlarmEngine {
     // Start silent keepalive oscillator to keep AudioContext alive on mobile (AUD-04)
     this.keepaliveOsc = startKeepalive(this.ac);
 
+    // Acquire Wake Lock to keep screen on during active timer (PLT-02)
+    await acquireWakeLock();
+    this.visibilityCleanup = attachVisibilityReacquire();
+
     // Calculate absolute wall-clock fire times
     const phase1FireAt = Date.now() + config.phase1DurationMs;
     const phase2FireAt = phase1FireAt + config.phase2DurationMs;
@@ -102,12 +115,11 @@ export class AlarmEngine {
       })
     );
 
-    // Phase 2: State transition — vibration handled in Phase 2 (Background Reliability)
+    // Phase 2: Vibration (Android) or tick pulse (iOS) — tactile escalation (ALM-05)
     this.timers.push(
       scheduleAt(phase2FireAt, () => {
         this.setPhase('phase2');
-        // Singing bowl's natural decay handles D-04 overlap-then-fade
-        // Phase 2 React layer will trigger navigator.vibrate() from this callback
+        this.enterPhase2(config.phase2DurationMs);
       })
     );
 
@@ -120,6 +132,37 @@ export class AlarmEngine {
 
     // Note: phase stays 'idle' during countdown period.
     // The UI tracks "is timer running" via a separate boolean, not phase.
+  }
+
+  /**
+   * Enters Phase 2: platform-appropriate tactile escalation.
+   *
+   * Android (vibrate in navigator): starts a repeating [300, 200] vibration pattern.
+   * iOS/desktop (no vibrate): starts a bandpass-filtered noise tick pulse with
+   * volume ramp from 0.01 to 0.7 over phase2DurationMs (D-03, D-04, D-05).
+   *
+   * @param durationMs - Phase 2 duration used to calculate the tick gain ramp end time
+   */
+  private enterPhase2(durationMs: number): void {
+    if ('vibrate' in navigator) {
+      // Android: pulsing vibration pattern (D-01, D-02)
+      startVibration();
+    } else {
+      // iOS/desktop: filtered noise tick pulse with gradual volume ramp (D-03, D-04, D-05)
+      this.tickGain = this.ac!.createGain();
+      this.tickGain.gain.setValueAtTime(0.01, this.ac!.currentTime);
+      this.tickGain.gain.linearRampToValueAtTime(
+        0.7,
+        this.ac!.currentTime + durationMs / 1000
+      );
+      this.tickGain.connect(this.ac!.destination);
+
+      // Play first tick immediately, then repeat on 500ms cycle (300ms sound + 200ms pause rhythm)
+      playTick(this.ac!, this.tickGain);
+      this.tickLoopTimer = setInterval(() => {
+        playTick(this.ac!, this.tickGain!);
+      }, 500);
+    }
   }
 
   /**
@@ -183,6 +226,26 @@ export class AlarmEngine {
     if (this.keepaliveOsc) {
       stopKeepalive(this.keepaliveOsc);
       this.keepaliveOsc = null;
+    }
+
+    // Stop Phase 2 vibration (safe no-op if not started or not supported — T-02-01)
+    stopVibration();
+
+    // Stop Phase 2 tick loop (T-02-02: prevents orphaned audio nodes)
+    if (this.tickLoopTimer !== null) {
+      clearInterval(this.tickLoopTimer);
+      this.tickLoopTimer = null;
+    }
+    if (this.tickGain) {
+      this.tickGain.disconnect();
+      this.tickGain = null;
+    }
+
+    // Release Wake Lock (PLT-02)
+    releaseWakeLock();
+    if (this.visibilityCleanup) {
+      this.visibilityCleanup();
+      this.visibilityCleanup = null;
     }
 
     // Stop Phase 3 swell loop (T-01-05: prevents OscillatorNode accumulation)
