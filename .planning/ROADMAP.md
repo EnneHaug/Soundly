@@ -31,8 +31,8 @@ Decimal phases appear between their surrounding integers in numeric order.
   5. The three-phase escalation sequence (soft sound → vibration cue → volume ramp) fires in correct order
 **Plans:** 2 plans
 Plans:
-- [ ] 01-01-PLAN.md — Audio synthesis layer (singing bowl, Phase 3 tone, keepalive, test sound)
-- [ ] 01-02-PLAN.md — AlarmEngine state machine and drift-free wall-clock timer
+- [x] 01-01-PLAN.md — Audio synthesis layer (singing bowl, Phase 3 tone, keepalive, test sound)
+- [x] 01-02-PLAN.md — AlarmEngine state machine and drift-free wall-clock timer
 
 ### Phase 2: Background Reliability
 **Goal**: The alarm fires reliably when the screen is off or the app is backgrounded, and preset timings are correctly defined
