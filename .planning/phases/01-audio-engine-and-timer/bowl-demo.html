@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Singing Bowl Sound Preview</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #1a1a2e; color: #e0e0e0;
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; min-height: 100vh; padding: 2rem;
+  }
+  h1 { font-size: 1.5rem; margin-bottom: 0.5rem; color: #a0c4ff; }
+  p.subtitle { font-size: 0.9rem; color: #888; margin-bottom: 2rem; }
+  .options { display: flex; flex-direction: column; gap: 1.5rem; max-width: 500px; width: 100%; }
+  .option {
+    background: #16213e; border: 1px solid #333; border-radius: 12px;
+    padding: 1.5rem; cursor: pointer; transition: all 0.2s;
+  }
+  .option:hover { border-color: #a0c4ff; background: #1a2744; }
+  .option.playing { border-color: #7ec8e3; box-shadow: 0 0 20px rgba(126,200,227,0.2); }
+  .option h2 { font-size: 1.1rem; margin-bottom: 0.4rem; color: #c9d6ff; }
+  .option .desc { font-size: 0.85rem; color: #999; margin-bottom: 0.8rem; }
+  .option .tech { font-size: 0.75rem; color: #666; font-style: italic; }
+  button {
+    background: #a0c4ff; color: #1a1a2e; border: none; border-radius: 8px;
+    padding: 0.6rem 1.5rem; font-size: 0.95rem; font-weight: 600;
+    cursor: pointer; transition: background 0.2s;
+  }
+  button:hover { background: #7ec8e3; }
+  button:disabled { background: #555; color: #888; cursor: not-allowed; }
+  .stop-btn { background: #ff6b6b; color: #fff; margin-top: 1.5rem; }
+  .stop-btn:hover { background: #ee5a5a; }
+  .note { font-size: 0.8rem; color: #666; margin-top: 2rem; text-align: center; max-width: 400px; }
+</style>
+</head>
+<body>
+<h1>Singing Bowl Sound Preview</h1>
+<p class="subtitle">Click each option to hear what it sounds like</p>
+
+<div class="options">
+  <div class="option" id="opt-warm">
+    <h2>A) Warm and Deep</h2>
+    <p class="desc">Low fundamental (~220Hz), rich overtones, long slow decay. Meditative and grounding &mdash; classic tibetan singing bowl.</p>
+    <p class="tech">Fundamental 220Hz + partials at 2.76x, 4.72x, 6.83x with exponential decay</p>
+    <button onclick="playBowl('warm')">Play</button>
+  </div>
+
+  <div class="option" id="opt-bright">
+    <h2>B) Bright and Clear</h2>
+    <p class="desc">Higher fundamental (~440Hz), crisp harmonics, moderate decay. Crystal singing bowl character &mdash; cuts through sleep more.</p>
+    <p class="tech">Fundamental 440Hz + partials at 3x, 5x with faster attack, moderate decay</p>
+    <button onclick="playBowl('bright')">Play</button>
+  </div>
+
+  <div class="option" id="opt-layered">
+    <h2>C) Layered Blend</h2>
+    <p class="desc">Multiple detuned oscillators across octaves. Richer, more complex, immersive &mdash; like multiple bowls ringing together.</p>
+    <p class="tech">Three fundamental layers (110Hz, 220Hz, 442Hz) each with own partials and slight detune</p>
+    <button onclick="playBowl('layered')">Play</button>
+  </div>
+</div>
+
+<button class="stop-btn" onclick="stopAll()">Stop All Sound</button>
+
+<p class="note">This is a rough preview for decision-making. The final synthesis will be refined during implementation.</p>
+
+<script>
+let ctx = null;
+let activeNodes = [];
+
+function getCtx() {
+  if (!ctx || ctx.state === 'closed') {
+    ctx = new AudioContext();
+  }
+  if (ctx.state === 'suspended') ctx.resume();
+  return ctx;
+}
+
+function stopAll() {
+  activeNodes.forEach(n => { try { n.stop(); } catch(e) {} });
+  activeNodes = [];
+  document.querySelectorAll('.option').forEach(el => el.classList.remove('playing'));
+}
+
+function createPartial(ac, freq, gain, attackTime, decayTime, startTime) {
+  const osc = new OscillatorNode(ac, { type: 'sine', frequency: freq });
+  const gainNode = new GainNode(ac, { gain: 0 });
+
+  // Attack
+  gainNode.gain.setValueAtTime(0, startTime);
+  gainNode.gain.linearRampToValueAtTime(gain, startTime + attackTime);
+
+  // Decay
+  gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + attackTime + decayTime);
+
+  osc.connect(gainNode).connect(ac.destination);
+  osc.start(startTime);
+  osc.stop(startTime + attackTime + decayTime + 0.1);
+  activeNodes.push(osc);
+  return osc;
+}
+
+function playBowl(type) {
+  stopAll();
+  const ac = getCtx();
+  const now = ac.currentTime;
+
+  document.getElementById('opt-' + type).classList.add('playing');
+
+  if (type === 'warm') {
+    // Tibetan bowl: low fundamental with inharmonic partials
+    const fund = 220;
+    createPartial(ac, fund,        0.35, 0.08, 6.0, now);          // fundamental
+    createPartial(ac, fund * 2.76, 0.20, 0.05, 4.5, now);          // 1st partial
+    createPartial(ac, fund * 4.72, 0.12, 0.03, 3.5, now);          // 2nd partial
+    createPartial(ac, fund * 6.83, 0.06, 0.02, 2.5, now);          // 3rd partial
+    // Slight beating from detuned second fundamental
+    createPartial(ac, fund * 1.003, 0.15, 0.08, 5.5, now);
+
+  } else if (type === 'bright') {
+    // Crystal bowl: higher, purer, faster onset
+    const fund = 440;
+    createPartial(ac, fund,       0.30, 0.02, 4.0, now);
+    createPartial(ac, fund * 3,   0.15, 0.02, 3.0, now);
+    createPartial(ac, fund * 5,   0.08, 0.01, 2.0, now);
+    // Shimmer
+    createPartial(ac, fund * 2.01, 0.10, 0.03, 3.5, now);
+
+  } else if (type === 'layered') {
+    // Multiple bowls ringing together
+    const layers = [
+      { fund: 110, detune: 0.5, gainMul: 0.8 },
+      { fund: 220, detune: -0.8, gainMul: 1.0 },
+      { fund: 442, detune: 1.2, gainMul: 0.6 },
+    ];
+    for (const layer of layers) {
+      const f = layer.fund;
+      const g = layer.gainMul;
+      createPartial(ac, f + layer.detune,        0.20 * g, 0.06, 6.0, now);
+      createPartial(ac, (f * 2.76) + layer.detune, 0.12 * g, 0.04, 4.5, now);
+      createPartial(ac, (f * 4.72) + layer.detune, 0.07 * g, 0.03, 3.0, now);
+    }
+  }
+
+  // Auto-clear playing state after sound ends
+  setTimeout(() => {
+    document.getElementById('opt-' + type)?.classList.remove('playing');
+  }, 7000);
+}
+</script>
+</body>
+</html>
