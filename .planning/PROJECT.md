@@ -16,20 +16,16 @@ The alarm must actually wake the user — gently first, reliably always. If the 
 - [x] Multi-phase alarm with three escalation stages (soft sound → vibration → volume ramp) — State machine validated in Phase 1
 - [x] Phase 3 volume ramp from 0% to 100% over configurable duration — Validated in Phase 1
 - [x] Test Sound button to verify audio works at comfortable mid-range volume — Validated in Phase 1 (plays singing bowl per D-07)
+- [x] Two built-in presets: Quick Nap (5 min) and Focus (21 min) — Validated in Phase 2: QUICK_NAP_CONFIG and FOCUS_CONFIG with exact timing
+- [x] Wake Lock API to prevent screen sleep during active timer — Validated in Phase 2: acquireWakeLock/releaseWakeLock with visibility re-acquisition
+- [x] Vibration API for Phase 2 tactile alert — Validated in Phase 2: Android [300,200] pattern loop with iOS tick pulse fallback
+- [x] System notifications when alarm triggers (backgrounded or screen off) — Validated in Phase 2: ServiceWorkerRegistration.showNotification with tag dedup
+- [x] PWA installable on home screens with offline support (vite-plugin-pwa) — Validated in Phase 2: injectManifest config, custom SW, placeholder icons
 
 ### Active
 
-- [ ] Multi-phase alarm with three escalation stages (soft sound → vibration → volume ramp)
-- [ ] Two built-in presets: Quick Nap (5 min) and Focus (21 min)
 - [ ] Customizable alarm: user can adjust delays between phases and ramp-up duration per session
-- [ ] Phase 3 volume ramp from 0% to 100% over configurable duration (default 1 minute)
-- [ ] Test Sound button to verify audio works at comfortable mid-range volume
-- [ ] PWA installable on home screens with offline support (vite-plugin-pwa)
-- [ ] Wake Lock API to prevent screen sleep during active timer
 - [ ] Background reliability: silent audio loop + notification-triggered audio for screen-off scenarios
-- [ ] System notifications when alarm triggers (backgrounded or screen off)
-- [ ] Vibration API for Phase 2 tactile alert
-- [ ] Synthesized audio via Web Audio API (singing bowl harmonics, chimes, sine wave swells — no copyright concerns)
 - [ ] Calm countdown screen with large Stop/Dismiss and Pause buttons
 - [ ] Dashboard with presets as large, tappable cards
 - [ ] System-following dark/light mode
@@ -66,7 +62,7 @@ The alarm must actually wake the user — gently first, reliably always. If the 
 | Web Audio API for sound synthesis | Avoids copyright issues, no file downloads, works offline natively | Validated Phase 1 |
 | No persistent storage | User sets up alarm each session; keeps app simple and stateless | — Pending |
 | System dark/light toggle | Follows OS preference for seamless device integration | — Pending |
-| Full background reliability | Silent audio loop + notification audio to survive screen-off | — Pending |
+| Full background reliability | Silent audio loop + notification audio to survive screen-off | Validated Phase 2 |
 
 ## Evolution
 
@@ -86,4 +82,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-14 after Phase 1 completion*
+*Last updated: 2026-04-14 after Phase 2 completion*
