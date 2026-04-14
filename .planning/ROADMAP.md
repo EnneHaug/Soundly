@@ -44,7 +44,10 @@ Plans:
   3. A system notification appears when the alarm triggers while the browser is backgrounded
   4. The screen stays on during an active timer (Wake Lock); it re-acquires if the tab regains visibility
   5. Non-installed iOS users see an "Add to Home Screen" prompt before starting an alarm
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 02-01-PLAN.md — Presets, Phase 2 escalation (vibration + tick pulse), and Wake Lock
+- [ ] 02-02-PLAN.md — Notifications, custom service worker, and iOS standalone detection
 
 ### Phase 3: React UI
 **Goal**: Users can set, monitor, and dismiss an alarm through a calm, legible interface
@@ -76,6 +79,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Audio Engine and Timer | 0/2 | Planned | - |
-| 2. Background Reliability | 0/? | Not started | - |
+| 2. Background Reliability | 0/2 | Planned | - |
 | 3. React UI | 0/? | Not started | - |
 | 4. PWA Shell | 0/? | Not started | - |
