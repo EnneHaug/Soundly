@@ -46,8 +46,8 @@ Plans:
   5. Non-installed iOS users see an "Add to Home Screen" prompt before starting an alarm
 **Plans:** 2 plans
 Plans:
-- [ ] 02-01-PLAN.md — Presets, Phase 2 escalation (vibration + tick pulse), and Wake Lock
-- [ ] 02-02-PLAN.md — Notifications, custom service worker, and iOS standalone detection
+- [x] 02-01-PLAN.md — Presets, Phase 2 escalation (vibration + tick pulse), and Wake Lock
+- [x] 02-02-PLAN.md — Notifications, custom service worker, and iOS standalone detection
 
 ### Phase 3: React UI
 **Goal**: Users can set, monitor, and dismiss an alarm through a calm, legible interface
