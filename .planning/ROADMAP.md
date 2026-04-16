@@ -58,7 +58,11 @@ Plans:
   2. The countdown screen shows the current phase, remaining time in large type, and reachable Stop and Pause buttons
   3. Tapping Pause halts the timer; tapping Resume continues from the same point
   4. The overall aesthetic reads as calm and minimal — generous spacing, soft palette, smooth transitions throughout
-**Plans**: TBD
+**Plans:** 3 plans
+Plans:
+- [ ] 03-01-PLAN.md — Engine pause/resume, React bootstrap, useAlarm hook, Tailwind theme
+- [ ] 03-02-PLAN.md — Dashboard screen with preset cards, test sound, iOS install banner
+- [ ] 03-03-PLAN.md — Countdown screen with progress ring, timer display, controls
 **UI hint**: yes
 
 ### Phase 4: PWA Shell
@@ -80,5 +84,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 |-------|----------------|--------|-----------|
 | 1. Audio Engine and Timer | 0/2 | Planned | - |
 | 2. Background Reliability | 0/2 | Planned | - |
-| 3. React UI | 0/? | Not started | - |
+| 3. React UI | 0/3 | Planned | - |
 | 4. PWA Shell | 0/? | Not started | - |
