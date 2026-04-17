@@ -1,5 +1,6 @@
 import { useAlarm } from './hooks/useAlarm';
 import Dashboard from './components/Dashboard';
+import Countdown from './components/Countdown';
 
 export default function App() {
   const alarm = useAlarm();
@@ -8,16 +9,7 @@ export default function App() {
   return (
     <div className="min-h-dvh bg-bg text-text-primary flex flex-col items-center">
       {showCountdown ? (
-        <div className="p-8 text-center">
-          <p className="text-2xl text-text-secondary">Alarm Active</p>
-          <p className="mt-2">Phase: {alarm.phase}</p>
-          <button
-            onClick={alarm.stop}
-            className="mt-4 px-6 py-3 bg-accent text-white rounded-xl"
-          >
-            Stop
-          </button>
-        </div>
+        <Countdown alarm={alarm} />
       ) : (
         <Dashboard alarm={alarm} />
       )}
