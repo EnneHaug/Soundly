@@ -60,9 +60,9 @@ Plans:
   4. The overall aesthetic reads as calm and minimal — generous spacing, soft palette, smooth transitions throughout
 **Plans:** 3 plans
 Plans:
-- [ ] 03-01-PLAN.md — Engine pause/resume, React bootstrap, useAlarm hook, Tailwind theme
-- [ ] 03-02-PLAN.md — Dashboard screen with preset cards, test sound, iOS install banner
-- [ ] 03-03-PLAN.md — Countdown screen with progress ring, timer display, controls
+- [x] 03-01-PLAN.md — Engine pause/resume, React bootstrap, useAlarm hook, Tailwind theme
+- [x] 03-02-PLAN.md — Dashboard screen with preset cards, test sound, iOS install banner
+- [x] 03-03-PLAN.md — Countdown screen with progress ring, timer display, controls
 **UI hint**: yes
 
 ### Phase 4: PWA Shell
