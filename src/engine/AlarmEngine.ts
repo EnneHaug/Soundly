@@ -42,6 +42,7 @@ export class AlarmEngine {
   private ac: AudioContext | null = null;
   private phase: AlarmPhase = 'idle';
   private _running: boolean = false; // true from start() until stop()/dismiss()
+  private _paused: boolean = false;
   private timers: TimerHandle[] = [];
   private keepaliveOsc: OscillatorNode | null = null;
   private phase3RampGain: GainNode | null = null;
@@ -53,6 +54,13 @@ export class AlarmEngine {
   private visibilityCleanup: (() => void) | null = null;
   private tickGain: GainNode | null = null;
   private tickLoopTimer: ReturnType<typeof setInterval> | null = null;
+
+  // Pause/resume state (UX-03)
+  private pauseSnapshot: { phase1Remaining: number; phase2Remaining: number; phase3Remaining: number } | null = null;
+  private phase1FireAt: number = 0;
+  private phase2FireAt: number = 0;
+  private phase3FireAt: number = 0;
+  private activeConfig: AlarmConfig | null = null;
 
   /** Returns the current alarm phase (read-only) */
   getPhase(): AlarmPhase {
@@ -106,6 +114,12 @@ export class AlarmEngine {
     const phase1FireAt = Date.now() + config.phase1DurationMs;
     const phase2FireAt = phase1FireAt + config.phase2DurationMs;
     const phase3FireAt = phase2FireAt + config.phase2to3GapMs; // configurable gap per ALM-02/03
+
+    // Store for pause/resume snapshot calculations (UX-03)
+    this.phase1FireAt = phase1FireAt;
+    this.phase2FireAt = phase2FireAt;
+    this.phase3FireAt = phase3FireAt;
+    this.activeConfig = config;
 
     // Phase 1: Singing bowl strike — gentle audio wake attempt
     this.timers.push(
@@ -193,6 +207,118 @@ export class AlarmEngine {
     }, 3200);
   }
 
+  /** Returns whether the engine is currently paused (UX-03) */
+  isPaused(): boolean {
+    return this._paused;
+  }
+
+  /**
+   * Pauses the alarm: snapshots remaining timer durations, cancels pending timers,
+   * and stops Phase 2/3 audio/vibration. The silent keepalive continues running
+   * to keep AudioContext alive during the pause.
+   *
+   * No-op if engine is not running or already paused (T-03-02).
+   */
+  pause(): void {
+    if (!this._running || this._paused) return;
+    this._paused = true;
+
+    const now = Date.now();
+    this.pauseSnapshot = {
+      phase1Remaining: Math.max(0, this.phase1FireAt - now),
+      phase2Remaining: Math.max(0, this.phase2FireAt - now),
+      phase3Remaining: Math.max(0, this.phase3FireAt - now),
+    };
+
+    // Cancel pending phase transition timers
+    this.timers.forEach((t) => t.cancel());
+    this.timers = [];
+
+    // Stop Phase 2 vibration and tick loop
+    stopVibration();
+    if (this.tickLoopTimer !== null) {
+      clearInterval(this.tickLoopTimer);
+      this.tickLoopTimer = null;
+    }
+
+    // Stop Phase 3 swell loop
+    if (this.phase3LoopTimer !== null) {
+      clearInterval(this.phase3LoopTimer);
+      this.phase3LoopTimer = null;
+    }
+    try {
+      this.phase3SwellOsc?.stop();
+    } catch {
+      // Already stopped — safe to ignore
+    }
+    this.phase3SwellOsc = null;
+
+    // Keepalive continues running to keep AudioContext alive
+  }
+
+  /**
+   * Resumes a paused alarm: re-registers timers with remaining durations,
+   * and restarts audio/vibration for the current phase.
+   *
+   * No-op if engine is not running, not paused, or has no snapshot (T-03-02).
+   */
+  resume(): void {
+    if (!this._running || !this._paused || !this.pauseSnapshot) return;
+    this._paused = false;
+
+    const now = Date.now();
+    const snap = this.pauseSnapshot;
+    const currentPhase = this.phase;
+    this.pauseSnapshot = null;
+
+    if (currentPhase === 'idle') {
+      // Still in countdown — re-register all phase timers
+      this.phase1FireAt = now + snap.phase1Remaining;
+      this.phase2FireAt = now + snap.phase2Remaining;
+      this.phase3FireAt = now + snap.phase3Remaining;
+
+      this.timers.push(scheduleAt(this.phase1FireAt, () => {
+        this.setPhase('phase1');
+        strikeBowl(this.ac!, 1.0);
+      }));
+      this.timers.push(scheduleAt(this.phase2FireAt, () => {
+        this.setPhase('phase2');
+        this.enterPhase2(this.activeConfig!.phase2DurationMs);
+      }));
+      this.timers.push(scheduleAt(this.phase3FireAt, () => {
+        this.enterPhase3(this.activeConfig!.phase3RampDurationMs);
+      }));
+    } else if (currentPhase === 'phase1') {
+      // In phase1 — re-register phase2 and phase3 timers
+      this.phase2FireAt = now + snap.phase2Remaining;
+      this.phase3FireAt = now + snap.phase3Remaining;
+
+      this.timers.push(scheduleAt(this.phase2FireAt, () => {
+        this.setPhase('phase2');
+        this.enterPhase2(this.activeConfig!.phase2DurationMs);
+      }));
+      this.timers.push(scheduleAt(this.phase3FireAt, () => {
+        this.enterPhase3(this.activeConfig!.phase3RampDurationMs);
+      }));
+
+      // Re-strike the bowl
+      strikeBowl(this.ac!, 1.0);
+    } else if (currentPhase === 'phase2') {
+      // In phase2 — re-register phase3 timer and restart phase2 audio/vibration
+      this.phase3FireAt = now + snap.phase3Remaining;
+
+      this.timers.push(scheduleAt(this.phase3FireAt, () => {
+        this.enterPhase3(this.activeConfig!.phase3RampDurationMs);
+      }));
+
+      // Restart phase 2 effects with remaining time until phase3
+      this.enterPhase2(snap.phase3Remaining);
+    } else if (currentPhase === 'phase3') {
+      // In phase3 — restart the swell loop
+      this.enterPhase3(this.activeConfig!.phase3RampDurationMs);
+    }
+  }
+
   /**
    * Stops the alarm, cancels all timers, and returns to idle.
    * Safe to call from any phase.
@@ -217,6 +343,9 @@ export class AlarmEngine {
    */
   private cleanup(): void {
     this._running = false;
+    this._paused = false;
+    this.pauseSnapshot = null;
+    this.activeConfig = null;
 
     // Cancel all pending timers (phase1, phase2, phase3 transitions)
     this.timers.forEach((t) => t.cancel());

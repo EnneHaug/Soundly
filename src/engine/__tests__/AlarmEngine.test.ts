@@ -332,4 +332,84 @@ describe('AlarmEngine', () => {
   it('FOCUS_CONFIG has phase1DurationMs = 1_260_000', () => {
     expect(FOCUS_CONFIG.phase1DurationMs).toBe(1_260_000);
   });
+
+  // ---- pause/resume tests ----
+
+  it('pause() on a running engine sets isPaused() to true', async () => {
+    const engine = new AlarmEngine();
+    await startEngine(engine);
+
+    engine.pause();
+    expect(engine.isPaused()).toBe(true);
+  });
+
+  it('resume() after pause sets isPaused() to false', async () => {
+    const engine = new AlarmEngine();
+    await startEngine(engine);
+
+    engine.pause();
+    engine.resume();
+    expect(engine.isPaused()).toBe(false);
+  });
+
+  it('pause() on a non-running engine is a no-op (does not throw)', () => {
+    const engine = new AlarmEngine();
+    expect(() => engine.pause()).not.toThrow();
+    expect(engine.isPaused()).toBe(false);
+  });
+
+  it('resume() on a non-paused engine is a no-op (does not throw)', async () => {
+    const engine = new AlarmEngine();
+    await startEngine(engine);
+
+    expect(() => engine.resume()).not.toThrow();
+    expect(engine.isPaused()).toBe(false);
+  });
+
+  it('pause() cancels pending timers (timers array is emptied via no more callbacks)', async () => {
+    const engine = new AlarmEngine();
+    const callback = vi.fn();
+    engine.onPhaseChange(callback);
+    await startEngine(engine);
+
+    engine.pause();
+
+    // Advance past all phase times — no callbacks should fire since timers were cancelled
+    vi.advanceTimersByTime(
+      DEFAULT_CONFIG.phase1DurationMs +
+        DEFAULT_CONFIG.phase2DurationMs +
+        DEFAULT_CONFIG.phase2to3GapMs +
+        900
+    );
+
+    expect(callback).not.toHaveBeenCalled();
+  });
+
+  it('resume() re-registers timers — phase1 fires after remaining duration', async () => {
+    const engine = new AlarmEngine();
+    const callback = vi.fn();
+    engine.onPhaseChange(callback);
+    await startEngine(engine);
+
+    // Advance halfway through phase1 countdown
+    const halfPhase1 = DEFAULT_CONFIG.phase1DurationMs / 2;
+    vi.advanceTimersByTime(halfPhase1);
+
+    engine.pause();
+    engine.resume();
+
+    // Advance the remaining half — phase1 should fire
+    vi.advanceTimersByTime(halfPhase1 + 300);
+
+    expect(callback).toHaveBeenCalledWith('phase1');
+  });
+
+  it('stop() after pause works without errors', async () => {
+    const engine = new AlarmEngine();
+    await startEngine(engine);
+
+    engine.pause();
+    expect(() => engine.stop()).not.toThrow();
+    expect(engine.getPhase()).toBe('idle');
+  });
 });
