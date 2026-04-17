@@ -26,10 +26,10 @@ The alarm must actually wake the user — gently first, reliably always. If the 
 
 - [ ] Customizable alarm: user can adjust delays between phases and ramp-up duration per session
 - [ ] Background reliability: silent audio loop + notification-triggered audio for screen-off scenarios
-- [ ] Calm countdown screen with large Stop/Dismiss and Pause buttons
-- [ ] Dashboard with presets as large, tappable cards
+- [x] Calm countdown screen with large Stop/Dismiss and Pause buttons — Validated in Phase 3: Countdown component with ProgressRing, mm:ss timer, Pause/Resume/Stop controls
+- [x] Dashboard with presets as large, tappable cards — Validated in Phase 3: PresetCard buttons with Quick Nap and Focus, immediate alarm start on tap
 - [ ] System-following dark/light mode
-- [ ] Gentle overall UX: smooth transitions, soft animations, generous spacing, zen aesthetic
+- [x] Gentle overall UX: smooth transitions, soft animations, generous spacing, zen aesthetic — Validated in Phase 3: Tailwind v4 warm earth theme, generous spacing, calm typography
 
 ### Out of Scope
 
@@ -82,4 +82,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-14 after Phase 2 completion*
+*Last updated: 2026-04-17 after Phase 3 completion*
