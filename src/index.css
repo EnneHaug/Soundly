@@ -1,0 +1,18 @@
+@import "tailwindcss";
+
+@theme {
+  /* Warm earth palette (D-04) */
+  --color-bg: #f4f1eb;
+  --color-text-primary: #3d4a38;
+  --color-text-secondary: #8a7e6b;
+  --color-accent: #c27c5a;
+  --color-border: #d4cbbe;
+  --color-sage: #5c6b56;
+  --color-sand: #c8b89a;
+
+  /* Ring segment faded state */
+  --color-faded: #d9d3ca;
+
+  /* Typography */
+  --font-size-countdown: clamp(3rem, 12vw, 5rem);
+}

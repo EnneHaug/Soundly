@@ -16,8 +16,8 @@ export default defineConfig({
         short_name: 'Soundly',
         display: 'standalone',
         orientation: 'portrait',
-        background_color: '#1a1a2e',
-        theme_color: '#1a1a2e',
+        background_color: '#f4f1eb',
+        theme_color: '#5c6b56',
         start_url: '/',
         icons: [
           { src: 'icons/icon-192x192.png', sizes: '192x192', type: 'image/png' },
