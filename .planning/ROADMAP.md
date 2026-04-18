@@ -73,7 +73,9 @@ Plans:
   1. The app can be installed to a phone home screen from Chrome and Safari
   2. The alarm runs fully after airplane mode is enabled — no network requests fail
   3. The service worker notification click handler routes the user back to the countdown screen
-**Plans**: TBD
+**Plans:** 1 plan
+Plans:
+- [ ] 04-01-PLAN.md — Apple meta tags, NavigationRoute fallback, production build validation
 
 ## Progress
 
@@ -85,4 +87,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | 1. Audio Engine and Timer | 0/2 | Planned | - |
 | 2. Background Reliability | 0/2 | Planned | - |
 | 3. React UI | 0/3 | Planned | - |
-| 4. PWA Shell | 0/? | Not started | - |
+| 4. PWA Shell | 0/1 | Not started | - |
