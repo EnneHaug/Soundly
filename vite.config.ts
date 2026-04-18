@@ -4,6 +4,7 @@ import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
+  base: '/Soundly/',
   plugins: [
     react(),
     tailwindcss(),
@@ -18,7 +19,7 @@ export default defineConfig({
         orientation: 'portrait',
         background_color: '#f4f1eb',
         theme_color: '#5c6b56',
-        start_url: '/',
+        start_url: '/Soundly/',
         icons: [
           { src: 'icons/icon-192x192.png', sizes: '192x192', type: 'image/png' },
           { src: 'icons/icon-512x512.png', sizes: '512x512', type: 'image/png' },

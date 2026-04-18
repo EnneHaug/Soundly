@@ -15,7 +15,7 @@ precacheAndRoute(self.__WB_MANIFEST);
 // Belt-and-suspenders: precacheAndRoute handles exact URL matches, but
 // NavigationRoute catches browser navigation to paths not in the precache manifest
 // (e.g., direct URL entry, refresh on a deep link if one is ever added).
-const navHandler = createHandlerBoundToURL('/index.html');
+const navHandler = createHandlerBoundToURL('/Soundly/index.html');
 registerRoute(new NavigationRoute(navHandler));
 
 /**
@@ -35,7 +35,7 @@ self.addEventListener('notificationclick', (event) => {
             return (client as WindowClient).focus();
           }
         }
-        return self.clients.openWindow('/');
+        return self.clients.openWindow('/Soundly/');
       })
   );
 });
