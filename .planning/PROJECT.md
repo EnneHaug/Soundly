@@ -20,7 +20,7 @@ The alarm must actually wake the user — gently first, reliably always. If the 
 - [x] Wake Lock API to prevent screen sleep during active timer — Validated in Phase 2: acquireWakeLock/releaseWakeLock with visibility re-acquisition
 - [x] Vibration API for Phase 2 tactile alert — Validated in Phase 2: Android [300,200] pattern loop with iOS tick pulse fallback
 - [x] System notifications when alarm triggers (backgrounded or screen off) — Validated in Phase 2: ServiceWorkerRegistration.showNotification with tag dedup
-- [x] PWA installable on home screens with offline support (vite-plugin-pwa) — Validated in Phase 2: injectManifest config, custom SW, placeholder icons
+- [x] PWA installable on home screens with offline support (vite-plugin-pwa) — Validated in Phase 4: Apple meta tags, NavigationRoute SPA fallback, production build with all PWA artifacts
 
 ### Active
 
@@ -82,4 +82,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-17 after Phase 3 completion*
+*Last updated: 2026-04-18 after Phase 4 completion — all 4 phases complete, human UAT pending*
