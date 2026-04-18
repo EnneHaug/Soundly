@@ -36,7 +36,8 @@ export async function showAlarmNotification(): Promise<void> {
     body: 'Tap to return to the app and dismiss.',
     icon: '/icons/icon-192x192.png',
     tag: 'soundly-alarm',
-    renotify: false,
+    // renotify is a valid Notifications API option but missing from some TS lib typings
+    ...(({ renotify: false }) as Record<string, unknown>),
     requireInteraction: true,
   });
 }

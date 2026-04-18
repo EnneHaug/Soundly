@@ -31,27 +31,6 @@ const PHASE_LABELS: Record<string, string> = {
 };
 
 /**
- * Map phase to 0-based segment index for ProgressRing.
- * -1 = before any phase (idle countdown), 3 = all depleted (dismissed).
- */
-function phaseToIndex(phase: AlarmPhase): number {
-  switch (phase) {
-    case 'idle':
-      return -1;
-    case 'phase1':
-      return 0;
-    case 'phase2':
-      return 1;
-    case 'phase3':
-      return 2;
-    case 'dismissed':
-      return 3;
-    default:
-      return -1;
-  }
-}
-
-/**
  * Get the total duration (ms) of the current phase from config.
  * Used to compute phaseProgress for the ProgressRing.
  */

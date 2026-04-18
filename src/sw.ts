@@ -27,15 +27,15 @@ self.addEventListener('notificationclick', (event) => {
   event.notification.close();
 
   event.waitUntil(
-    clients
+    self.clients
       .matchAll({ type: 'window', includeUncontrolled: true })
-      .then((clientList) => {
+      .then((clientList: readonly Client[]) => {
         for (const client of clientList) {
           if (client.url.startsWith(self.location.origin) && 'focus' in client) {
             return (client as WindowClient).focus();
           }
         }
-        return clients.openWindow('/');
+        return self.clients.openWindow('/');
       })
   );
 });

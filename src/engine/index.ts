@@ -10,10 +10,12 @@
  */
 
 export { AlarmEngine } from './AlarmEngine';
-export {
+export type {
   AlarmPhase,
   AlarmConfig,
   PhaseChangeCallback,
+} from './AlarmState';
+export {
   DEFAULT_CONFIG,
   QUICK_NAP_CONFIG,
   FOCUS_CONFIG,

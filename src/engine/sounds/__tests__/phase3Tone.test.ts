@@ -219,11 +219,6 @@ describe('fadeOutGain', () => {
 
   it('calls setTargetAtTime(0.0001, currentTime, 0.015) on the gain param', () => {
     const ac = buildMockAudioContext(7)
-    const mockGainNode = gainNodeInstances[0] ?? {
-      gain: makeGainParamMock(),
-      connect: vi.fn().mockReturnThis(),
-    }
-
     // Build a fresh gain mock to use as the argument
     const gainParam = makeGainParamMock()
     const fakeGainNode = { gain: gainParam, connect: vi.fn() } as unknown as GainNode
