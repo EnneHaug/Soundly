@@ -23,7 +23,7 @@ interface CountdownProps {
 
 /** D-08: Human-readable phase labels */
 const PHASE_LABELS: Record<string, string> = {
-  idle: '',
+  idle: 'Gentle Sound',
   phase1: 'Gentle Sound',
   phase2: 'Nudge',
   phase3: 'Wake',

@@ -64,7 +64,7 @@ function arcPath(startAngle: number, endAngle: number): string {
 function phaseToIndex(phase: AlarmPhase): number {
   switch (phase) {
     case 'idle':
-      return -1;
+      return 0;
     case 'phase1':
       return 0;
     case 'phase2':
@@ -86,7 +86,7 @@ export default function ProgressRing({
 }: ProgressRingProps) {
   // Compute total duration across phases (excluding phase3 ramp which is post-ring)
   const total =
-    config.phase1DurationMs + config.phase2DurationMs + config.phase2to3GapMs;
+    config.phase1DurationMs + config.phase2DurationMs + config.phase3RampDurationMs;
 
   // Available arc after subtracting 3 gaps between segments
   const availableArc = TWO_PI - 3 * GAP_RADIANS;
@@ -95,7 +95,7 @@ export default function ProgressRing({
   const arcLengths = [
     (config.phase1DurationMs / total) * availableArc,
     (config.phase2DurationMs / total) * availableArc,
-    (config.phase2to3GapMs / total) * availableArc,
+    (config.phase3RampDurationMs / total) * availableArc,
   ];
 
   // Compute start angles for each segment
