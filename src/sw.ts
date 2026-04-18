@@ -1,6 +1,7 @@
 /// <reference lib="webworker" />
 
-import { cleanupOutdatedCaches, precacheAndRoute } from 'workbox-precaching';
+import { cleanupOutdatedCaches, createHandlerBoundToURL, precacheAndRoute } from 'workbox-precaching';
+import { NavigationRoute, registerRoute } from 'workbox-routing';
 
 declare let self: ServiceWorkerGlobalScope;
 
@@ -9,6 +10,13 @@ cleanupOutdatedCaches();
 
 // Precache static assets injected by vite-plugin-pwa at build time
 precacheAndRoute(self.__WB_MANIFEST);
+
+// SPA navigation fallback — serves cached index.html for all navigation requests.
+// Belt-and-suspenders: precacheAndRoute handles exact URL matches, but
+// NavigationRoute catches browser navigation to paths not in the precache manifest
+// (e.g., direct URL entry, refresh on a deep link if one is ever added).
+const navHandler = createHandlerBoundToURL('/index.html');
+registerRoute(new NavigationRoute(navHandler));
 
 /**
  * Handle notification taps (PLT-03).
