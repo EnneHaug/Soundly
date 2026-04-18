@@ -23,7 +23,7 @@ interface CountdownProps {
 
 /** D-08: Human-readable phase labels */
 const PHASE_LABELS: Record<string, string> = {
-  idle: 'Starting...',
+  idle: '',
   phase1: 'Gentle Sound',
   phase2: 'Nudge',
   phase3: 'Wake',
@@ -42,9 +42,9 @@ function getPhaseDuration(
     case 'idle':
       return config.phase1DurationMs;
     case 'phase1':
-      return config.phase2DurationMs;
+      return config.phase1DurationMs;
     case 'phase2':
-      return config.phase2to3GapMs;
+      return config.phase2DurationMs;
     case 'phase3':
       return config.phase3RampDurationMs;
     default:

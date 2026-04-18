@@ -52,9 +52,9 @@ function computePhaseEndsAt(phase: AlarmPhase, config: AlarmConfig | null): numb
   const now = Date.now();
   switch (phase) {
     case 'phase1':
-      return now + config.phase2DurationMs; // phase1 ends when phase2 starts
+      return now + config.phase1DurationMs;
     case 'phase2':
-      return now + config.phase2to3GapMs; // phase2 ends at phase2to3 gap
+      return now + config.phase2DurationMs;
     case 'phase3':
       return now + config.phase3RampDurationMs;
     default:
@@ -105,16 +105,21 @@ export function useAlarm(): UseAlarmReturn {
 
   const pause = (): void => {
     engine.pause();
-    setState((prev) => ({ ...prev, isPaused: true }));
+    setState((prev) => ({
+      ...prev,
+      isPaused: true,
+      // Snapshot remaining time so resume can restore it
+      phaseEndsAt: Math.max(0, prev.phaseEndsAt - Date.now()),
+    }));
   };
 
   const resume = (): void => {
     engine.resume();
-    // Recalculate phaseEndsAt based on current phase and remaining time
     setState((prev) => ({
       ...prev,
       isPaused: false,
-      phaseEndsAt: computePhaseEndsAt(prev.phase, prev.activeConfig),
+      // phaseEndsAt was storing remaining ms while paused — convert back to epoch
+      phaseEndsAt: Date.now() + prev.phaseEndsAt,
     }));
   };
 
