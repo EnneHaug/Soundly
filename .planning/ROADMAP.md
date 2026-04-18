@@ -75,7 +75,7 @@ Plans:
   3. The service worker notification click handler routes the user back to the countdown screen
 **Plans:** 1 plan
 Plans:
-- [ ] 04-01-PLAN.md — Apple meta tags, NavigationRoute fallback, production build validation
+- [x] 04-01-PLAN.md — Apple meta tags, NavigationRoute fallback, production build validation
 
 ## Progress
 
