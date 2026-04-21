@@ -13,6 +13,7 @@ export default function App() {
       ) : (
         <Dashboard alarm={alarm} />
       )}
+      <p className="fixed bottom-3 right-4 text-text-secondary text-xs opacity-40">Version: Test 02</p>
     </div>
   );
 }

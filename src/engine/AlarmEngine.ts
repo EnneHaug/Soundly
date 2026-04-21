@@ -190,6 +190,17 @@ export class AlarmEngine {
   private enterPhase3(rampDurationMs: number): void {
     this.setPhase('phase3');
 
+    // Stop Phase 2 effects before starting Phase 3
+    stopVibration();
+    if (this.tickLoopTimer !== null) {
+      clearInterval(this.tickLoopTimer);
+      this.tickLoopTimer = null;
+    }
+    if (this.tickGain) {
+      this.tickGain.disconnect();
+      this.tickGain = null;
+    }
+
     // Create volume ramp gain: 0→100% over rampDuration seconds
     this.phase3RampGain = createPhase3Ramp(this.ac!, rampDurationMs / 1000);
 

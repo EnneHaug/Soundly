@@ -51,7 +51,6 @@ export default function Dashboard({ alarm }: DashboardProps) {
         <IosInstallBanner />
       </div>
 
-      <p className="mt-auto pt-8 text-text-secondary text-xs opacity-50">Version: Test 01</p>
     </div>
   );
 }
