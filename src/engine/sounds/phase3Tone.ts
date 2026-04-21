@@ -30,13 +30,14 @@
 export function createPhase3Ramp(ac: AudioContext, durationSec: number): GainNode {
   const masterGain = new GainNode(ac, { gain: 0 });
 
-  // Front-loaded ramp: reach 0.8 in first quarter, then 1.0 over the rest.
-  // This ensures the alarm is clearly audible early rather than staying quiet
-  // for most of the ramp duration.
+  // Front-loaded ramp with overdrive: reach 2.0 in first quarter, then 3.0.
+  // Values above 1.0 push the output louder than unity gain — the browser
+  // soft-clips which adds urgency. This ensures the wake alarm is noticeably
+  // louder than the gentle singing bowl (which plays at gain 1.0).
   const quarterSec = durationSec * 0.25;
   masterGain.gain.setValueAtTime(0, ac.currentTime);
-  masterGain.gain.linearRampToValueAtTime(0.8, ac.currentTime + quarterSec);
-  masterGain.gain.linearRampToValueAtTime(1.0, ac.currentTime + durationSec);
+  masterGain.gain.linearRampToValueAtTime(2.0, ac.currentTime + quarterSec);
+  masterGain.gain.linearRampToValueAtTime(3.0, ac.currentTime + durationSec);
 
   masterGain.connect(ac.destination);
   return masterGain;

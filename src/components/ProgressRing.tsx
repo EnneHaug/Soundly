@@ -64,15 +64,15 @@ function arcPath(startAngle: number, endAngle: number): string {
 function phaseToIndex(phase: AlarmPhase): number {
   switch (phase) {
     case 'idle':
-      return 0;
+      return 0;  // segment 1 (Gentle Sound)
     case 'phase1':
-      return 1;
+      return 1;  // segment 2 (Nudge)
     case 'phase2':
-      return 2;
+      return 2;  // past both segments, approaching dot
     case 'phase3':
-      return 3; // past all segments — at the dot
+      return 2;  // dot active (Wake)
     case 'dismissed':
-      return 3;
+      return 3;  // all done
     default:
       return -1;
   }
@@ -169,9 +169,10 @@ export default function ProgressRing({
     return [track, activeFill];
   });
 
-  // Phase 3 dot — terracotta when active/future, faded when all past
-  const dotColor = currentIndex >= 3 ? 'var(--color-faded)' : PHASE_COLORS[2];
-  const dotOpacity = currentIndex >= 3 ? 0.6 : 1;
+  // Phase 3 dot — terracotta when wake is active, faded otherwise
+  const wakeActive = currentPhase === 'phase3';
+  const dotColor = wakeActive ? PHASE_COLORS[2] : 'var(--color-faded)';
+  const dotOpacity = wakeActive ? 1 : 0.4;
   const dotCenter = polarToCartesian(dotStart + DOT_ARC / 2);
   const phase3Dot = (
     <circle

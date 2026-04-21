@@ -119,11 +119,11 @@ describe('createPhase3Ramp', () => {
     const calls = gainNodeInstances[0].gain._calls
     const rampCalls = calls.filter((c) => c.method === 'linearRampToValueAtTime')
 
-    // Two-stage ramp: 0→0.8 at quarter, 0.8→1.0 at full
+    // Two-stage ramp with overdrive: 0→2.0 at quarter, 2.0→3.0 at full
     expect(rampCalls).toHaveLength(2)
-    expect(rampCalls[0].args[0]).toBe(0.8)
+    expect(rampCalls[0].args[0]).toBe(2.0)
     expect(rampCalls[0].args[1]).toBeCloseTo(currentTime + 15, 5)
-    expect(rampCalls[1].args[0]).toBe(1.0)
+    expect(rampCalls[1].args[0]).toBe(3.0)
     expect(rampCalls[1].args[1]).toBeCloseTo(currentTime + 60, 5)
   })
 
