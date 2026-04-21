@@ -52,9 +52,9 @@ function computePhaseEndsAt(phase: AlarmPhase, config: AlarmConfig | null): numb
   const now = Date.now();
   switch (phase) {
     case 'phase1':
-      return now + config.phase1DurationMs;
+      return now + config.phase2DurationMs; // phase1 ends when phase2 fires
     case 'phase2':
-      return now + config.phase2DurationMs;
+      return now + config.phase2to3GapMs; // phase2 ends when phase3 fires
     case 'phase3':
       return now + config.phase3RampDurationMs;
     default:

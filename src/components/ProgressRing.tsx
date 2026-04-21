@@ -66,11 +66,11 @@ function phaseToIndex(phase: AlarmPhase): number {
     case 'idle':
       return 0;
     case 'phase1':
-      return 0;
-    case 'phase2':
       return 1;
-    case 'phase3':
+    case 'phase2':
       return 2;
+    case 'phase3':
+      return 3; // past all segments — at the dot
     case 'dismissed':
       return 3;
     default:
@@ -84,27 +84,21 @@ export default function ProgressRing({
   phaseProgress,
   children,
 }: ProgressRingProps) {
-  // Compute total duration across phases (excluding phase3 ramp which is post-ring)
-  const total =
-    config.phase1DurationMs + config.phase2DurationMs + config.phase3RampDurationMs;
+  // Two arc segments + a dot for phase 3
+  const total = config.phase1DurationMs + config.phase2DurationMs;
 
-  // Available arc after subtracting 3 gaps between segments
-  const availableArc = TWO_PI - 3 * GAP_RADIANS;
+  // Available arc after subtracting 2 gaps (seg1-seg2, seg2-dot)
+  const DOT_ARC = 0.08; // small fixed arc for the phase 3 dot
+  const availableArc = TWO_PI - 2 * GAP_RADIANS - DOT_ARC;
 
-  // Arc lengths proportional to phase durations
   const arcLengths = [
-    (config.phase1DurationMs / total) * availableArc,
-    (config.phase2DurationMs / total) * availableArc,
-    (config.phase3RampDurationMs / total) * availableArc,
+    (config.phase1DurationMs / total) * availableArc,  // Gentle Sound
+    (config.phase2DurationMs / total) * availableArc,  // Nudge
   ];
 
-  // Compute start angles for each segment
-  const startAngles: number[] = [];
-  let cursor = 0;
-  for (let i = 0; i < 3; i++) {
-    startAngles[i] = cursor;
-    cursor += arcLengths[i] + GAP_RADIANS;
-  }
+  // Compute start angles
+  const startAngles = [0, arcLengths[0] + GAP_RADIANS];
+  const dotStart = startAngles[1] + arcLengths[1] + GAP_RADIANS;
 
   const currentIndex = phaseToIndex(currentPhase);
   const clampedProgress = Math.min(1, Math.max(0, phaseProgress));
@@ -117,7 +111,6 @@ export default function ProgressRing({
     const isCurrent = i === currentIndex;
     const isFuture = i > currentIndex;
 
-    // Background (faded) track always visible
     const track = (
       <path
         key={`track-${i}`}
@@ -133,7 +126,6 @@ export default function ProgressRing({
     let activeFill: React.ReactNode = null;
 
     if (isPast) {
-      // Depleted: faded gray at slightly higher opacity
       activeFill = (
         <path
           key={`fill-${i}`}
@@ -146,8 +138,6 @@ export default function ProgressRing({
         />
       );
     } else if (isCurrent) {
-      // Remaining portion: from start to (start + remaining arc)
-      // phaseProgress=0 → full arc remaining; phaseProgress=1 → nothing remaining
       const remainingArc = (1 - clampedProgress) * arcLen;
       if (remainingArc > 0.001) {
         activeFill = (
@@ -163,7 +153,6 @@ export default function ProgressRing({
         );
       }
     } else if (isFuture) {
-      // Not yet started: full arc, full opacity
       activeFill = (
         <path
           key={`fill-${i}`}
@@ -180,6 +169,21 @@ export default function ProgressRing({
     return [track, activeFill];
   });
 
+  // Phase 3 dot — terracotta when active/future, faded when all past
+  const dotColor = currentIndex >= 3 ? 'var(--color-faded)' : PHASE_COLORS[2];
+  const dotOpacity = currentIndex >= 3 ? 0.6 : 1;
+  const dotCenter = polarToCartesian(dotStart + DOT_ARC / 2);
+  const phase3Dot = (
+    <circle
+      key="dot-phase3"
+      cx={dotCenter.x}
+      cy={dotCenter.y}
+      r={STROKE_WIDTH / 2}
+      fill={dotColor}
+      opacity={dotOpacity}
+    />
+  );
+
   return (
     <div className="relative w-full max-w-[280px] mx-auto">
       <svg
@@ -189,6 +193,7 @@ export default function ProgressRing({
         aria-label="Alarm progress"
       >
         {segments.map((pair) => pair)}
+        {phase3Dot}
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         {children}

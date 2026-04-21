@@ -30,8 +30,12 @@
 export function createPhase3Ramp(ac: AudioContext, durationSec: number): GainNode {
   const masterGain = new GainNode(ac, { gain: 0 });
 
-  // Anchor required before ramp (pitfall 6: linearRamp needs prior setValueAtTime)
+  // Front-loaded ramp: reach 0.8 in first quarter, then 1.0 over the rest.
+  // This ensures the alarm is clearly audible early rather than staying quiet
+  // for most of the ramp duration.
+  const quarterSec = durationSec * 0.25;
   masterGain.gain.setValueAtTime(0, ac.currentTime);
+  masterGain.gain.linearRampToValueAtTime(0.8, ac.currentTime + quarterSec);
   masterGain.gain.linearRampToValueAtTime(1.0, ac.currentTime + durationSec);
 
   masterGain.connect(ac.destination);

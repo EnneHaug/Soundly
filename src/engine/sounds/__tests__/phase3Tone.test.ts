@@ -92,7 +92,7 @@ describe('createPhase3Ramp', () => {
     expect(gainNodeInstances[0].connect).toHaveBeenCalled()
   })
 
-  it('calls setValueAtTime(0) before linearRampToValueAtTime(1.0) — anchor required (pitfall 6)', () => {
+  it('calls setValueAtTime(0) before linearRampToValueAtTime — anchor required (pitfall 6)', () => {
     const ac = buildMockAudioContext(5)
     createPhase3Ramp(ac, 60)
 
@@ -109,21 +109,22 @@ describe('createPhase3Ramp', () => {
 
     // setValueAtTime anchor must be 0
     expect(calls[setValueIdx].args[0]).toBe(0)
-
-    // linearRamp target must be 1.0
-    expect(calls[rampIdx].args[0]).toBe(1.0)
   })
 
-  it('ramps to 1.0 over the specified durationSec', () => {
+  it('front-loads ramp: reaches 0.8 at quarter duration, 1.0 at full duration', () => {
     const currentTime = 10
     const ac = buildMockAudioContext(currentTime)
     createPhase3Ramp(ac, 60)
 
     const calls = gainNodeInstances[0].gain._calls
-    const rampCall = calls.find((c) => c.method === 'linearRampToValueAtTime')!
+    const rampCalls = calls.filter((c) => c.method === 'linearRampToValueAtTime')
 
-    expect(rampCall.args[0]).toBe(1.0)
-    expect(rampCall.args[1]).toBeCloseTo(currentTime + 60, 5)
+    // Two-stage ramp: 0→0.8 at quarter, 0.8→1.0 at full
+    expect(rampCalls).toHaveLength(2)
+    expect(rampCalls[0].args[0]).toBe(0.8)
+    expect(rampCalls[0].args[1]).toBeCloseTo(currentTime + 15, 5)
+    expect(rampCalls[1].args[0]).toBe(1.0)
+    expect(rampCalls[1].args[1]).toBeCloseTo(currentTime + 60, 5)
   })
 
   it('returns the GainNode', () => {

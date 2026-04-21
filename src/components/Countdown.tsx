@@ -40,11 +40,11 @@ function getPhaseDuration(
 ): number {
   switch (phase) {
     case 'idle':
-      return config.phase1DurationMs;
+      return config.phase1DurationMs;     // idle lasts until phase1 fires
     case 'phase1':
-      return config.phase1DurationMs;
+      return config.phase2DurationMs;     // phase1 lasts until phase2 fires
     case 'phase2':
-      return config.phase2DurationMs;
+      return config.phase2to3GapMs;       // phase2 lasts until phase3 fires
     case 'phase3':
       return config.phase3RampDurationMs;
     default:
