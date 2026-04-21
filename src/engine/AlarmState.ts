@@ -55,19 +55,19 @@ export const DEFAULT_CONFIG: AlarmConfig = {
   phase2to3GapMs: 10_000,
 };
 
-/** Quick Nap: 5 min soft sound, 5 min vibration, 10s gap, 1 min ramp (ALM-02, D-06) */
+/** Quick Nap: 1 min per phase for testing (Test 01) */
 export const QUICK_NAP_CONFIG: AlarmConfig = {
-  phase1DurationMs: 300_000,
-  phase2DurationMs: 300_000,
-  phase2to3GapMs: 10_000,
+  phase1DurationMs: 60_000,
+  phase2DurationMs: 60_000,
+  phase2to3GapMs: 5_000,
   phase3RampDurationMs: 60_000,
 };
 
-/** Focus: 21 min soft sound, 2 min vibration, 10s gap, 1 min ramp (ALM-03, D-06) */
+/** Focus: 1 min per phase for testing (Test 01) */
 export const FOCUS_CONFIG: AlarmConfig = {
-  phase1DurationMs: 1_260_000,
-  phase2DurationMs: 120_000,
-  phase2to3GapMs: 10_000,
+  phase1DurationMs: 60_000,
+  phase2DurationMs: 60_000,
+  phase2to3GapMs: 5_000,
   phase3RampDurationMs: 60_000,
 };
 

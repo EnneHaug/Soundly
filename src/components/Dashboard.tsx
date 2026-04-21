@@ -31,12 +31,12 @@ export default function Dashboard({ alarm }: DashboardProps) {
       <div className="mt-10 w-full flex flex-col gap-4">
         <PresetCard
           name="Quick Nap"
-          description="5 min gentle, 5 min nudge, wake"
+          description="1 min gentle, 1 min nudge, wake"
           onStart={() => alarm.start(QUICK_NAP_CONFIG)}
         />
         <PresetCard
           name="Focus"
-          description="21 min gentle, 2 min nudge, wake"
+          description="1 min gentle, 1 min nudge, wake"
           onStart={() => alarm.start(FOCUS_CONFIG)}
         />
       </div>
@@ -50,6 +50,8 @@ export default function Dashboard({ alarm }: DashboardProps) {
       <div className="mt-6 w-full">
         <IosInstallBanner />
       </div>
+
+      <p className="mt-auto pt-8 text-text-secondary text-xs opacity-50">Version: Test 01</p>
     </div>
   );
 }
