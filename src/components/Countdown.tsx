@@ -11,7 +11,7 @@
  * Interval is cleaned up on unmount and when paused (T-03-08: no interval leak).
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { UseAlarmReturn } from '../hooks/useAlarm';
 import type { AlarmPhase } from '../engine';
 import ProgressRing from './ProgressRing';
@@ -57,6 +57,20 @@ export default function Countdown({ alarm }: CountdownProps) {
     Math.max(0, alarm.phaseEndsAt - Date.now())
   );
 
+  // Track when phase3 started for count-up display
+  const phase3StartRef = useRef<number>(0);
+  const [elapsedMs, setElapsedMs] = useState(0);
+
+  // Record when phase3 begins
+  useEffect(() => {
+    if (alarm.phase === 'phase3' && phase3StartRef.current === 0) {
+      phase3StartRef.current = Date.now();
+    }
+    if (alarm.phase !== 'phase3') {
+      phase3StartRef.current = 0;
+    }
+  }, [alarm.phase]);
+
   // Tick every 250ms when running. Freezes on pause (Pitfall 4).
   // Interval cleared on unmount and when paused (T-03-08: no interval leak).
   useEffect(() => {
@@ -64,13 +78,19 @@ export default function Countdown({ alarm }: CountdownProps) {
 
     // Set immediately so there's no initial lag
     setDisplayRemainingMs(Math.max(0, alarm.phaseEndsAt - Date.now()));
+    if (alarm.phase === 'phase3' && phase3StartRef.current > 0) {
+      setElapsedMs(Date.now() - phase3StartRef.current);
+    }
 
     const id = setInterval(() => {
       setDisplayRemainingMs(Math.max(0, alarm.phaseEndsAt - Date.now()));
+      if (alarm.phase === 'phase3' && phase3StartRef.current > 0) {
+        setElapsedMs(Date.now() - phase3StartRef.current);
+      }
     }, 250);
 
     return () => clearInterval(id);
-  }, [alarm.isPaused, alarm.isRunning, alarm.phaseEndsAt]);
+  }, [alarm.isPaused, alarm.isRunning, alarm.phaseEndsAt, alarm.phase]);
 
   // Compute phaseProgress (0 = just started, 1 = complete) for ProgressRing
   const config = alarm.activeConfig;
@@ -82,9 +102,10 @@ export default function Countdown({ alarm }: CountdownProps) {
       : 0;
   }
 
-  // ProgressRing needs currentPhase mapped to index-based awareness.
-  // The ring uses the phase string directly — we pass it through.
   const currentPhase = alarm.phase;
+
+  // During wake phase, show elapsed time counting up instead of countdown
+  const displayTime = alarm.phase === 'phase3' ? elapsedMs : displayRemainingMs;
 
   return (
     <div className="flex flex-col items-center w-full max-w-md mx-auto px-6 py-12">
@@ -94,7 +115,7 @@ export default function Countdown({ alarm }: CountdownProps) {
           currentPhase={currentPhase}
           phaseProgress={phaseProgress}
         >
-          {/* D-07: Large mm:ss countdown with tabular-nums for stable width */}
+          {/* D-07: Large mm:ss timer with tabular-nums for stable width */}
           <span
             className="text-text-primary font-light tracking-tight"
             style={{
@@ -102,7 +123,7 @@ export default function Countdown({ alarm }: CountdownProps) {
               fontVariantNumeric: 'tabular-nums',
             }}
           >
-            {formatMmSs(displayRemainingMs)}
+            {formatMmSs(displayTime)}
           </span>
           {/* D-08: Phase label with subtle crossfade on transition (D-10) */}
           <span className="text-text-secondary text-sm mt-1 transition-opacity duration-500">
