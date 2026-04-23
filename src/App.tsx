@@ -13,7 +13,7 @@ export default function App() {
       ) : (
         <Dashboard alarm={alarm} />
       )}
-      <p className="fixed bottom-3 right-4 text-text-secondary text-xs opacity-40">Version: 01</p>
+      <p className="fixed bottom-3 right-4 text-text-secondary text-xs opacity-40">Version: 1.1</p>
     </div>
   );
 }
