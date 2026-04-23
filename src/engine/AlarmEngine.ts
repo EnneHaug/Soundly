@@ -46,7 +46,7 @@ export class AlarmEngine {
   private timers: TimerHandle[] = [];
   private keepaliveOsc: OscillatorNode | null = null;
   private phase3RampGain: GainNode | null = null;
-  private phase3SwellOsc: OscillatorNode | null = null;
+  private phase3SwellNodes: OscillatorNode[] | null = null;
   private phase3LoopTimer: ReturnType<typeof setInterval> | null = null;
   private phaseCallback: PhaseChangeCallback | null = null;
 
@@ -204,17 +204,20 @@ export class AlarmEngine {
     // Create volume ramp gain: 0→100% over rampDuration seconds
     this.phase3RampGain = createPhase3Ramp(this.ac!, rampDurationMs / 1000);
 
-    // Start initial swell cycle
-    this.phase3SwellOsc = startPhase3Swell(this.ac!, this.phase3RampGain);
+    // Start initial swell cycle — returns an array of 6 oscillators
+    // (3 detuned + 1 harmonic + 1 chirp + 1 LFO). All must be stopped together.
+    this.phase3SwellNodes = startPhase3Swell(this.ac!, this.phase3RampGain);
 
-    // Loop: stop old swell and create new one every 3.2 seconds (T-01-05: interval cleared on stop/dismiss)
+    // Loop: stop old swell stack and create new one every 3.2 seconds (T-01-05: interval cleared on stop/dismiss)
     this.phase3LoopTimer = setInterval(() => {
-      try {
-        this.phase3SwellOsc?.stop();
-      } catch {
-        // OscillatorNode may already be stopped — safe to ignore
-      }
-      this.phase3SwellOsc = startPhase3Swell(this.ac!, this.phase3RampGain!);
+      this.phase3SwellNodes?.forEach((n) => {
+        try {
+          n.stop();
+        } catch {
+          // OscillatorNode may already be stopped — safe to ignore
+        }
+      });
+      this.phase3SwellNodes = startPhase3Swell(this.ac!, this.phase3RampGain!);
     }, 3200);
   }
 
@@ -257,12 +260,14 @@ export class AlarmEngine {
       clearInterval(this.phase3LoopTimer);
       this.phase3LoopTimer = null;
     }
-    try {
-      this.phase3SwellOsc?.stop();
-    } catch {
-      // Already stopped — safe to ignore
-    }
-    this.phase3SwellOsc = null;
+    this.phase3SwellNodes?.forEach((n) => {
+      try {
+        n.stop();
+      } catch {
+        // Already stopped — safe to ignore
+      }
+    });
+    this.phase3SwellNodes = null;
 
     // Keepalive continues running to keep AudioContext alive
   }
@@ -394,13 +399,15 @@ export class AlarmEngine {
       this.phase3LoopTimer = null;
     }
 
-    // Stop Phase 3 swell oscillator
-    try {
-      this.phase3SwellOsc?.stop();
-    } catch {
-      // Already stopped — safe to ignore
-    }
-    this.phase3SwellOsc = null;
+    // Stop Phase 3 swell oscillator stack (every node including the LFO)
+    this.phase3SwellNodes?.forEach((n) => {
+      try {
+        n.stop();
+      } catch {
+        // Already stopped — safe to ignore
+      }
+    });
+    this.phase3SwellNodes = null;
 
     // Fade out Phase 3 ramp gain (smooth stop, no audible click per pitfall 4)
     if (this.phase3RampGain && this.ac) {
