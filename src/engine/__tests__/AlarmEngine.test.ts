@@ -325,12 +325,12 @@ describe('AlarmEngine', () => {
     expect(() => validateConfig(FOCUS_CONFIG)).not.toThrow();
   });
 
-  it('QUICK_NAP_CONFIG has phase1DurationMs = 60_000', () => {
-    expect(QUICK_NAP_CONFIG.phase1DurationMs).toBe(60_000);
+  it('QUICK_NAP_CONFIG has phase1DurationMs = 300_000', () => {
+    expect(QUICK_NAP_CONFIG.phase1DurationMs).toBe(300_000);
   });
 
-  it('FOCUS_CONFIG has phase1DurationMs = 60_000', () => {
-    expect(FOCUS_CONFIG.phase1DurationMs).toBe(60_000);
+  it('FOCUS_CONFIG has phase1DurationMs = 1_260_000', () => {
+    expect(FOCUS_CONFIG.phase1DurationMs).toBe(1_260_000);
   });
 
   // ---- pause/resume tests ----
