@@ -16,6 +16,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 2: Background Reliability** - Silent keepalive loop, Wake Lock, notifications, vibration, and iOS handling
 - [ ] **Phase 3: React UI** - Dashboard, countdown screen, stop/pause controls, and zen aesthetic
 - [ ] **Phase 4: PWA Shell** - Installable PWA with offline support and service worker
+- [ ] **Phase 5: iOS Audio Loudness Fixes** - Software-only Phase 3 loudness improvements on iPhone (audioSession, compressor, frequency shift, amplitude modulation)
 
 ## Phase Details
 
@@ -77,10 +78,30 @@ Plans:
 Plans:
 - [x] 04-01-PLAN.md — Apple meta tags, NavigationRoute fallback, production build validation
 
+### Phase 5: iOS Audio Loudness Fixes
+**Goal**: Phase 3 escalation feels meaningfully louder and more attention-grabbing than Phase 2 on iPhone, and is not silenced by the ringer switch — software-only (no native wrapper)
+**Depends on**: Phase 1
+**Requirements**: AUD-03, PLT-04
+**Scope** (from `.planning/research/ios-alarm-feasibility.md`):
+  1. Set `navigator.audioSession.type = 'playback'` (iOS 17+, feature-detected) so the iOS silent switch does not mute WebAudio output
+  2. Replace the current gain > 1 "overdrive" on the Phase 3 GainNode with a `DynamicsCompressorNode` so perceived loudness increases without clipping
+  3. Shift the Phase 3 fundamental up to the 1–3 kHz band where phone speakers and human hearing both perform best (Phase 1 singing-bowl stays as-is)
+  4. Add 4–8 Hz amplitude modulation to the Phase 3 waveform — sirens work because they warble
+**Out of scope**: Capacitor / native wrapper for locked-screen wake (tracked as future Option B)
+**Success Criteria** (what must be TRUE):
+  1. Phase 3 is audibly louder than Phase 2 on an iPhone with the ringer switch OFF
+  2. Phase 3 plays audibly on an iPhone with the ringer switch ON (silent mode) — not muted
+  3. No audio clipping or distortion artifacts at peak Phase 3 volume
+  4. Phase 3 waveform exhibits perceptible warble/modulation, not a steady tone
+  5. Phase 1 singing-bowl sound is unchanged (regression check)
+**Plans:** 1 plan
+Plans:
+- [x] 05-01-PLAN.md — iOS Phase 3 loudness fixes: audioSession=playback + DynamicsCompressorNode + 1–3 kHz band + 6 Hz AM LFO
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4
+Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -88,3 +109,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | 2. Background Reliability | 0/2 | Planned | - |
 | 3. React UI | 0/3 | Planned | - |
 | 4. PWA Shell | 0/1 | Not started | - |
+| 5. iOS Audio Loudness Fixes | 0/1 | Planned | - |

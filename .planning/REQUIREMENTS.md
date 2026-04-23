@@ -9,7 +9,7 @@
 
 - [ ] **AUD-01**: Phase 1 plays a synthesized singing bowl sound via Web Audio API
 - [ ] **AUD-02**: Phase 3 ramps volume from 0% to 100% over configurable duration (default 1 min) using `linearRampToValueAtTime`
-- [ ] **AUD-03**: Test Sound button plays Phase 3 sound at mid-range volume to verify audio works
+- [x] **AUD-03**: Test Sound button plays Phase 3 sound at mid-range volume to verify audio works
 - [ ] **AUD-04**: Silent audio keepalive loop runs during active timer to prevent OS from killing the app
 
 ### Alarm
@@ -25,7 +25,7 @@
 - [ ] **PLT-01**: PWA installable on home screens with offline support via vite-plugin-pwa
 - [ ] **PLT-02**: Wake Lock API keeps screen on during active timer (re-acquires on visibility change)
 - [ ] **PLT-03**: System notification fires when alarm triggers while backgrounded
-- [ ] **PLT-04**: iOS standalone detection with "Add to Home Screen" prompt for non-installed users
+- [x] **PLT-04**: iOS standalone detection with "Add to Home Screen" prompt for non-installed users
 
 ### UX
 
@@ -63,7 +63,7 @@
 |-------------|-------|--------|
 | AUD-01 | Phase 1 | Pending |
 | AUD-02 | Phase 1 | Pending |
-| AUD-03 | Phase 1 | Pending |
+| AUD-03 | Phase 1 | Complete |
 | AUD-04 | Phase 1 | Pending |
 | ALM-01 | Phase 1 | Pending |
 | ALM-04 | Phase 1 | Pending |
@@ -72,7 +72,7 @@
 | ALM-05 | Phase 2 | Pending |
 | PLT-02 | Phase 2 | Pending |
 | PLT-03 | Phase 2 | Pending |
-| PLT-04 | Phase 2 | Pending |
+| PLT-04 | Phase 2 | Complete |
 | UX-01 | Phase 3 | Pending |
 | UX-02 | Phase 3 | Pending |
 | UX-03 | Phase 3 | Pending |
