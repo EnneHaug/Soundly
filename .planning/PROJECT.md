@@ -8,6 +8,17 @@ A Progressive Web App that wakes or alerts users gently through a multi-phase ap
 
 The alarm must actually wake the user — gently first, reliably always. If the gentle phases fail, escalation guarantees the user doesn't oversleep.
 
+## Current Milestone: v2.0 Custom Alarm Composer
+
+**Goal:** Let users compose alarms from arbitrary segments with a chosen end-of-segment sound, and ship a long-form gentle preset that demonstrates the model.
+
+**Target features:**
+- New "segment" alarm model — a segment is a duration ending with one chosen sound (gentle / triangle / alarm). Sound plays at the tail; most of the segment is silence.
+- Custom Mode UI — "Custom" button on home opens a segment builder; arbitrary number of segments, per-segment duration + sound type, optional preset pre-fill.
+- Wake Easy preset — 4 × 4 min gentle (chime at end) + 1 × 1 min alarm = 17 min total. New third preset card.
+- New triangle sound asset — synthesized via Web Audio API, single bright strike with quick decay (~1–2 s).
+- Existing Quick Nap and Focus presets stay on the continuous-phase model unchanged (no risk to Phase 1/2/3 code).
+
 ## Requirements
 
 ### Validated
@@ -82,4 +93,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-18 after Phase 4 completion — all 4 phases complete, human UAT pending*
+*Last updated: 2026-05-03 — v1.0 shipped (Phases 1–5 complete + on-device UAT). Milestone v2.0 (Custom Alarm Composer) opened.*
