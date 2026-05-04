@@ -4,8 +4,8 @@ milestone: v2.0
 milestone_name: Custom Alarm Composer
 status: defining-requirements
 stopped_at: Milestone v2.0 opened
-last_updated: "2026-05-03T00:00:00.000Z"
-last_activity: 2026-05-03
+last_updated: "2026-05-04T00:00:00.000Z"
+last_activity: 2026-05-04
 progress:
   total_phases: 0
   completed_phases: 0
@@ -18,17 +18,17 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-05-03)
+See: .planning/PROJECT.md (updated 2026-05-04)
 
 **Core value:** The alarm must actually wake the user — gently first, reliably always.
-**Current focus:** Milestone v2.0 — Custom Alarm Composer (defining requirements)
+**Current focus:** Milestone v2.0 — Custom Alarm Composer + Discoverability (defining requirements)
 
 ## Current Position
 
 Phase: Not started (defining requirements)
 Plan: —
 Status: Defining requirements
-Last activity: 2026-05-03 — Milestone v2.0 started
+Last activity: 2026-05-04 — Milestone v2.0 scope confirmed (alarm composer + SEO/landing page)
 
 Progress: [░░░░░░░░░░] 0%
 

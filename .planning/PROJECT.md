@@ -10,14 +10,22 @@ The alarm must actually wake the user — gently first, reliably always. If the 
 
 ## Current Milestone: v2.0 Custom Alarm Composer
 
-**Goal:** Let users compose alarms from arbitrary segments with a chosen end-of-segment sound, and ship a long-form gentle preset that demonstrates the model.
+**Goal:** Let users compose alarms from arbitrary segments with a chosen end-of-segment sound, ship a long-form gentle preset that demonstrates the model, and make the app discoverable from search engines.
 
 **Target features:**
+
+*Alarm composer (primary):*
 - New "segment" alarm model — a segment is a duration ending with one chosen sound (gentle / triangle / alarm). Sound plays at the tail; most of the segment is silence.
 - Custom Mode UI — "Custom" button on home opens a segment builder; arbitrary number of segments, per-segment duration + sound type, optional preset pre-fill.
 - Wake Easy preset — 4 × 4 min gentle (chime at end) + 1 × 1 min alarm = 17 min total. New third preset card.
 - New triangle sound asset — synthesized via Web Audio API, single bright strike with quick decay (~1–2 s).
 - Existing Quick Nap and Focus presets stay on the continuous-phase model unchanged (no risk to Phase 1/2/3 code).
+
+*Discoverability:*
+- SEO meta tags — `<title>`, meta description, Open Graph / Twitter cards, JSON-LD structured data (SoftwareApplication or WebApplication schema).
+- `robots.txt` + auto-generated `sitemap.xml`.
+- Marketing landing page — above-the-fold pitch, screenshots, install CTA, brief FAQ; routing so search-result clicks land here, with a deep link to the alarm app shell.
+- Out of scope for v2.0: keyword research, long-tail content/articles, analytics — deferred to a possible future v3.x growth milestone.
 
 ## Requirements
 
@@ -93,4 +101,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-03 — v1.0 shipped (Phases 1–5 complete + on-device UAT). Milestone v2.0 (Custom Alarm Composer) opened.*
+*Last updated: 2026-05-04 — Milestone v2.0 (Custom Alarm Composer) scope confirmed; SEO/discoverability added.*
