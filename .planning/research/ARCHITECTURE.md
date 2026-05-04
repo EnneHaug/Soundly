@@ -1,450 +1,874 @@
-# Architecture Patterns
+# Architecture Patterns — v2.0 Custom Alarm Composer + Discoverability
 
-**Domain:** Gentle alarm PWA (React + Vite + Web Audio API)
-**Researched:** 2026-04-14
-**Confidence:** HIGH for component structure and Web Audio API graph design (verified against MDN). MEDIUM for background reliability strategy (browser behavior is documented but varies by platform/version).
+**Domain:** Subsequent milestone — extending an existing React + Vite + Tailwind PWA
+**Researched:** 2026-05-04
+**Confidence:** HIGH for AlarmConfig schema decision and integration boundaries (verified against actual `src/engine/AlarmEngine.ts`, `src/hooks/useAlarm.ts`, `src/components/Countdown.tsx`). MEDIUM for landing-page routing decision (multi-page Vite is well-documented but interaction with vite-plugin-pwa `injectManifest` SPA fallback needs careful configuration). MEDIUM for React 19 JSON-LD hoisting (documented behavior; verify with Context7 before implementation).
+
+---
+
+## Executive Summary
+
+The v2.0 work splits cleanly into two architecturally independent tracks:
+
+1. **Alarm composer** — additive engine work. New `SegmentEngine` runs alongside the existing `AlarmEngine`; existing `AlarmConfig` is **untouched** (zero diff to v1 presets, sound files, and Phase 1/2/3 logic). The two engines share `getAudioContext()`, `keepalive`, `wakeLock`, and notifications. `useAlarm` is **superseded** (not modified) by a new `useSegmentAlarm` hook for Custom Mode; Quick Nap and Focus continue routing through the unmodified `useAlarm`. Countdown is **forked** into `Countdown.tsx` (continuous, untouched) and `SegmentCountdown.tsx` (segment-aware) — same visual language, different state shape. A higher-level `useActiveAlarm` selector chooses which hook is live.
+
+2. **Discoverability** — a **multi-page Vite build** (option c). `index.html` becomes the static marketing landing page; the React app shell moves to `app.html` served at `/app/`. This avoids adding a router to a single-screen app, gives crawlers fully-rendered HTML at `/`, and keeps the existing `injectManifest` service worker in charge of `/app/` precaching. The landing page is precached too but uses NetworkFirst so updated marketing copy ships without an SW update.
+
+**The integration risk to manage:** `vite-plugin-pwa` is currently configured with `base: '/Soundly/'` and a NavigationRoute fallback bound to `/Soundly/index.html`. Splitting into two entry points requires updating the SW navigation handler so `/Soundly/app/` falls back to `app.html` and `/Soundly/` falls back to `index.html` — otherwise the marketing page will be served when users deep-link to the app.
 
 ---
 
 ## Recommended Architecture
 
-The app has three distinct runtime concerns that must be isolated from each other:
+The existing v1 architecture has three runtime concerns: UI layer (React), orchestration engine (plain TS), hardware abstraction (Web Audio API + browser APIs). v2.0 adds a **fourth concern**: a **content/marketing surface** that is structurally separate from the alarm app.
 
-1. **UI layer** — React component tree, view routing, user interaction
-2. **Timer/orchestration engine** — phase state machine, scheduling logic, countdown
-3. **Hardware abstraction layer** — Web Audio API synthesis, Wake Lock, Vibration, Notification
+```
+┌────────────────────────────────────────────────────────────────────┐
+│  Static marketing surface (NEW)                                    │
+│  ─ index.html (build-time generated landing page)                  │
+│  ─ FAQ, screenshots, install CTA, JSON-LD, OG tags                 │
+│  ─ Deep link → /app/                                               │
+└────────────────────────────────────────────────────────────────────┘
+                                  ↓ user clicks "Open App"
+┌────────────────────────────────────────────────────────────────────┐
+│  React app shell (EXISTING + EXTENDED)                             │
+│  ─ app.html (NEW: second Vite entry, mounts existing <App />)     │
+│  ─ Dashboard (MODIFIED: 3 preset cards + Custom button)            │
+│  ─ Countdown (UNCHANGED — used by continuous alarms)               │
+│  ─ SegmentCountdown (NEW — used by Custom Mode + Wake Easy)        │
+│  ─ CustomComposer (NEW — segment builder UI)                       │
+└────────────────────────────────────────────────────────────────────┘
+                                  ↓ start alarm
+┌────────────────────────────────────────────────────────────────────┐
+│  Orchestration layer                                               │
+│  ┌──────────────────────────┐  ┌──────────────────────────────┐    │
+│  │ AlarmEngine (UNCHANGED)  │  │ SegmentEngine (NEW)          │    │
+│  │ phase1 → phase2 → phase3 │  │ segment[0] → segment[1] → …  │    │
+│  └────────────┬─────────────┘  └────────────┬─────────────────┘    │
+│               │                              │                      │
+│               └──────────────┬───────────────┘                      │
+│                              ↓                                      │
+│  Shared services: getAudioContext, keepalive, wakeLock,             │
+│  notifications, vibration                                           │
+└────────────────────────────────────────────────────────────────────┘
+                                  ↓
+┌────────────────────────────────────────────────────────────────────┐
+│  Hardware (UNCHANGED) — Web Audio API graph, Wake Lock, etc.       │
+│  Sound files in src/engine/sounds/ stay zero-diff except           │
+│  the new triangle.ts addition.                                     │
+└────────────────────────────────────────────────────────────────────┘
+```
 
-These three layers communicate top-down (UI → engine → hardware) for control and bottom-up (hardware events → engine → UI) for state updates. They must never be tangled: React render cycles cannot be allowed to interrupt audio scheduling, and audio state must not be stored in React state.
+**Invariant:** the existing AlarmEngine state machine, its three-phase scheduler, its pause/resume snapshot logic, and its sound files (`singingBowl.ts`, `phase3Tone.ts`, `keepalive.ts`, `tickPulse.ts`, `fadeOutGain.ts`) are **frozen** in v2.0. All segment behavior lives in the new SegmentEngine. This is the smallest-diff integration that keeps the v1 success criteria untouchable.
 
 ---
 
-## Component Boundaries
+## Decision 1: AlarmConfig Schema Shape
 
-### UI Layer (React)
-
-```
-App
-├── HomeScreen
-│   ├── PresetCard (Quick Nap)
-│   ├── PresetCard (Focus)
-│   └── CustomSetupForm
-│       ├── PhaseDurationSlider (phase 1 delay)
-│       ├── PhaseDurationSlider (phase 2 delay)
-│       └── RampDurationSlider (phase 3 length)
-├── CountdownScreen
-│   ├── PhaseIndicator
-│   ├── CountdownDisplay
-│   ├── StopButton
-│   └── PauseButton
-└── TestSoundButton (lives on HomeScreen, uses AudioEngine directly)
-```
-
-**HomeScreen** owns session configuration. It holds the ephemeral form state (duration, phase delays, ramp time) and passes a resolved `SessionConfig` object to the engine when the user starts. It never touches audio or timers.
-
-**CountdownScreen** is a display-only component. It reads timer state from a shared store/context and renders it. It issues stop/pause commands to the engine but does not run any timing logic itself.
-
-**PresetCard** is a pure display component that, on tap, populates the form and immediately starts the session (one-tap start is a requirement for the zen UX).
-
-### Timer / Orchestration Engine (plain TypeScript module, not React)
-
-This is the critical layer. It must live outside React's render cycle.
-
-```
-AlarmEngine (singleton class or module)
-├── state: AlarmState (idle | running | paused | ringing | stopped)
-├── phase: AlarmPhase (phase1 | phase2 | phase3 | done)
-├── countdown: number (seconds remaining)
-│
-├── start(config: SessionConfig): void
-├── pause(): void
-├── resume(): void
-├── stop(): void
-│
-├── — internally schedules —
-│   ├── Phase 1 trigger: setTimeout → audioEngine.startPhase1()
-│   ├── Phase 2 trigger: setTimeout → audioEngine.startPhase2() + vibrationEngine.start()
-│   ├── Phase 3 trigger: setTimeout → audioEngine.startPhase3Ramp()
-│   └── Countdown tick: setInterval (1s) → emit state update
-│
-└── — emits updates via —
-    └── callback / EventEmitter / Zustand action
-```
-
-The engine uses `setTimeout` and `setInterval` for phase scheduling, not Web Audio's scheduler. Web Audio's clock (`audioCtx.currentTime`) is used only within the AudioEngine for sample-accurate sound scheduling. Phase transitions happen on human-perceptible timescales (minutes), so `setTimeout` drift is acceptable.
-
-**SessionConfig shape:**
+The existing `AlarmConfig` (from `src/engine/AlarmState.ts` per Phase 1 work) is a flat record:
 
 ```typescript
-interface SessionConfig {
-  phase1DelayMs: number;   // time from start until alarm begins (countdown duration)
-  phase2DelayMs: number;   // time after phase 1 until vibration starts
-  phase3DelayMs: number;   // time after phase 2 until volume ramp starts
-  rampDurationMs: number;  // how long phase 3 takes to reach 100% volume
+interface AlarmConfig {
+  phase1DurationMs: number;
+  phase2DurationMs: number;
+  phase2to3GapMs: number;
+  phase3RampDurationMs: number;
 }
 ```
 
-### Audio Engine (plain TypeScript module)
+Three options for representing segments:
 
-Owns the `AudioContext` and all audio node graphs. Never touched by React directly — only called by the AlarmEngine.
+### (a) Extend AlarmConfig with optional `segments`
 
-```
-AudioEngine
-├── ctx: AudioContext (singleton, created on first user gesture)
-├── masterGain: GainNode (master volume, used for phase 3 ramp)
-│
-├── silentLoop: AudioBufferSourceNode (keepalive — looping silence)
-│
-├── startPhase1(): void
-│   └── creates: OscillatorNode (sine, ~432Hz fundamental)
-│              + OscillatorNode (sine, 2x frequency, 3x frequency — harmonics)
-│              + GainNode per oscillator (for harmonic balance)
-│              + shared GainNode (envelope: fade in slowly from 0)
-│              all routed → masterGain → ctx.destination
-│
-├── startPhase2(): void
-│   └── continues phase 1 audio (no change)
-│       (vibration is handled by VibrationEngine separately)
-│
-├── startPhase3Ramp(): void
-│   └── masterGain.gain.linearRampToValueAtTime(1.0, ctx.currentTime + rampDurationSec)
-│       (phase 1 audio continues; volume increases to full)
-│
-├── startSilentLoop(): void
-│   └── creates looping AudioBufferSourceNode with a tiny silent buffer
-│       (prevents iOS from suspending AudioContext when screen locks)
-│
-├── playTestSound(): void
-│   └── triggers phase 1 synthesis at mid volume for 3 seconds
-│
-├── suspend(): void   (pause support)
-├── resume(): void
-└── stop(): void
-    └── masterGain.gain.setValueAtTime(0, ctx.currentTime)
-        + disconnect all nodes
-        + reset gain to 0
+```typescript
+interface AlarmConfig {
+  phase1DurationMs: number;
+  phase2DurationMs: number;
+  phase2to3GapMs: number;
+  phase3RampDurationMs: number;
+  segments?: Segment[]; // NEW — if present, takes precedence
+}
 ```
 
-**Critical audio graph layout:**
+**Tradeoffs:**
+- **Pro:** Single config type, single hook (`useAlarm`), single Countdown component with branching.
+- **Con:** Forces every consumer of AlarmConfig to handle "what if segments are present?" Branching infects `validateConfig`, the engine's `start()`, the Countdown's phase-progress math, and the hook's `phaseEndsAt` computation. The "if segments, ignore phase1/2/3 fields" rule is implicit and easy to violate. Type safety doesn't catch the misuse.
+- **Con:** The Countdown has to encode two different timeline visualizations behind a single component — `ProgressRing` is hardcoded for three segments; a 5-segment Wake Easy alarm would require it to grow conditional layout.
 
-```
-OscillatorNode (fundamental, sine ~432Hz)  ──→ GainNode (harmonic balance) ──┐
-OscillatorNode (2nd harmonic, sine ~864Hz) ──→ GainNode (harmonic balance) ──┤
-OscillatorNode (3rd harmonic, sine ~1296Hz)──→ GainNode (harmonic balance) ──┤
-                                                                               ↓
-                                                              GainNode (attack envelope)
-                                                                               ↓
-                                                              GainNode (masterGain, 0.0 → 1.0 over ramp)
-                                                                               ↓
-                                                              AudioDestinationNode (speakers)
+### (b) Discriminated union
 
-SilentLoop:
-AudioBufferSourceNode (1-second silent buffer, loop: true) ──→ GainNode (gain: 0) ──→ AudioDestinationNode
+```typescript
+type AlarmConfig =
+  | { mode: 'continuous'; phase1DurationMs: number; phase2DurationMs: number; ... }
+  | { mode: 'segments'; segments: Segment[] };
 ```
 
-**Why masterGain is separate from the envelope GainNode:** The envelope GainNode controls per-phase fade-in shape (start soft). The masterGain controls the overall output level for phase 3 ramping. Keeping them separate allows the phase 1 fade-in envelope to run its full curve at a low overall volume, then phase 3 ramps the masterGain from wherever it is to 1.0, independently.
+**Tradeoffs:**
+- **Pro:** Type-safe — TypeScript forces every consumer to switch on `mode`.
+- **Con:** **Breaks v1.** Every existing usage of `AlarmConfig` (Dashboard preset constants, useAlarm phaseEndsAt math, Countdown phase-duration lookup, validateConfig) needs an update. `QUICK_NAP_CONFIG` and `FOCUS_CONFIG` need `mode: 'continuous'` added. This violates the "Phase 1/2/3 sound files should stay zero-diff" project convention by extension — it forces churn into every file that imports the type.
+- **Con:** AlarmEngine itself becomes a union dispatcher — it has to decide whether to run continuous logic or hand off. The existing AlarmEngine class is not the right place for that.
 
-### Wake Lock Manager (plain TypeScript module)
+### (c) Separate SegmentConfig + SegmentEngine alongside AlarmEngine — RECOMMENDED
 
-```
-WakeLockManager
-├── sentinel: WakeLockSentinel | null
-├── acquire(): Promise<void>
-│   └── calls navigator.wakeLock.request("screen")
-│       re-acquires on visibilitychange (required by spec — lock releases on page hide)
-├── release(): void
-└── isSupported(): boolean
-```
+```typescript
+// EXISTING — unchanged
+interface AlarmConfig {
+  phase1DurationMs: number;
+  phase2DurationMs: number;
+  phase2to3GapMs: number;
+  phase3RampDurationMs: number;
+}
 
-The Wake Lock Manager listens to `document.visibilitychange` and re-acquires the lock when the page becomes visible again. This is required behavior because the spec mandates automatic release on page hide.
-
-**Important limitation:** Wake Lock prevents the *screen* from dimming but does NOT prevent the AudioContext from being suspended. On iOS Safari, screen lock suspends the AudioContext regardless of Wake Lock. This is why the silent audio loop is essential as a complementary strategy.
-
-### Vibration Engine (plain TypeScript module)
-
-```
-VibrationEngine
-├── start(): void
-│   └── navigator.vibrate([400, 200, 400, 200, 400]) → setInterval to repeat
-├── stop(): void
-│   └── navigator.vibrate(0) + clearInterval
-└── isSupported(): boolean
-    └── "vibrate" in navigator
-```
-
-Vibration is fire-and-forget. The pattern repeats on an interval while phase 2 is active. When the engine moves to phase 3, vibration continues (it does not harm the ramp-up) until Stop is hit.
-
-### Notification Manager (plain TypeScript module)
-
-```
-NotificationManager
-├── requestPermission(): Promise<boolean>
-├── show(title: string, body: string): void
-│   └── uses ServiceWorkerRegistration.showNotification() (persistent, works on mobile)
-│       falls back to new Notification() if SW not registered
-└── isSupported(): boolean
+// NEW — separate type
+type EndSound = 'gentle' | 'triangle' | 'alarm';
+interface Segment {
+  durationMs: number;
+  endSound: EndSound;
+}
+interface SegmentConfig {
+  segments: Segment[];
+  // Optional metadata — used by Wake Easy preset display, never read by engine
+  presetLabel?: string;
+}
 ```
 
-Notifications fire when phase 1 begins — this is the user's signal that the alarm is ringing. On screen-off scenarios on Android, the notification banner is the primary wake stimulus when audio and vibration may be suppressed.
+**Tradeoffs:**
+- **Pro:** Zero diff to v1. `AlarmConfig`, `validateConfig`, `AlarmEngine`, `useAlarm`, `Countdown`, `ProgressRing` all untouched.
+- **Pro:** The segment runner is a separate module — its scheduling logic (sequential segments) is fundamentally different from the v1 model (escalating phases with overlapping audio). Trying to unify them is forced.
+- **Pro:** `validateSegmentConfig` is independent — its rules differ (e.g., at least one segment, no negative durations, endSound must be a known literal).
+- **Pro:** New behavior is added by composition, not by modifying existing surfaces.
+- **Con:** Two engines, two hooks. The Dashboard has to know which to dispatch to (mitigated by a thin `useActiveAlarm` selector hook).
+- **Con:** Some duplication of the keepalive / wake-lock / notification setup. Mitigation: extract a small `AlarmSession` helper module that both engines call into for the shared lifecycle (`startSession()`, `endSession()`).
 
-### Service Worker (vite-plugin-pwa managed)
+**Decision: (c).** It's the smallest change that doesn't risk v1 regression and gives the cleanest long-term shape. Option (a) looks lightweight but spreads conditionals through every consumer; option (b) breaks the zero-diff guarantee. The duplication cost in (c) is small (~30 lines of session lifecycle code) and the boundary it establishes is real — segment alarms and continuous-escalation alarms are different products.
 
-The service worker for Soundly has one job: **offline caching**. It does NOT run alarm logic, schedule timers, or interact with Web Audio. The browser's service worker sandbox has no DOM access and cannot meaningfully interact with the alarm engine.
+### Shared lifecycle module (refactor to support both engines)
+
+```typescript
+// src/engine/AlarmSession.ts — NEW
+// Owns the shared startup/teardown that both engines need.
+export async function startAlarmSession(): Promise<{
+  ac: AudioContext;
+  keepaliveOsc: OscillatorNode;
+  visibilityCleanup: () => void;
+}> {
+  const ac = await getAudioContext();
+  const keepaliveOsc = startKeepalive(ac);
+  await acquireWakeLock();
+  const visibilityCleanup = attachVisibilityReacquire();
+  return { ac, keepaliveOsc, visibilityCleanup };
+}
+
+export function endAlarmSession(handle: { keepaliveOsc: OscillatorNode; visibilityCleanup: () => void }): void {
+  stopKeepalive(handle.keepaliveOsc);
+  releaseWakeLock();
+  handle.visibilityCleanup();
+  stopVibration();
+}
+```
+
+This is a **light refactor** of `AlarmEngine.start()` and `AlarmEngine.cleanup()` — they call into `startAlarmSession`/`endAlarmSession` instead of inlining the calls. Acceptable because it's mechanical, doesn't change behavior, and the only test it could regress is "does the keepalive start and the wake lock acquire" — easily verified.
+
+---
+
+## Decision 2: SegmentEngine Design
+
+```typescript
+// src/engine/SegmentEngine.ts — NEW
+
+import { Segment, SegmentConfig, validateSegmentConfig } from './SegmentState';
+import { scheduleAt, TimerHandle } from './timer';
+import { startAlarmSession, endAlarmSession } from './AlarmSession';
+import { strikeBowl } from './sounds/singingBowl';
+import { strikeTriangle } from './sounds/triangle'; // NEW
+import { startPhase3Swell, createPhase3Ramp } from './sounds/phase3Tone';
+
+export type SegmentPhase = 'idle' | 'segment' | 'dismissed';
+
+export class SegmentEngine {
+  private ac: AudioContext | null = null;
+  private session: Awaited<ReturnType<typeof startAlarmSession>> | null = null;
+  private phase: SegmentPhase = 'idle';
+  private _running = false;
+  private _paused = false;
+  private timers: TimerHandle[] = [];
+
+  // The active config is needed for pause/resume and progress display
+  private activeConfig: SegmentConfig | null = null;
+  private currentSegmentIndex: number = -1;
+  private segmentEndsAt: number[] = []; // wall-clock fire time for each segment's end-sound
+
+  // Pause snapshot — remaining ms for each segment yet to fire
+  private pauseSnapshot: { remainingMs: number[] } | null = null;
+
+  private phaseCallback: ((p: SegmentPhase, segmentIndex: number) => void) | null = null;
+
+  onChange(cb: (p: SegmentPhase, segmentIndex: number) => void): void {
+    this.phaseCallback = cb;
+  }
+
+  async start(config: SegmentConfig): Promise<void> {
+    validateSegmentConfig(config);
+    if (this._running) throw new Error('SegmentEngine already running');
+    this._running = true;
+    this.activeConfig = config;
+    this.session = await startAlarmSession();
+    this.ac = this.session.ac;
+
+    // Schedule each segment's end-sound at cumulative wall-clock time
+    let cumulative = Date.now();
+    this.segmentEndsAt = config.segments.map((seg) => {
+      cumulative += seg.durationMs;
+      return cumulative;
+    });
+
+    config.segments.forEach((seg, i) => {
+      this.timers.push(scheduleAt(this.segmentEndsAt[i], () => {
+        this.currentSegmentIndex = i;
+        this.fireEndSound(seg.endSound);
+        this.phaseCallback?.('segment', i);
+      }));
+    });
+  }
+
+  private fireEndSound(sound: EndSound): void {
+    if (!this.ac) return;
+    switch (sound) {
+      case 'gentle':
+        strikeBowl(this.ac, 1.0);
+        break;
+      case 'triangle':
+        strikeTriangle(this.ac, 1.0);
+        break;
+      case 'alarm':
+        // Brief Phase-3-style swell — reuse existing module
+        const ramp = createPhase3Ramp(this.ac, 0.5); // fast ramp for non-final segments
+        startPhase3Swell(this.ac, ramp);
+        break;
+    }
+  }
+
+  pause(): void { /* analogous to AlarmEngine.pause — snapshot remainingMs */ }
+  resume(): void { /* re-schedule remaining segments */ }
+  stop(): void { this.cleanup(); this.phase = 'idle'; this.phaseCallback?.('idle', -1); }
+  dismiss(): void { this.cleanup(); this.phase = 'dismissed'; this.phaseCallback?.('dismissed', -1); }
+
+  private cleanup(): void {
+    this.timers.forEach((t) => t.cancel());
+    this.timers = [];
+    if (this.session) endAlarmSession(this.session);
+    this.session = null;
+    this._running = false;
+    this._paused = false;
+    this.pauseSnapshot = null;
+  }
+}
+```
+
+**Key differences from AlarmEngine:**
+- No three-phase state — phase is just `idle | segment | dismissed`. The "where am I?" data is the segment index, not the phase enum.
+- No overlapping audio — segments are sequential. Each `endSound` is a discrete strike at the segment boundary.
+- `validateSegmentConfig` enforces: `segments.length >= 1`, `every duration > 0`, total duration sane upper bound (e.g., 6 hours).
+
+**Reuse:** `scheduleAt`, `getAudioContext`, the keepalive/wake-lock/vibration modules, `strikeBowl`, `createPhase3Ramp + startPhase3Swell` (for the 'alarm' end sound). Only `triangle.ts` is new.
+
+---
+
+## Decision 3: Triangle Sound File
+
+**Option A — `src/engine/sounds/triangle.ts` (mirror existing pattern)**
+
+This matches `singingBowl.ts`, `phase3Tone.ts`, `tickPulse.ts`, `fadeOutGain.ts` — each file exports a synthesis function for one sound type.
+
+```typescript
+// src/engine/sounds/triangle.ts — NEW
+import { getAudioContext } from '../AudioContext';
+
+/**
+ * Triangle strike — bright single hit with quick decay (~1–2s).
+ * Higher pitched than singing bowl, sharper attack, less harmonic content.
+ *
+ * Synthesis: 2 sine partials (fundamental ~2093Hz / C7 + octave) with
+ * very short attack (5ms) and exponential decay over ~1.2s.
+ */
+export function strikeTriangle(ac: AudioContext, peakGain: number = 1.0): void {
+  const fundamental = 2093; // C7
+  const partials = [{ freq: fundamental, gain: 1.0 }, { freq: fundamental * 2, gain: 0.4 }];
+  const now = ac.currentTime;
+  const decaySec = 1.2;
+
+  const masterGain = ac.createGain();
+  masterGain.gain.setValueAtTime(0, now);
+  masterGain.gain.linearRampToValueAtTime(peakGain, now + 0.005); // 5ms attack
+  masterGain.gain.exponentialRampToValueAtTime(0.001, now + decaySec);
+  masterGain.connect(ac.destination);
+
+  partials.forEach((p) => {
+    const osc = ac.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.value = p.freq;
+    const partialGain = ac.createGain();
+    partialGain.gain.value = p.gain;
+    osc.connect(partialGain).connect(masterGain);
+    osc.start(now);
+    osc.stop(now + decaySec + 0.05);
+  });
+}
+```
+
+**Option B — shared "strike sounds" module**
+
+Bundle triangle, bowl-strike, and any future strike sounds in `src/engine/sounds/strikes.ts`.
+
+**Decision: Option A.** Project convention from Phase 1 is one sound = one file. Following that convention is cheaper than introducing a new abstraction. If a third or fourth strike sound emerges later, refactoring at that point is trivial. **Adding a triangle file is a zero-diff-risk addition** — no existing file changes.
+
+---
+
+## Decision 4: SegmentCountdown vs Reusing Countdown
+
+The existing `Countdown.tsx`:
+- Reads `alarm.phase` (`'idle' | 'phase1' | 'phase2' | 'phase3' | 'dismissed'`)
+- Looks up phase duration from `config` via `getPhaseDuration(phase, config)` — a switch over phase enum
+- Renders `<ProgressRing config={config} currentPhase={phase} phaseProgress={...} />` — ProgressRing is hardcoded to three segments
+- Uses `PHASE_LABELS` map for phase names ("Gentle Sound", "Nudge", "Wake")
+
+For Custom Mode and Wake Easy (5 segments), this component is structurally wrong — it can't render an N-segment timeline.
+
+**Decision:** **Fork into `SegmentCountdown.tsx`** with a different ProgressRing strategy:
+- Linear horizontal timeline OR a circular ring divided into N variable-width arcs (proportional to segment durations)
+- `currentSegmentIndex` instead of phase enum
+- Label = "Segment 3 of 5" or the user's preset label + remaining mm:ss
+- Same pause/resume button layout, same color palette (zen aesthetic preserved)
+
+**Rationale:**
+- `Countdown.tsx` and `ProgressRing.tsx` were written to a specific data shape; trying to overload them costs more than forking.
+- The fork keeps v1 unchanged — Quick Nap and Focus continue routing through `Countdown.tsx`.
+- `SegmentCountdown.tsx` is small (~80 lines) and reuses `formatMmSs`, the button styling, and the layout container.
+
+**Shared subcomponents** (no fork needed):
+- `formatMmSs` — utility, used by both
+- The `<button>` styling for Pause/Resume/Stop — extract to `<AlarmControls />` if you want to dedupe; otherwise leave inline (it's 12 lines per file)
+
+---
+
+## Decision 5: Hook Layering
+
+```typescript
+// src/hooks/useAlarm.ts — UNCHANGED (still wraps AlarmEngine, used by Quick Nap/Focus)
+
+// src/hooks/useSegmentAlarm.ts — NEW (wraps SegmentEngine, used by Custom/Wake Easy)
+export function useSegmentAlarm(): UseSegmentAlarmReturn {
+  // Mirrors useAlarm shape but exposes segmentIndex, segmentEndsAt[], segments[]
+}
+
+// src/hooks/useActiveAlarm.ts — NEW (router-like selector)
+export function useActiveAlarm(): {
+  mode: 'continuous' | 'segments' | null;
+  continuous: UseAlarmReturn;
+  segments: UseSegmentAlarmReturn;
+} {
+  const continuous = useAlarm();
+  const segments = useSegmentAlarm();
+  const mode = continuous.isRunning ? 'continuous'
+             : segments.isRunning   ? 'segments'
+             : null;
+  return { mode, continuous, segments };
+}
+```
+
+`App.tsx` uses `useActiveAlarm()` and routes the rendering:
+- `mode === null` → `<Dashboard />`
+- `mode === 'continuous'` → `<Countdown alarm={continuous} />`
+- `mode === 'segments'` → `<SegmentCountdown alarm={segments} />`
+
+**Constraint:** Only one alarm runs at a time. Dashboard preset cards call `continuous.start(QUICK_NAP_CONFIG)`; the Custom button opens `<CustomComposer />` which on Start calls `segments.start(segmentConfig)`. Both engines guard with `_running` flags; if both are somehow started simultaneously, the engines themselves throw. UI prevents this by checking `mode === null` before allowing a new start.
+
+---
+
+## Decision 6: Custom Mode UI Placement
+
+**Option A — New top-level page (`/custom`)**
+Requires React Router. Forces the rest of the app to become routed too (or adopt a hybrid where one page is routed and the rest isn't).
+
+**Option B — Modal over Dashboard**
+Tap "Custom" → modal overlays Dashboard with the segment builder. On Start, modal closes and `<SegmentCountdown />` takes over.
+
+**Option C — Inline expansion**
+Tap "Custom" → Dashboard expands in place to show the builder. On Start, transitions to countdown.
+
+**Decision: Option B (modal).** Reasons:
+- App is single-screen by design; introducing routing for one new screen is overkill.
+- Modal preserves the Dashboard's role as "alarm launcher" and keeps the user's mental model.
+- Builder needs scrollable area for arbitrary segment count; a modal full-screen on mobile gives that naturally.
+- Dismiss behavior is obvious (close = back to dashboard, no orphan state).
+- The existing `useState` in `App` can hold `isComposerOpen: boolean`; no new dependency.
+
+```typescript
+// src/App.tsx — MODIFIED (existing file)
+const [isComposerOpen, setIsComposerOpen] = useState(false);
+const { mode, continuous, segments } = useActiveAlarm();
+
+if (mode === 'continuous') return <Countdown alarm={continuous} />;
+if (mode === 'segments') return <SegmentCountdown alarm={segments} />;
+
+return (
+  <>
+    <Dashboard
+      alarm={continuous}
+      onOpenComposer={() => setIsComposerOpen(true)}
+    />
+    {isComposerOpen && (
+      <CustomComposer
+        onClose={() => setIsComposerOpen(false)}
+        onStart={(cfg) => { setIsComposerOpen(false); segments.start(cfg); }}
+      />
+    )}
+  </>
+);
+```
+
+---
+
+## Decision 7: Landing Page Routing
+
+The marketing landing page must be indexed by search engines. Three options:
+
+### (a) Static `index.html` + React app at `/app` via React Router
+
+- Pure-static landing, max SEO. But requires a router for the app, which currently has no routing. React Router adds ~10KB and forces every component to know about routes.
+
+### (b) React-rendered landing at `/` + SSG/prerender
+
+- Use `vite-plugin-prerender-spa` or `vite-react-ssg`. Renders the landing page to static HTML at build time so crawlers see content. Keeps SPA architecture.
+- **Risk:** Prerender plugins add a build-time Puppeteer/Playwright dependency, slow CI, and have edge cases with hydration mismatch. The app is currently small enough that this is overkill.
+
+### (c) Multi-page Vite build — RECOMMENDED
+
+Vite's `build.rollupOptions.input` accepts multiple HTML entry points. Two completely separate HTML files, each with its own JS bundle, served at different URLs.
 
 ```
-Service Worker responsibilities:
-├── Cache app shell on install (HTML, JS bundles, CSS)
-├── Cache synthesized via Workbox CacheFirst strategy (JS/CSS)
-├── Serve cached assets when offline
-└── Handle notification click events (bring app to foreground)
+/Soundly/             → index.html (landing page, hand-authored HTML + minimal JS)
+/Soundly/app/         → app.html   (mounts existing <App />, full PWA shell)
 ```
 
-Use `vite-plugin-pwa` in `generateSW` mode (not `injectManifest`) — the app does not need custom service worker logic, only Workbox's built-in caching strategies. The manifest is configured via `vite-plugin-pwa`'s options object.
+**Tradeoffs:**
+- **Pro:** Landing page is hand-authored static HTML — every word is crawlable, no SSG infrastructure needed.
+- **Pro:** No router required. The "deep link" from landing to app is just an `<a href="/Soundly/app/">` — zero JS.
+- **Pro:** Each page only ships the code it needs. Marketing doesn't load AlarmEngine; app doesn't load marketing.
+- **Pro:** Native browser cache + HTTP semantics work. SEO crawlers, social card scrapers, and Lighthouse all see real HTML.
+- **Con:** Two HTML files to maintain. Mitigation: landing is mostly static; ~one update per release.
+- **Con:** Service worker needs reconfiguration to handle two roots. Mitigation: explicit, manageable — see SW section below.
+
+**Decision: Option (c).** For a single-developer indie PWA already using `injectManifest`, multi-page Vite is the smallest-toolchain solution. SSG adds a Puppeteer-class dependency for one page; routing a single-screen app adds ~10KB and architectural debt.
+
+### Vite multi-page configuration
+
+```typescript
+// vite.config.ts — MODIFIED
+import { resolve } from 'path';
+
+export default defineConfig({
+  base: '/Soundly/',
+  build: {
+    rollupOptions: {
+      input: {
+        landing: resolve(__dirname, 'index.html'),
+        app:     resolve(__dirname, 'app/index.html'),
+      },
+    },
+  },
+  plugins: [
+    react(),
+    tailwindcss(),
+    VitePWA({
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.ts',
+      manifest: { /* unchanged except start_url */
+        start_url: '/Soundly/app/', // installed PWA opens the app, not the landing page
+        scope: '/Soundly/app/',     // SW scope limited to the app
+        // ... rest unchanged
+      },
+      injectManifest: {
+        // Only precache app shell + assets, NOT the landing page
+        globPatterns: ['app/**/*.{js,css,html,png,svg,webmanifest}'],
+      },
+      devOptions: { enabled: true, type: 'module' },
+    }),
+  ],
+});
+```
+
+**Critical:** the manifest's `start_url` and `scope` must point to `/Soundly/app/` so the installed PWA bypasses the marketing page. Users who installed v1 will need to reinstall (or the SW update will refresh `start_url` on next launch — verify behavior with Context7 / vite-plugin-pwa docs before shipping).
+
+### File layout after change
+
+```
+index.html              # Landing page (hand-authored marketing HTML)
+app/
+  index.html            # App shell (mounts <App />)
+src/
+  main.tsx              # UNCHANGED (the entry app/index.html references)
+  ...
+```
+
+### Service worker reconfiguration
+
+`src/sw.ts` currently has:
+
+```typescript
+const navHandler = createHandlerBoundToURL('/Soundly/index.html');
+registerRoute(new NavigationRoute(navHandler));
+```
+
+This must become:
+
+```typescript
+// src/sw.ts — MODIFIED
+const appNavHandler = createHandlerBoundToURL('/Soundly/app/index.html');
+registerRoute(
+  new NavigationRoute(appNavHandler, {
+    // Only handle navigations under /app/
+    allowlist: [/^\/Soundly\/app\//],
+  })
+);
+
+// Landing page is NetworkFirst — always try to fetch fresh marketing copy,
+// fall back to cache if offline. Don't precache it.
+registerRoute(
+  ({ url }) => url.pathname === '/Soundly/' || url.pathname === '/Soundly/index.html',
+  new NetworkFirst({ cacheName: 'landing-page' })
+);
+```
+
+**Why NetworkFirst for landing:**
+- Marketing copy changes more often than the app. NetworkFirst means a fresh deploy is visible immediately without an SW update cycle (which can lag a session).
+- Offline fallback still works for installed users who briefly hit the landing page.
+
+**Why precache for app:**
+- App shell must be available offline (existing v1 requirement). `injectManifest`'s `globPatterns` restricts the manifest to app assets only.
+
+### Sitemap and robots
+
+```
+public/
+  robots.txt            # Hand-authored, one line: Allow: / + Sitemap URL
+  sitemap.xml           # Two URLs: /Soundly/ and /Soundly/app/
+```
+
+**Decision: hand-authored static files in `public/`.** A Vite plugin (`vite-plugin-sitemap`) is overkill for two URLs. If the site grows to dozens of pages later, switch to a plugin.
+
+### JSON-LD injection
+
+React 19 hoists `<title>`, `<meta>`, and `<link>` tags rendered inside components into `<head>` automatically. **For `<script type="application/ld+json">`, React 19's behavior:**
+- React 19 supports rendering `<script>` tags in components and hoisting them to head when they have a `src` attribute (deduplicated by src).
+- For inline JSON-LD (`<script type="application/ld+json">{json}</script>`) the hoisting behavior is less clear — verify with Context7 (`mcp__context7__resolve-library-id` for React, then docs query for "metadata script ld+json").
+
+**Recommendation regardless of React 19 hoisting:**
+- **Landing page:** JSON-LD goes directly in `index.html` as static markup. The landing page is hand-authored HTML with minimal JS — no React hoisting needed, and crawlers see it instantly without executing JS.
+- **App page:** JSON-LD for the SoftwareApplication schema goes in `app/index.html` as static markup too. The app is a PWA — Google still benefits from the schema even if it requires JS to render the rest. No need to inject from React.
+
+This makes JSON-LD purely a build-time concern, no runtime React work. Keeps the cleanest separation.
+
+---
+
+## Component Boundaries (v2.0 final state)
+
+```
+src/
+├── App.tsx                     [MODIFIED] route between Dashboard / Countdown / SegmentCountdown / CustomComposer
+├── main.tsx                    [UNCHANGED]
+├── components/
+│   ├── Dashboard.tsx           [MODIFIED] add 3rd preset card (Wake Easy) + Custom button
+│   ├── PresetCard.tsx          [UNCHANGED]
+│   ├── TestSoundButton.tsx     [UNCHANGED]
+│   ├── IosInstallBanner.tsx    [UNCHANGED]
+│   ├── Countdown.tsx           [UNCHANGED] continuous-phase countdown
+│   ├── ProgressRing.tsx        [UNCHANGED] three-segment ring
+│   ├── SegmentCountdown.tsx    [NEW]      N-segment countdown
+│   ├── SegmentTimeline.tsx     [NEW]      visual timeline for SegmentCountdown
+│   ├── CustomComposer.tsx      [NEW]      modal segment builder
+│   └── SegmentRow.tsx          [NEW]      one row in CustomComposer (duration + endSound)
+├── hooks/
+│   ├── useAlarm.ts             [UNCHANGED]
+│   ├── useSegmentAlarm.ts      [NEW]
+│   └── useActiveAlarm.ts       [NEW]      mode selector
+├── engine/
+│   ├── AlarmEngine.ts          [LIGHT REFACTOR] start/cleanup call AlarmSession helpers
+│   ├── AlarmState.ts           [UNCHANGED] AlarmConfig + presets
+│   ├── AlarmSession.ts         [NEW]      shared session start/end (keepalive, wakelock)
+│   ├── SegmentEngine.ts        [NEW]
+│   ├── SegmentState.ts         [NEW]      Segment, SegmentConfig, EndSound, validateSegmentConfig
+│   ├── AudioContext.ts         [UNCHANGED]
+│   ├── timer.ts                [UNCHANGED]
+│   ├── index.ts                [MODIFIED] export new types/engines
+│   └── sounds/
+│       ├── singingBowl.ts      [UNCHANGED]
+│       ├── phase3Tone.ts       [UNCHANGED]
+│       ├── keepalive.ts        [UNCHANGED]
+│       ├── tickPulse.ts        [UNCHANGED]
+│       ├── fadeOutGain.ts      [UNCHANGED]
+│       ├── testSound.ts        [UNCHANGED]
+│       └── triangle.ts         [NEW]
+├── platform/
+│   ├── notifications.ts        [UNCHANGED]
+│   ├── vibration.ts            [UNCHANGED]
+│   └── wakeLock.ts             [UNCHANGED]
+├── presets/
+│   └── wakeEasy.ts             [NEW] WAKE_EASY_CONFIG: SegmentConfig
+└── sw.ts                       [MODIFIED] dual nav routing for /app/ and /
+
+# Build / config
+vite.config.ts                  [MODIFIED] multi-page input, scoped manifest, scoped SW
+index.html                      [REWRITTEN] hand-authored marketing landing page + JSON-LD + OG tags
+app/index.html                  [NEW] app shell (move existing index.html content here, update script src)
+
+# Static
+public/
+├── robots.txt                  [NEW]
+├── sitemap.xml                 [NEW]
+└── og-image.png                [NEW] 1200x630 social card image
+```
+
+**Zero-diff guarantees:**
+- All `src/engine/sounds/*.ts` files (except the new `triangle.ts`) are unchanged.
+- `AlarmState.ts` unchanged — `AlarmConfig`, `validateConfig`, `QUICK_NAP_CONFIG`, `FOCUS_CONFIG` all preserved exactly.
+- `Countdown.tsx`, `ProgressRing.tsx`, `useAlarm.ts` unchanged — the v1 user paths through the app are byte-identical.
+- `AlarmEngine.ts` has a light refactor (extract session lifecycle into `AlarmSession.ts`) — behavior identical, but if even this is too risky, defer the extraction and let `SegmentEngine` duplicate the keepalive/wake-lock setup.
 
 ---
 
 ## Data Flow
 
-### Session Start Flow
-
+### Continuous alarm (Quick Nap / Focus) — UNCHANGED
 ```
-User taps preset card
-  → HomeScreen reads preset values → builds SessionConfig
-  → calls AlarmEngine.start(config)
-  → AlarmEngine:
-      - calls AudioEngine.startSilentLoop()    (immediate — before anything else)
-      - calls WakeLockManager.acquire()
-      - calls NotificationManager.requestPermission()
-      - starts setInterval countdown ticker
-      - sets setTimeout for phase 1 trigger (config.phase1DelayMs)
-      → navigates React router to CountdownScreen
+User taps PresetCard → Dashboard.onStart(QUICK_NAP_CONFIG)
+  → useAlarm.start(config) → AlarmEngine.start(config)
+  → schedules phase1/phase2/phase3 timers
+  → state propagates via onPhaseChange → Countdown renders
 ```
 
-### Phase Transition Flow
-
+### Segment alarm (Custom / Wake Easy) — NEW
 ```
-setTimeout fires (phase 1 trigger)
-  → AlarmEngine updates phase state → "phase1"
-  → calls AudioEngine.startPhase1()
-  → calls NotificationManager.show("Soundly", "Your alarm is starting gently")
-  → state update propagates to CountdownScreen → PhaseIndicator updates
+User taps "Custom" → setIsComposerOpen(true)
+  → CustomComposer renders modal with [SegmentRow, SegmentRow, ...]
+  → User configures segments → onStart(segmentConfig)
+  → useSegmentAlarm.start(config) → SegmentEngine.start(config)
+  → schedules N timers, one per segment-end
+  → onChange callback fires (phase, segmentIndex)
+  → state propagates → SegmentCountdown renders SegmentTimeline + remaining time
 
-setTimeout fires (phase 2 trigger)
-  → AlarmEngine updates phase state → "phase2"
-  → calls VibrationEngine.start()
-  → AudioEngine continues unchanged (no audio transition needed)
-  → state update propagates to CountdownScreen → PhaseIndicator updates
-
-setTimeout fires (phase 3 trigger)
-  → AlarmEngine updates phase state → "phase3"
-  → calls AudioEngine.startPhase3Ramp()
-  → state update propagates to CountdownScreen → PhaseIndicator updates
+User taps Wake Easy preset → Dashboard.onStartWakeEasy(WAKE_EASY_CONFIG)
+  → same flow, just with prebuilt config
 ```
 
-### Stop Flow
+### Where segment data lives
 
 ```
-User taps Stop
-  → CountdownScreen calls AlarmEngine.stop()
-  → AlarmEngine:
-      - clearTimeout / clearInterval on all pending timers
-      - calls AudioEngine.stop()        → gain to 0, disconnect nodes
-      - calls VibrationEngine.stop()    → navigator.vibrate(0)
-      - calls WakeLockManager.release()
-      - updates state to "idle"
-      → React router navigates to HomeScreen
+WAKE_EASY_CONFIG (constant)        ─┐
+or                                  ├─→  SegmentEngine.activeConfig (private)
+CustomComposer modal local state ──┘     ↓
+                                    ─→  useSegmentAlarm.activeConfig (state)
+                                          ↓
+                                    ─→  SegmentCountdown.props.alarm.activeConfig
+                                          ↓
+                                    ─→  SegmentTimeline reads segments[] for layout
 ```
 
-### Background / Screen-Off Flow
-
-```
-User locks phone screen (during active timer, countdown phase)
-  → visibilitychange event fires (hidden)
-  → WakeLockManager detects release (spec behavior) — records for re-acquire
-  → AudioContext may transition to "interrupted" (iOS) or remain "running" (Chrome Android)
-  → Silent audio loop continues (Chrome Android respects active audio context)
-  → iOS: AudioContext enters "interrupted" state — silent loop must be resumed
-      AudioContext.onstatechange → if "interrupted", call audioCtx.resume()
-
-User unlocks phone screen
-  → visibilitychange event fires (visible)
-  → WakeLockManager.acquire() called again
-  → AudioContext checked: if "interrupted", resume()
-  → Timer continues from where it was (setInterval was throttled but not killed)
-```
-
-**Timer drift on backgrounding:** Browser timer throttling means `setInterval` may drift by seconds when backgrounded. Mitigation: record `Date.now()` at session start and compute elapsed time as `Date.now() - startTime` rather than counting ticks. Phase transitions are then `startTime + phase1DelayMs > Date.now()`.
-
----
-
-## State Management
-
-**Use Zustand** (single small store, no persistence, no middleware needed).
-
-```typescript
-interface AlarmStore {
-  // Timer state
-  status: "idle" | "running" | "paused" | "stopped";
-  phase: "none" | "phase1" | "phase2" | "phase3";
-  secondsRemaining: number;
-  config: SessionConfig | null;
-
-  // Actions (called by AlarmEngine, not directly by UI)
-  setStatus: (s: AlarmStore["status"]) => void;
-  setPhase: (p: AlarmStore["phase"]) => void;
-  setSecondsRemaining: (n: number) => void;
-  setConfig: (c: SessionConfig | null) => void;
-}
-```
-
-The AlarmEngine holds all the authoritative timing logic. It writes into the Zustand store as a side effect (not the other way around). React components read from the store. This keeps the render cycle decoupled from the timing loop.
-
-**No React state for timer values.** Using `useState` for a countdown ticker causes a re-render every second, which is fine, but the *authoritative* elapsed-time calculation must happen in the engine, not derived from state tick counts.
+The SegmentConfig is **owned** by the launcher (preset constant or composer state), **passed** to the engine on start, **mirrored** in the hook for UI consumption. Engine is the source of truth for *runtime* state (currentSegmentIndex, paused, remaining); config is read-only after start.
 
 ---
 
 ## Suggested Build Order
 
-Build in this order. Each layer is a prerequisite for the next.
+Phases ordered by dependency. Each phase is independently shippable.
+
+### Phase 1: Foundations (engine layer, no UI)
+**What:**
+- Create `src/engine/AlarmSession.ts` (extract shared session lifecycle)
+- Light refactor `AlarmEngine.start/cleanup` to use AlarmSession
+- Verify v1 still works (Quick Nap + Focus regression test)
+
+**Why first:** This is the only existing-file modification in the engine layer. Shipping it first isolates the regression risk window. If something breaks, it's caught before any new feature work piles on top.
+
+**Why standalone:** No new user-visible behavior. Pure refactor.
+
+### Phase 2: Triangle sound + SegmentEngine
+**What:**
+- New `src/engine/sounds/triangle.ts`
+- New `src/engine/SegmentState.ts` (types + validateSegmentConfig)
+- New `src/engine/SegmentEngine.ts`
+- New `src/hooks/useSegmentAlarm.ts`
+- Unit-test SegmentEngine end-to-end with a 2-segment config (gentle + alarm)
+- No UI changes yet — verifiable via a temporary dev-only button or test harness
+
+**Depends on:** Phase 1 (AlarmSession exists)
+
+**Why before UI:** SegmentEngine must work in isolation before any composer is built. Same discipline as v1 Phase 1 (engine before UI).
+
+### Phase 3: Wake Easy preset + 3rd preset card
+**What:**
+- New `src/presets/wakeEasy.ts` (`WAKE_EASY_CONFIG` — 4×4min gentle + 1×1min alarm)
+- New `src/components/SegmentTimeline.tsx`
+- New `src/components/SegmentCountdown.tsx`
+- New `src/hooks/useActiveAlarm.ts` (mode selector)
+- Modify `src/App.tsx` to dispatch on mode
+- Modify `src/components/Dashboard.tsx` to add Wake Easy preset card
+- Ship: user can launch Wake Easy from dashboard, see N-segment countdown, hear gentle chimes at each 4-min boundary, alarm at the end
+
+**Depends on:** Phase 2 (SegmentEngine works)
+
+**Why before Custom UI:** Wake Easy is a fixed preset — it exercises the entire segment runtime path end-to-end without needing the builder UI. Demonstrates the model is correct before investing in the composer.
+
+### Phase 4: Custom Composer UI
+**What:**
+- New `src/components/CustomComposer.tsx` (modal)
+- New `src/components/SegmentRow.tsx`
+- Modify `src/components/Dashboard.tsx` to add Custom button + modal state
+- "Pre-fill from Wake Easy preset" affordance in the composer
+- Ship: user can compose arbitrary segments and launch them
+
+**Depends on:** Phase 3 (SegmentCountdown exists; the composer needs somewhere to send the user)
+
+### Phase 5: SEO meta tags (no routing changes yet)
+**What:**
+- Update `index.html` `<head>` with meta description, Open Graph, Twitter card, JSON-LD SoftwareApplication schema
+- Add `public/og-image.png`
+- Add `public/robots.txt` (single-URL allowed)
+- Note: still single-page at this point; SEO improves but landing page is still the app shell
+
+**Depends on:** Nothing (orthogonal track — can ship before, in parallel with, or after Phase 1–4)
+
+**Why early in the SEO track:** Meta tags are a low-risk, no-architectural-change win. Can ship same day as Phase 1's refactor if desired.
+
+### Phase 6: Multi-page split — landing page goes live
+**What:**
+- Create `app/index.html` (move app shell here, update `<script src>`)
+- Rewrite `index.html` as hand-authored marketing landing page (hero, screenshots, install CTA, FAQ, "Open App" link to `/Soundly/app/`)
+- Modify `vite.config.ts`: `rollupOptions.input` for two entries; manifest `start_url` and `scope` set to `/Soundly/app/`; `injectManifest.globPatterns` restricted to app/
+- Modify `src/sw.ts`: NavigationRoute scoped to `/Soundly/app/`; NetworkFirst for landing
+- Add `public/sitemap.xml` (two URLs)
+- Update `public/robots.txt` to reference sitemap
+- Test: installed PWA users — does start_url update propagate? Document migration if needed.
+
+**Depends on:** Phase 5 (meta tags pattern established) and ideally after Phase 4 (avoid mixing landing-page launch with feature churn)
+
+**Why last:** This is the highest-risk phase — touches `vite.config.ts`, `sw.ts`, and the URL structure. Deserves its own phase boundary so a regression here doesn't block feature shipping.
+
+### Build order summary
 
 ```
-Phase 1: AudioEngine (foundation)
-  └── AudioContext lifecycle + OscillatorNode graph
-  └── GainNode chain (harmonic balance + envelope + master)
-  └── playTestSound()
-  └── silentLoop keepalive
-  └── Reason: All alarm behavior depends on this. Test it in isolation first.
-      Build it as a pure TypeScript class with no React dependency.
-
-Phase 2: AlarmEngine state machine
-  └── SessionConfig type
-  └── Phase state machine (idle → running → phase1 → phase2 → phase3 → stopped)
-  └── setTimeout scheduling with wall-clock correction
-  └── setInterval countdown ticker with elapsed-time arithmetic
-  └── Calls into AudioEngine (injected as dependency, not imported directly)
-  └── Reason: Engine must be testable without UI. Stub AudioEngine for unit tests.
-
-Phase 3: Hardware managers
-  └── WakeLockManager (acquire, release, visibilitychange handler)
-  └── VibrationEngine (pattern start/stop, isSupported guard)
-  └── NotificationManager (permission request, showNotification via SW)
-  └── Reason: These are side-effect modules. Wire them into AlarmEngine after
-      the core state machine works.
-
-Phase 4: Zustand store
-  └── AlarmStore definition
-  └── AlarmEngine writes to store on each state transition
-  └── Reason: Connect engine output to React after engine is verified to work.
-
-Phase 5: React UI
-  └── HomeScreen + PresetCard + CustomSetupForm
-  └── CountdownScreen + PhaseIndicator + CountdownDisplay
-  └── StopButton + PauseButton
-  └── TestSoundButton (calls AudioEngine.playTestSound() directly)
-  └── React Router for Home ↔ Countdown navigation
-  └── Tailwind dark/light mode
-  └── Reason: UI is the last layer. By this point, all behavior is tested
-      independently of rendering.
-
-Phase 6: PWA shell
-  └── vite-plugin-pwa configuration (generateSW mode)
-  └── Web app manifest (name, icons, display: standalone, theme_color)
-  └── Service worker offline caching strategy (CacheFirst for app shell)
-  └── Reason: PWA layer is a wrapper around a working app. Do not attempt to
-      configure it before the app functions.
+1. AlarmSession refactor             (engine, low risk)
+2. SegmentEngine + triangle          (engine, additive)
+3. Wake Easy preset + SegmentCountdown (UI, validates segment runtime)
+4. Custom Composer modal             (UI, depends on segment countdown)
+─────────────── parallel track ───────────────
+5. SEO meta tags                     (build, additive — can ship anytime)
+6. Multi-page split + landing page   (build, highest risk — last)
 ```
+
+Phases 1–4 deliver the alarm composer track end-to-end. Phases 5–6 deliver the discoverability track. Phase 5 can ship in parallel with any of Phase 1–4. Phase 6 should ship last.
+
+---
+
+## Patterns to Follow
+
+### Pattern 1: Extend by composition, not by mutation
+
+The v2 segment behavior is added as new modules (SegmentEngine, useSegmentAlarm, SegmentCountdown) that **compose with** the existing engine via shared services (AlarmSession). The temptation to "just add segments to AlarmConfig" is rejected because it spreads conditionals through every consumer.
+
+### Pattern 2: Shared lifecycle, separate state machines
+
+Both engines call `startAlarmSession()` / `endAlarmSession()` for the keepalive + wake lock + visibility handling. That's the *only* code that's shared. The state machines themselves remain distinct because their semantics differ (escalating phases vs. sequential segments).
+
+### Pattern 3: Preset = constant + dispatch
+
+Following the v1 pattern (`QUICK_NAP_CONFIG`, `FOCUS_CONFIG`), `WAKE_EASY_CONFIG` is a single exported constant. Dashboard cards are thin: `onStart={() => alarm.start(WAKE_EASY_CONFIG)}`. No factory functions, no preset registry.
+
+### Pattern 4: Hand-authored static HTML for the landing page
+
+The landing page is HTML, not React. JSON-LD, meta tags, and content live in the file directly. This is the "right tool" — search crawlers want HTML, and HTML is what they get without any rendering pipeline.
 
 ---
 
 ## Anti-Patterns to Avoid
 
-### Anti-Pattern 1: Timer logic inside a React component
+### Anti-Pattern 1: Modifying AlarmConfig to support segments
 
-**What:** `useEffect` with `setInterval` inside `CountdownScreen` that drives both countdown display and phase transitions.
+**What:** Add `segments?: Segment[]` to AlarmConfig and branch on its presence.
 
-**Why bad:** React's render cycle can cancel and restart effects unpredictably (Strict Mode double-fires effects). If the user navigates briefly (unlikely in this app, but possible) the effect is torn down and the timer is lost. Phase transitions wired to component lifecycle will misfire.
+**Why bad:** Spreads the segment-or-not branch through every consumer. Breaks the type's clarity (it now means two things). Requires updating `validateConfig`, `useAlarm.computePhaseEndsAt`, `Countdown.getPhaseDuration`, and the Dashboard preset constants — all files that have nothing to do with segments.
 
-**Instead:** AlarmEngine is a singleton module that lives outside React's component tree. React components only observe its output via Zustand. The engine's timers survive unmounts.
+**Instead:** SegmentConfig is its own type. AlarmConfig stays exactly as it is.
 
----
+### Anti-Pattern 2: Reusing `Countdown.tsx` for segment alarms via conditionals
 
-### Anti-Pattern 2: Creating a new AudioContext on every alarm start
+**What:** Add `if (alarm.activeConfig.segments) { ... }` branches inside Countdown.tsx and ProgressRing.tsx.
 
-**What:** `const ctx = new AudioContext()` inside `AlarmEngine.start()`.
+**Why bad:** Same problem one layer up. The ring is hardcoded for three segments; making it dynamic for N segments is a structural change that's easier in a fresh component than retrofitted into the existing one.
 
-**Why bad:** AudioContext creation requires a user gesture. If start() is called after a delay (the engine is initialized lazily), the context will be suspended. Browsers also limit the number of AudioContext instances; creating multiple is a resource leak.
+**Instead:** `SegmentCountdown.tsx` and `SegmentTimeline.tsx` are new components. They share styling tokens and utility functions with Countdown but are structurally independent.
 
-**Instead:** Create the AudioContext once on the first user interaction (tap of Start or Test Sound) and keep it for the session. Resume it if interrupted; never close and recreate it.
+### Anti-Pattern 3: Adding React Router for one new feature
 
----
+**What:** Install `react-router-dom`, route the landing/composer/countdown.
 
-### Anti-Pattern 3: Using `setInterval` for audio timing
+**Why bad:** This app has one screen at a time. React Router is the wrong abstraction — it adds a dependency, a learning surface, and an architectural shift to solve a problem (modal placement, page split) that's better solved with `useState` (modal) and a multi-page Vite build (landing).
 
-**What:** Scheduling oscillator starts and stops via `setInterval`.
+**Instead:** Modal for Custom Mode (state in App), multi-page Vite for landing/app split.
 
-**Why bad:** `setInterval` has millisecond-level jitter and is throttled when the page is backgrounded. Audio that depends on interval timing will click, stutter, or skip.
+### Anti-Pattern 4: Generating the landing page from React via SSG
 
-**Instead:** Use `audioCtx.currentTime` for all sample-level audio scheduling (fade-in envelopes, ramp timing). Use `setTimeout`/`setInterval` only for human-perceptible phase transitions (minutes apart), where sub-second drift is imperceptible.
+**What:** Build the landing page as a React component and prerender it with vite-plugin-prerender or vite-react-ssg.
 
----
+**Why bad:** Adds a Puppeteer/Playwright build dependency, slow CI, hydration mismatch debugging, all to render one mostly-static page. The landing page changes infrequently and has no interactive logic that benefits from React.
 
-### Anti-Pattern 4: Firing the silent audio loop only at alarm trigger
+**Instead:** Hand-author `index.html` as HTML. Tailwind classes work in plain HTML too (just include the CSS bundle). One file, no build pipeline complications.
 
-**What:** Starting the silent keepalive loop at the moment the alarm fires, not at session start.
+### Anti-Pattern 5: Forgetting to scope service worker after multi-page split
 
-**Why bad:** On iOS Safari, the AudioContext is suspended when the screen locks. If the silent loop is not already running *before* the screen locks, it cannot be started after the lock (no user gesture available). The alarm will be silent on iOS.
+**What:** Leave `NavigationRoute` matching all paths; both landing and app navigations get the same fallback.
 
-**Instead:** Start the silent loop immediately when the user taps Start (a user gesture is present). The loop costs no audible output and minimal CPU. It must be running throughout the entire countdown.
+**Why bad:** Either the landing page becomes uncacheable (if app fallback wins) or the app becomes unreachable offline (if landing wins). Worse: deep links from email/social to `/Soundly/` could land on the wrong shell.
 
----
+**Instead:** NavigationRoute uses `allowlist: [/^\/Soundly\/app\//]` so only app navigations get the SPA fallback. Landing is handled by a separate NetworkFirst route.
 
-### Anti-Pattern 5: Storing `SessionConfig` in a React form and passing it as props
+### Anti-Pattern 6: Allowing both engines to run simultaneously
 
-**What:** `<AlarmEngine config={formState} />` where the engine is a React component.
+**What:** Custom Mode start while Quick Nap countdown is active.
 
-**Why bad:** The engine must not be subject to React's render lifecycle. Props changes cause re-renders; re-renders cause effect teardown; effect teardown kills timers.
+**Why bad:** Two AudioContexts / two keepalive loops / two wake locks fighting each other. Nondeterministic audio behavior.
 
-**Instead:** The form owns the `SessionConfig` as local state. On submit (Start tap), it calls `alarmEngine.start(config)` — a plain function call into the engine module. The engine takes the config as a snapshot and runs independently.
+**Instead:** `useActiveAlarm` mode selector enforces "one mode at a time"; UI only renders Dashboard (with start affordances) when `mode === null`. Engines themselves throw on duplicate start as a backstop.
 
 ---
 
 ## Scalability Considerations
 
-This is a single-device, single-session, single-user app. "Scalability" here means complexity management, not load.
+This is still a single-device, single-session app — "scalability" here is complexity management.
 
-| Concern | Current approach | If complexity grows |
-|---------|-----------------|-------------------|
-| Multiple sound designs | Single OscillatorNode graph in AudioEngine | Extract a `SoundPreset` abstraction; AudioEngine accepts a preset object that defines frequencies, envelope shape, harmonic ratios |
-| Additional presets | Hardcoded `PRESETS` constant | Presets stay as a static array; never dynamic/user-created |
-| Additional phases | AlarmPhase enum + ordered array of phase configs | Phase sequence is data-driven already — add items to the config |
-| Different ramp curves | `linearRampToValueAtTime` hardcoded | Expose `rampCurve: "linear" | "exponential"` in SessionConfig |
-| Sound testing iteration | `playTestSound()` in AudioEngine | No change needed; test sound just calls the same synthesis path |
-
----
-
-## Platform Behavior Reference
-
-These are confirmed behaviors (HIGH confidence from MDN) that affect architecture decisions.
-
-| Platform | Audio context on screen lock | Wake Lock | Vibration |
-|----------|------------------------------|-----------|-----------|
-| Chrome Android | Continues if audio is actively playing (silent loop works) | Supported | Supported |
-| iOS Safari | Suspends AudioContext on screen lock regardless | Supported (Baseline 2025) | Not supported |
-| Firefox Android | Continues if audio active | Supported | Supported |
-| Desktop Chrome | N/A (screen lock rare) | Supported | Not supported |
-| Desktop Safari | N/A | Supported | Not supported |
-
-The silent loop keepalive strategy works on Chrome Android but NOT on iOS. For iOS, the AudioContext will enter `interrupted` state on screen lock. The mitigation is to listen to `audioCtx.onstatechange` and call `audioCtx.resume()` on the next user interaction (the notification tap or the screen unlock). This means iOS users may miss phase 1 and part of phase 2 if the screen was locked — acceptable degradation, must be documented in the UI ("For best results, keep screen on or plug in").
+| Concern | Current (v2.0) approach | If complexity grows |
+|---------|-------------------------|----------------------|
+| More end-sound types (bell, gong, etc.) | Add files in `src/engine/sounds/`, extend `EndSound` literal type | Stays the same — the union type pattern scales linearly |
+| More preset configs | Add constants in `src/presets/` | Static constants forever; no dynamic preset registry |
+| Preset persistence (user-saved customs) | Out of scope per PROJECT.md | Would require a storage layer (IndexedDB) — add a `src/storage/` module; presets become user-owned |
+| Marketing pages (FAQ, blog, etc.) | One landing page | Add more entries to `rollupOptions.input` — Vite multi-page scales to dozens of pages without restructuring |
+| Analytics | Out of scope per PROJECT.md | Would land in `index.html` (landing) and `app/index.html` (app) as inline snippets, kept out of React |
+| Multiple simultaneous alarms | Out of scope (PROJECT.md) | Would require an alarm registry replacing the singleton engine pattern — significant rework |
 
 ---
 
 ## Sources
 
-- MDN Web Audio API — AudioContext states, GainNode, OscillatorNode, AudioParam scheduling: HIGH confidence (official spec documentation, fetched 2026-04-14)
-- MDN Screen Wake Lock API — automatic release on visibility change, re-acquire pattern: HIGH confidence (official spec documentation, fetched 2026-04-14)
-- MDN Vibration API — pattern syntax, `navigator.vibrate(0)` cancel: HIGH confidence (official spec documentation, fetched 2026-04-14)
-- MDN Page Visibility API — timer throttling behavior, visibilitychange event: HIGH confidence (official spec documentation, fetched 2026-04-14)
-- MDN Autoplay policy — AudioContext autoplay blocking rules, `getAutoplayPolicy()`: HIGH confidence (official documentation, fetched 2026-04-14)
-- MDN Media Session API — background audio session integration: MEDIUM confidence (API noted as "limited availability" / not Baseline in fetched docs)
-- MDN Notifications API — ServiceWorkerRegistration.showNotification() for persistent mobile notifications: HIGH confidence (official documentation, fetched 2026-04-14)
-- iOS AudioContext suspension on screen lock — training data, confirmed as a long-standing WebKit behavior: MEDIUM confidence (not fetched from current source; well-known but should be verified against current iOS Safari release notes)
-- vite-plugin-pwa generateSW mode recommendation — training data (WebFetch to vite-pwa-org was denied): MEDIUM confidence; verify against current vite-plugin-pwa docs before implementation
+- `src/engine/AlarmEngine.ts` (read 2026-05-04) — confirmed state machine shape, pause/resume snapshot pattern, cleanup contract
+- `src/engine/index.ts` (read 2026-05-04) — confirmed AlarmConfig export surface, validateConfig presence
+- `src/hooks/useAlarm.ts` (read 2026-05-04) — confirmed hook contract (phase, isPaused, isRunning, phaseEndsAt, activeConfig, start/stop/pause/resume)
+- `src/components/Countdown.tsx` (read 2026-05-04) — confirmed hardcoded three-segment ProgressRing usage and phase-duration switch
+- `src/components/Dashboard.tsx` (read 2026-05-04) — confirmed preset card pattern (PresetCard with onStart callback)
+- `src/sw.ts` (read 2026-05-04) — confirmed NavigationRoute bound to `/Soundly/index.html`, must rewrite for multi-page split
+- `vite.config.ts` (read 2026-05-04) — confirmed `injectManifest` mode, `base: '/Soundly/'`, current single-entry config
+- `index.html` (read 2026-05-04) — confirmed minimal app shell, no SEO meta currently
+- `.planning/PROJECT.md` (read 2026-05-04) — confirmed v2.0 scope: composer, Wake Easy, triangle sound, SEO + landing page; out of scope: persistence, analytics
+- `.planning/research/v1.0/ARCHITECTURE.md` (read 2026-05-04) — confirmed v1 architectural philosophy (engine outside React render cycle, hardware abstraction layer, anti-patterns)
+- React 19 metadata hoisting behavior — MEDIUM confidence from training data; explicit `<script type="application/ld+json">` hoisting should be verified with Context7 (`mcp__context7__resolve-library-id` "react" → docs query "metadata script") before relying on it. Mitigation: put JSON-LD directly in static HTML, sidestepping the question.
+- vite-plugin-pwa multi-entry behavior with `injectManifest` — MEDIUM confidence; verify `injectManifest.globPatterns`, `manifest.start_url`, `manifest.scope` interactions with Context7 before Phase 6 implementation.
