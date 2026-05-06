@@ -1,11 +1,11 @@
 ---
 gsd_state_version: 1.0
-milestone: v2.0
-milestone_name: Custom Alarm Composer + Discoverability
-status: phase-planned
-stopped_at: Roadmap created — Phase 6 planned, awaiting plan-phase
-last_updated: "2026-05-04T00:00:00.000Z"
-last_activity: 2026-05-04
+milestone: v1.0
+milestone_name: — Foundations
+status: Awaiting `/gsd-plan-phase 6`
+stopped_at: Phase 6 context gathered
+last_updated: "2026-05-06T18:16:26.438Z"
+last_activity: 2026-05-04 — Roadmap for v2.0 created (Phases 6–11), 34 v2.0 requirements mapped, traceability table populated
 progress:
   total_phases: 6
   completed_phases: 0
@@ -96,8 +96,8 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-05-04T00:00:00.000Z
-Stopped at: v2.0 roadmap created (Phases 6–11), STATE updated, REQUIREMENTS traceability populated
-Resume file: None
+Last session: --stopped-at
+Stopped at: Phase 6 context gathered
+Resume file: --resume-file
 
 **Planned Phase:** 06 (AlarmSession Refactor + v1 Regression Guard) — TBD plans — 2026-05-04
