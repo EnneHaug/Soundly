@@ -16,9 +16,10 @@ The alarm must actually wake the user — gently first, reliably always. If the 
 
 *Alarm composer (primary):*
 - New "segment" alarm model — a segment is a duration ending with one chosen sound (gentle / triangle / alarm). Sound plays at the tail; most of the segment is silence.
-- Custom Mode UI — "Custom" button on home opens a segment builder; arbitrary number of segments, per-segment duration + sound type, optional preset pre-fill.
+- Custom Mode UI — "Custom" button on home opens a segment builder; arbitrary number of segments, per-segment stepper duration input, sound picker, delete + duplicate per row, pre-loaded with Wake Easy template.
 - Wake Easy preset — 4 × 4 min gentle (chime at end) + 1 × 1 min alarm = 17 min total. New third preset card.
 - New triangle sound asset — synthesized via Web Audio API, single bright strike with quick decay (~1–2 s).
+- Share via URL — composer "Share" button serializes segments into a versioned URL hash fragment; recipient opens the link and the composer pre-loads with the shared composition. No backend, no localStorage — reinforces the no-persistence design.
 - Existing Quick Nap and Focus presets stay on the continuous-phase model unchanged (no risk to Phase 1/2/3 code).
 
 *Discoverability:*
@@ -101,4 +102,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-04 — Milestone v2.0 (Custom Alarm Composer) scope confirmed; SEO/discoverability added.*
+*Last updated: 2026-05-06 — Milestone v2.0 (Custom Alarm Composer) scope confirmed; SEO/discoverability + share-via-URL added; 34 requirements defined.*
