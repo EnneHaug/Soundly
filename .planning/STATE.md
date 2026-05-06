@@ -1,13 +1,13 @@
 ---
 gsd_state_version: 1.0
 milestone: v2.0
-milestone_name: Custom Alarm Composer
-status: defining-requirements
-stopped_at: Milestone v2.0 opened
+milestone_name: Custom Alarm Composer + Discoverability
+status: phase-planned
+stopped_at: Roadmap created — Phase 6 planned, awaiting plan-phase
 last_updated: "2026-05-04T00:00:00.000Z"
 last_activity: 2026-05-04
 progress:
-  total_phases: 0
+  total_phases: 6
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-04)
 
 **Core value:** The alarm must actually wake the user — gently first, reliably always.
-**Current focus:** Milestone v2.0 — Custom Alarm Composer + Discoverability (defining requirements)
+**Current focus:** Milestone v2.0 — Custom Alarm Composer + Discoverability (roadmap created; Phase 6 planned)
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: 6 — AlarmSession Refactor + v1 Regression Guard (planned, not started)
 Plan: —
-Status: Defining requirements
-Last activity: 2026-05-04 — Milestone v2.0 scope confirmed (alarm composer + SEO/landing page)
+Status: Awaiting `/gsd-plan-phase 6`
+Last activity: 2026-05-04 — Roadmap for v2.0 created (Phases 6–11), 34 v2.0 requirements mapped, traceability table populated
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -36,7 +36,7 @@ Progress: [░░░░░░░░░░] 0%
 
 **Velocity:**
 
-- Total plans completed: 8
+- Total plans completed: 8 (v1.0)
 - Average duration: —
 - Total execution time: —
 
@@ -48,6 +48,7 @@ Progress: [░░░░░░░░░░] 0%
 | 02 | 2 | - | - |
 | 03 | 3 | - | - |
 | 04 | 1 | - | - |
+| 05 | 1 | - | - |
 
 **Recent Trend:**
 
@@ -68,26 +69,35 @@ Recent decisions affecting current work:
 - Init: No persistent storage — settings ephemeral per session
 - Init: Silent audio loop + Wake Lock + SW notifications as combined keepalive strategy
 - [Phase 05]: D-01/D-02/D-03/D-04 Phase 3 iOS loudness fixes shipped with plan-locked params (threshold -24 dB, 3 detuned voices at 1000/1003/1007 Hz, AM +-0.35 around 0.65)
+- [v2.0 roadmap]: Routing approach locked to Vite multi-page (no router dep) — landing at `/`, app at `/app`; SW rescoped to `/app` only
+- [v2.0 roadmap]: Hosting locked to GitHub Pages at `username.github.io/Soundly/`; robots.txt is best-effort, primary discoverability path is Search Console manual sitemap submission
+- [v2.0 roadmap]: Drag-and-drop reorder explicitly out of scope for v2.0; deferred to v2.x
 
 ### Pending Todos
 
-None yet.
+- Phase 6 plan to be created via `/gsd-plan-phase 6`
+- Resolve Phase 7 open questions during plan: triangle exact synthesis parameters (Hz, partial mix, attack/decay)
+- Resolve Phase 8/9 open question during plan: final sound naming labels (UI strings — internal enum vs friendly UI labels)
+- Resolve Phase 11 open question during plan: final landing-page copy including iOS honesty section wording
 
 ### Blockers/Concerns
 
-- iOS Safari structurally hostile: no Vibration API, AudioContext suspends on screen lock — must be surfaced honestly in the UI
-- OscillatorNode cannot restart after `.stop()` — factory pattern required in AudioEngine
-- Singing bowl synthesis quality needs iterative tuning during Phase 1
-- Field testing on iPhone (2026-04-22): locked-screen alarm is fully silent (WebKit structural limit, confirmed via `.planning/research/ios-alarm-feasibility.md`) — requires Capacitor wrapper to resolve (deferred as Option B); Phase 3 loudness insufficient on iPhone — addressed by new Phase 5
+- iOS Safari structurally hostile: no Vibration API, AudioContext suspends on screen lock — must be surfaced honestly in the v2.0 landing-page iOS section (LAND-05)
+- OscillatorNode cannot restart after `.stop()` — factory pattern required (already established v1 pattern; SegmentEngine must follow it)
+- vite-plugin-pwa multi-entry interaction with `injectManifest` is the biggest unknown for Phase 11 — verify with Context7 before that phase ships
+- Whether installed v1 PWA users will auto-migrate to the new `start_url=/app` or need to reinstall — verify during Phase 11 plan
+- v1 zero-diff guarantee (SEG-05) is a hard floor across Phases 6–11: any plan that touches `AlarmEngine.ts`, `AlarmConfig`, `validateConfig`, `Quick Nap`, `Focus`, `useAlarm`, `Countdown.tsx`, `ProgressRing.tsx`, or any existing `src/engine/sounds/*.ts` (except adding `triangle.ts`) MUST call out a regression check in its success criteria
+- Phase 10 ordering: SW autoUpdate + skipWaiting + clientsClaim MUST land in the same phase as SEO meta delivery, otherwise installed users see stale meta forever (Pitfall #6)
 
 ### Roadmap Evolution
 
 - Phase 5 added (2026-04-22): iOS Audio Loudness Fixes — software-only Phase 3 loudness improvements on iPhone (audioSession, compressor, frequency shift, amplitude modulation). Derived from `.planning/research/ios-alarm-feasibility.md`. Capacitor wrapper (Option B) deferred.
+- Milestone v2.0 opened (2026-05-04): Custom Alarm Composer + Discoverability — 34 requirements across SEG (6) + COMP (8) + AUD (1) + SEO (9) + LAND (6) + SHR (4); 6 phases (6–11); routing locked to Vite multi-page; DnD deferred to v2.x.
 
 ## Session Continuity
 
-Last session: 2026-04-23T16:39:35.057Z
-Stopped at: Completed 05-01-PLAN.md
+Last session: 2026-05-04T00:00:00.000Z
+Stopped at: v2.0 roadmap created (Phases 6–11), STATE updated, REQUIREMENTS traceability populated
 Resume file: None
 
-**Planned Phase:** 05 (iOS Audio Loudness Fixes) — 1 plans — 2026-04-23T15:59:42.985Z
+**Planned Phase:** 06 (AlarmSession Refactor + v1 Regression Guard) — TBD plans — 2026-05-04

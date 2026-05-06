@@ -146,21 +146,56 @@ v1.0 traceability (shipped):
 | UX-01, UX-02, UX-03, UX-04 | Phase 3 | Shipped |
 | PLT-01 | Phase 4 | Shipped |
 
-v2.0 traceability — populated by the roadmapper:
+v2.0 traceability:
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SEG-01..06 | TBD | Pending |
-| COMP-01..08 | TBD | Pending |
-| AUD-05 | TBD | Pending |
-| SEO-01..09 | TBD | Pending |
-| LAND-01..06 | TBD | Pending |
-| SHR-01..04 | TBD | Pending |
+| SEG-05 | Phase 6 | Pending |
+| SEG-01 | Phase 7 | Pending |
+| SEG-02 | Phase 7 | Pending |
+| SEG-03 | Phase 7 | Pending |
+| SEG-04 | Phase 7 | Pending |
+| AUD-05 | Phase 7 | Pending |
+| SEG-06 | Phase 8 | Pending |
+| COMP-01 | Phase 9 | Pending |
+| COMP-02 | Phase 9 | Pending |
+| COMP-03 | Phase 9 | Pending |
+| COMP-04 | Phase 9 | Pending |
+| COMP-05 | Phase 9 | Pending |
+| COMP-06 | Phase 9 | Pending |
+| COMP-07 | Phase 9 | Pending |
+| COMP-08 | Phase 9 | Pending |
+| SHR-01 | Phase 9 | Pending |
+| SHR-02 | Phase 9 | Pending |
+| SHR-03 | Phase 9 | Pending |
+| SHR-04 | Phase 9 | Pending |
+| SEO-01 | Phase 10 | Pending |
+| SEO-02 | Phase 10 | Pending |
+| SEO-03 | Phase 10 | Pending |
+| SEO-04 | Phase 10 | Pending |
+| SEO-05 | Phase 10 | Pending |
+| SEO-06 | Phase 10 | Pending |
+| SEO-07 | Phase 10 | Pending |
+| SEO-08 | Phase 10 | Pending |
+| SEO-09 | Phase 10 | Pending |
+| LAND-01 | Phase 11 | Pending |
+| LAND-02 | Phase 11 | Pending |
+| LAND-03 | Phase 11 | Pending |
+| LAND-04 | Phase 11 | Pending |
+| LAND-05 | Phase 11 | Pending |
+| LAND-06 | Phase 11 | Pending |
 
 **Coverage:**
 - v1.0 requirements: 17 total — all shipped ✓
-- v2.0 requirements: 34 total — to be mapped to phases by roadmapper
+- v2.0 requirements: 34 total — all mapped to phases ✓
+  - Phase 6: 1 requirement (SEG-05)
+  - Phase 7: 5 requirements (SEG-01..04, AUD-05)
+  - Phase 8: 1 requirement (SEG-06)
+  - Phase 9: 12 requirements (COMP-01..08, SHR-01..04)
+  - Phase 10: 9 requirements (SEO-01..09)
+  - Phase 11: 6 requirements (LAND-01..06)
 
 ---
 *v1.0 requirements defined: 2026-04-14*
 *v2.0 requirements defined: 2026-05-06*
+*v2.0 traceability populated by roadmapper: 2026-05-04*
