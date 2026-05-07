@@ -38,7 +38,7 @@ The original v1.0 alarm engine, three-phase escalation, presets, PWA shell, and 
 
 ## Phases
 
-- [ ] **Phase 6: AlarmSession Refactor + v1 Regression Guard** — Extract shared session lifecycle from `AlarmEngine`; preserve byte-identical v1 behavior (SEG-05 zero-diff guarantee)
+- [x] **Phase 6: AlarmSession Refactor + v1 Regression Guard** — Extract shared session lifecycle from `AlarmEngine`; preserve byte-identical v1 behavior (SEG-05 zero-diff guarantee)
 - [ ] **Phase 7: Segment Engine + Triangle Sound** — Additive engine + new sound; no UI changes; runtime validated by tests
 - [ ] **Phase 8: Wake Easy Preset + Segment Countdown UI** — Third dashboard preset card + N-segment countdown UI; validates segment runtime end-to-end
 - [ ] **Phase 9: Custom Composer + Share via URL** — Modal segment builder with stepper inputs and duplicate; share link round-trip
@@ -59,7 +59,7 @@ The original v1.0 alarm engine, three-phase escalation, presets, PWA shell, and 
 **Plans:** 3 plans
   - [x] 06-01-PLAN.md — Create AlarmSession.ts (function pair + SessionHandle + WeakMap internals) + standalone unit tests + barrel exports
   - [x] 06-02-PLAN.md — Rewire AlarmEngine.start()/cleanup() to call AlarmSession + extend AlarmEngine.test.ts with QUICK_NAP/FOCUS regression assertions
-  - [ ] 06-03-PLAN.md — Author 06-REGRESSION-CHECKLIST.md (on-device manual verification matrix)
+  - [x] 06-03-PLAN.md — Author 06-REGRESSION-CHECKLIST.md (on-device manual verification matrix)
 **UI hint**: no
 
 ### Phase 7: Segment Engine + Triangle Sound
