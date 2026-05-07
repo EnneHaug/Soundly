@@ -151,7 +151,7 @@ v2.0 traceability:
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SEG-05 | Phase 6 | Pending |
+| SEG-05 | Phase 6 | Shipped |
 | SEG-01 | Phase 7 | Pending |
 | SEG-02 | Phase 7 | Pending |
 | SEG-03 | Phase 7 | Pending |
