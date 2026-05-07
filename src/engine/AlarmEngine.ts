@@ -26,32 +26,29 @@ import {
   validateConfig,
 } from './AlarmState';
 import { scheduleAt, TimerHandle } from './timer';
-import { getAudioContext } from './AudioContext';
 import { strikeBowl } from './sounds/singingBowl';
 import {
   createPhase3Ramp,
   startPhase3Swell,
   fadeOutGain,
 } from './sounds/phase3Tone';
-import { startKeepalive, stopKeepalive } from './sounds/keepalive';
 import { playTick } from './sounds/tickPulse';
-import { acquireWakeLock, releaseWakeLock, attachVisibilityReacquire } from '../platform/wakeLock';
+import { startAlarmSession, endAlarmSession, type SessionHandle } from './AlarmSession';
 import { startVibration, stopVibration } from '../platform/vibration';
 
 export class AlarmEngine {
   private ac: AudioContext | null = null;
+  private session: SessionHandle | null = null;
   private phase: AlarmPhase = 'idle';
   private _running: boolean = false; // true from start() until stop()/dismiss()
   private _paused: boolean = false;
   private timers: TimerHandle[] = [];
-  private keepaliveOsc: OscillatorNode | null = null;
   private phase3RampGain: GainNode | null = null;
   private phase3SwellNodes: OscillatorNode[] | null = null;
   private phase3LoopTimer: ReturnType<typeof setInterval> | null = null;
   private phaseCallback: PhaseChangeCallback | null = null;
 
   // Phase 2 state (Background Reliability)
-  private visibilityCleanup: (() => void) | null = null;
   private tickGain: GainNode | null = null;
   private tickLoopTimer: ReturnType<typeof setInterval> | null = null;
 
@@ -101,14 +98,11 @@ export class AlarmEngine {
     }
     this._running = true;
 
-    this.ac = await getAudioContext();
-
-    // Start silent keepalive oscillator to keep AudioContext alive on mobile (AUD-04)
-    this.keepaliveOsc = startKeepalive(this.ac);
-
-    // Acquire Wake Lock to keep screen on during active timer (PLT-02)
-    await acquireWakeLock();
-    this.visibilityCleanup = attachVisibilityReacquire();
+    // Bring up the shared session lifecycle:
+    //   AudioContext bring-up + keepalive + Wake Lock + visibility re-acquire (D-06).
+    // AlarmSession preserves the v1 ordering and failure profile (D-05).
+    this.session = await startAlarmSession();
+    this.ac = this.session.ac;
 
     // Calculate absolute wall-clock fire times
     const phase1FireAt = Date.now() + config.phase1DurationMs;
@@ -367,10 +361,13 @@ export class AlarmEngine {
     this.timers.forEach((t) => t.cancel());
     this.timers = [];
 
-    // Stop silent keepalive oscillator
-    if (this.keepaliveOsc) {
-      stopKeepalive(this.keepaliveOsc);
-      this.keepaliveOsc = null;
+    // Tear down the shared session lifecycle (keepalive + wake lock + visibility).
+    // Single call replaces the three v1 teardown blocks; ordering inside is reverse-of-start.
+    // Position preserved (between timer cancel and stopVibration) to keep v1 byte-identical
+    // teardown TIMING per D-04 — this sits where the old keepalive teardown block lived.
+    if (this.session) {
+      endAlarmSession(this.session);
+      this.session = null;
     }
 
     // Stop Phase 2 vibration (safe no-op if not started or not supported — T-02-01)
@@ -384,13 +381,6 @@ export class AlarmEngine {
     if (this.tickGain) {
       this.tickGain.disconnect();
       this.tickGain = null;
-    }
-
-    // Release Wake Lock (PLT-02)
-    releaseWakeLock();
-    if (this.visibilityCleanup) {
-      this.visibilityCleanup();
-      this.visibilityCleanup = null;
     }
 
     // Stop Phase 3 swell loop (T-01-05: prevents OscillatorNode accumulation)
