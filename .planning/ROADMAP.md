@@ -56,7 +56,10 @@ The original v1.0 alarm engine, three-phase escalation, presets, PWA shell, and 
   2. `AlarmEngine.start()` and `AlarmEngine.cleanup()` call into AlarmSession; behavior of Quick Nap and Focus is byte-identical (timing, audio, vibration, notifications, Wake Lock, pause/resume snapshot semantics) to pre-refactor
   3. v1.0 paths carry zero diff: `src/engine/AlarmState.ts` (AlarmConfig, validateConfig, QUICK_NAP_CONFIG, FOCUS_CONFIG), `src/hooks/useAlarm.ts`, `src/components/Countdown.tsx`, `src/components/ProgressRing.tsx`, and every existing `src/engine/sounds/*.ts` file are unchanged this phase
   4. A documented v1 regression check passes: Quick Nap launches, fires Phase 1 → 2 → 3 in correct order with correct durations and audio, Wake Lock is acquired and released; Focus repeats the same regression matrix at its longer cadence
-**Plans:** TBD
+**Plans:** 3 plans
+  - [ ] 06-01-PLAN.md — Create AlarmSession.ts (function pair + SessionHandle + WeakMap internals) + standalone unit tests + barrel exports
+  - [ ] 06-02-PLAN.md — Rewire AlarmEngine.start()/cleanup() to call AlarmSession + extend AlarmEngine.test.ts with QUICK_NAP/FOCUS regression assertions
+  - [ ] 06-03-PLAN.md — Author 06-REGRESSION-CHECKLIST.md (on-device manual verification matrix)
 **UI hint**: no
 
 ### Phase 7: Segment Engine + Triangle Sound
@@ -138,7 +141,7 @@ Phase 10 may ship in parallel with Phases 6–9 if desired (orthogonal track); P
 | 3. React UI | 3/3 | Shipped | v1.0 |
 | 4. PWA Shell | 1/1 | Shipped | v1.0 |
 | 5. iOS Audio Loudness Fixes | 1/1 | Shipped | v1.0 |
-| 6. AlarmSession Refactor + v1 Regression Guard | 0/0 | Planned | - |
+| 6. AlarmSession Refactor + v1 Regression Guard | 0/3 | Planned | - |
 | 7. Segment Engine + Triangle Sound | 0/0 | Planned | - |
 | 8. Wake Easy Preset + Segment Countdown UI | 0/0 | Planned | - |
 | 9. Custom Composer + Share via URL | 0/0 | Planned | - |
