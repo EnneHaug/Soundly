@@ -57,7 +57,7 @@ The original v1.0 alarm engine, three-phase escalation, presets, PWA shell, and 
   3. v1.0 paths carry zero diff: `src/engine/AlarmState.ts` (AlarmConfig, validateConfig, QUICK_NAP_CONFIG, FOCUS_CONFIG), `src/hooks/useAlarm.ts`, `src/components/Countdown.tsx`, `src/components/ProgressRing.tsx`, and every existing `src/engine/sounds/*.ts` file are unchanged this phase
   4. A documented v1 regression check passes: Quick Nap launches, fires Phase 1 → 2 → 3 in correct order with correct durations and audio, Wake Lock is acquired and released; Focus repeats the same regression matrix at its longer cadence
 **Plans:** 3 plans
-  - [ ] 06-01-PLAN.md — Create AlarmSession.ts (function pair + SessionHandle + WeakMap internals) + standalone unit tests + barrel exports
+  - [x] 06-01-PLAN.md — Create AlarmSession.ts (function pair + SessionHandle + WeakMap internals) + standalone unit tests + barrel exports
   - [ ] 06-02-PLAN.md — Rewire AlarmEngine.start()/cleanup() to call AlarmSession + extend AlarmEngine.test.ts with QUICK_NAP/FOCUS regression assertions
   - [ ] 06-03-PLAN.md — Author 06-REGRESSION-CHECKLIST.md (on-device manual verification matrix)
 **UI hint**: no

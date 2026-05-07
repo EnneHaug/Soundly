@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: — Foundations
-status: Awaiting `/gsd-plan-phase 6`
-stopped_at: Phase 6 context gathered
-last_updated: "2026-05-07T19:49:06.947Z"
-last_activity: 2026-05-04 — Roadmap for v2.0 created (Phases 6–11), 34 v2.0 requirements mapped, traceability table populated
+status: executing
+stopped_at: Completed 06-01-PLAN.md
+last_updated: "2026-05-07T20:11:33.734Z"
+last_activity: 2026-05-07
 progress:
   total_phases: 6
   completed_phases: 5
   total_plans: 12
-  completed_plans: 9
-  percent: 75
+  completed_plans: 10
+  percent: 83
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-04)
 
 **Core value:** The alarm must actually wake the user — gently first, reliably always.
-**Current focus:** Milestone v2.0 — Custom Alarm Composer + Discoverability (roadmap created; Phase 6 planned)
+**Current focus:** Phase 6 — AlarmSession Refactor + v1 Regression Guard
 
 ## Current Position
 
-Phase: 6 — AlarmSession Refactor + v1 Regression Guard (planned, not started)
-Plan: —
-Status: Awaiting `/gsd-plan-phase 6`
-Last activity: 2026-05-04 — Roadmap for v2.0 created (Phases 6–11), 34 v2.0 requirements mapped, traceability table populated
+Phase: 6 (AlarmSession Refactor + v1 Regression Guard) — EXECUTING
+Plan: 2 of 3
+Status: Ready to execute
+Last activity: 2026-05-07
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [████████░░] 83%
 
 ## Performance Metrics
 
@@ -57,6 +57,7 @@ Progress: [░░░░░░░░░░] 0%
 
 *Updated after each plan completion*
 | Phase 05 P01 | 7m 24s | 3 tasks | 4 files |
+| Phase 06 P01 | 5m 37s | 3 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -72,6 +73,8 @@ Recent decisions affecting current work:
 - [v2.0 roadmap]: Routing approach locked to Vite multi-page (no router dep) — landing at `/`, app at `/app`; SW rescoped to `/app` only
 - [v2.0 roadmap]: Hosting locked to GitHub Pages at `username.github.io/Soundly/`; robots.txt is best-effort, primary discoverability path is Search Console manual sitemap submission
 - [v2.0 roadmap]: Drag-and-drop reorder explicitly out of scope for v2.0; deferred to v2.x
+- [Phase 06]: AlarmSession internal-state mechanism = WeakMap<SessionHandle, SessionInternals> (D-02 Claude's Discretion). Reference-identity keying prevents forged-handle teardown, GC-friendly, reads as straight TS strict mode without non-enumerable property gymnastics.
+- [Phase 06 P01]: Defensive contract test idiom established for thin-orchestrator modules — force-reject the dep mock and assert .rejects.toBe(err) (identity-equal, stronger than .rejects.toThrow(message)). Used in AlarmSession.test.ts to prove no error-transforming wrapper around acquireWakeLock per D-05.
 
 ### Pending Todos
 
@@ -96,8 +99,8 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: --stopped-at
-Stopped at: Phase 6 context gathered
-Resume file: --resume-file
+Last session: 2026-05-07T20:10:59.710Z
+Stopped at: Completed 06-01-PLAN.md
+Resume file: None
 
 **Planned Phase:** 6 (AlarmSession Refactor + v1 Regression Guard) — 3 plans — 2026-05-07T19:49:06.904Z
