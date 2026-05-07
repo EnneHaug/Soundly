@@ -26,3 +26,5 @@ export { playTestSound, TEST_SOUND_GAIN } from './sounds/testSound';
 export { playTick } from './sounds/tickPulse';
 export { startVibration, stopVibration } from '../platform/vibration';
 export { acquireWakeLock, releaseWakeLock, attachVisibilityReacquire } from '../platform/wakeLock';
+export { startAlarmSession, endAlarmSession } from './AlarmSession';
+export type { SessionHandle } from './AlarmSession';
