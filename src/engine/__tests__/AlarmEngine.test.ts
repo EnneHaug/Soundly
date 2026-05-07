@@ -412,4 +412,216 @@ describe('AlarmEngine', () => {
     expect(() => engine.stop()).not.toThrow();
     expect(engine.getPhase()).toBe('idle');
   });
+
+  // ============================================================================
+  // Phase 6 Plan 2 — AlarmSession wiring + v1 byte-identity regression net.
+  //
+  // These tests prove that AlarmEngine.start() / cleanup() now delegate the
+  // four session-lifecycle responsibilities to AlarmSession (Plan 1 module)
+  // WITHOUT changing observable behavior. Per D-07 primary, the existing
+  // ~29 tests above are preserved verbatim as the SEG-05 regression net;
+  // these appended tests strengthen it across QUICK_NAP_CONFIG / FOCUS_CONFIG
+  // end-to-end and pause/resume from each entry phase.
+  //
+  // Reuses the existing vi.mock(...) blocks at the top of the file —
+  // AlarmSession's deps (../sounds/keepalive, ../../platform/wakeLock) are
+  // already mocked since AlarmEngine used to call them directly.
+  // ============================================================================
+
+  // ---- AlarmSession wiring (proven via existing keepalive/wakeLock mocks) ----
+
+  it('start() drives keepalive, wake lock, and visibility re-acquire via AlarmSession', async () => {
+    const { startKeepalive } = await import('../sounds/keepalive');
+    const { acquireWakeLock, attachVisibilityReacquire } = await import('../../platform/wakeLock');
+    const engine = new AlarmEngine();
+
+    await startEngine(engine);
+
+    // Each underlying primitive should still be called exactly once — proves AlarmSession
+    // is doing the work and AlarmEngine is calling AlarmSession exactly once.
+    expect(startKeepalive).toHaveBeenCalledTimes(1);
+    expect(acquireWakeLock).toHaveBeenCalledTimes(1);
+    expect(attachVisibilityReacquire).toHaveBeenCalledTimes(1);
+  });
+
+  it('stop() drives stopKeepalive, releaseWakeLock, and the visibility cleanup via AlarmSession', async () => {
+    const { stopKeepalive } = await import('../sounds/keepalive');
+    const { releaseWakeLock, attachVisibilityReacquire } = await import('../../platform/wakeLock');
+
+    const releaseVisibility = vi.fn();
+    (attachVisibilityReacquire as ReturnType<typeof vi.fn>).mockReturnValueOnce(releaseVisibility);
+
+    const engine = new AlarmEngine();
+    await startEngine(engine);
+    engine.stop();
+
+    expect(stopKeepalive).toHaveBeenCalledTimes(1);
+    expect(releaseWakeLock).toHaveBeenCalledTimes(1);
+    expect(releaseVisibility).toHaveBeenCalledTimes(1);
+  });
+
+  it('dismiss() also drives the full session teardown via AlarmSession', async () => {
+    const { stopKeepalive } = await import('../sounds/keepalive');
+    const { releaseWakeLock, attachVisibilityReacquire } = await import('../../platform/wakeLock');
+
+    const releaseVisibility = vi.fn();
+    (attachVisibilityReacquire as ReturnType<typeof vi.fn>).mockReturnValueOnce(releaseVisibility);
+
+    const engine = new AlarmEngine();
+    await startEngine(engine);
+    engine.dismiss();
+
+    expect(stopKeepalive).toHaveBeenCalledTimes(1);
+    expect(releaseWakeLock).toHaveBeenCalledTimes(1);
+    expect(releaseVisibility).toHaveBeenCalledTimes(1);
+  });
+
+  it('cleanup() called twice (stop then stop) is idempotent — primitives still called only once', async () => {
+    const { stopKeepalive } = await import('../sounds/keepalive');
+    const { releaseWakeLock } = await import('../../platform/wakeLock');
+
+    const engine = new AlarmEngine();
+    await startEngine(engine);
+    engine.stop();
+    engine.stop(); // second call: this.session is null, endAlarmSession not invoked again
+
+    expect(stopKeepalive).toHaveBeenCalledTimes(1);
+    expect(releaseWakeLock).toHaveBeenCalledTimes(1);
+  });
+
+  // ---- v1 byte-identity regression: QUICK_NAP_CONFIG + FOCUS_CONFIG ----
+
+  it('QUICK_NAP_CONFIG fires phase1 -> phase2 -> phase3 in order with correct durations', async () => {
+    const engine = new AlarmEngine();
+    const phases: string[] = [];
+    engine.onPhaseChange((p) => phases.push(p));
+
+    await startEngine(engine, QUICK_NAP_CONFIG);
+
+    // Advance precisely to phase1
+    vi.advanceTimersByTime(QUICK_NAP_CONFIG.phase1DurationMs);
+    expect(phases[phases.length - 1]).toBe('phase1');
+
+    // Advance to phase2
+    vi.advanceTimersByTime(QUICK_NAP_CONFIG.phase2DurationMs);
+    expect(phases[phases.length - 1]).toBe('phase2');
+
+    // Advance to phase3
+    vi.advanceTimersByTime(QUICK_NAP_CONFIG.phase2to3GapMs);
+    expect(phases[phases.length - 1]).toBe('phase3');
+  });
+
+  it('FOCUS_CONFIG fires phase1 -> phase2 -> phase3 in order with correct durations', async () => {
+    const engine = new AlarmEngine();
+    const phases: string[] = [];
+    engine.onPhaseChange((p) => phases.push(p));
+
+    await startEngine(engine, FOCUS_CONFIG);
+
+    vi.advanceTimersByTime(FOCUS_CONFIG.phase1DurationMs);
+    expect(phases[phases.length - 1]).toBe('phase1');
+
+    vi.advanceTimersByTime(FOCUS_CONFIG.phase2DurationMs);
+    expect(phases[phases.length - 1]).toBe('phase2');
+
+    vi.advanceTimersByTime(FOCUS_CONFIG.phase2to3GapMs);
+    expect(phases[phases.length - 1]).toBe('phase3');
+  });
+
+  it('QUICK_NAP_CONFIG: strikeBowl is invoked exactly once at phase1', async () => {
+    const { strikeBowl } = await import('../sounds/singingBowl');
+    const engine = new AlarmEngine();
+    await startEngine(engine, QUICK_NAP_CONFIG);
+
+    vi.advanceTimersByTime(QUICK_NAP_CONFIG.phase1DurationMs + 1);
+
+    expect(strikeBowl).toHaveBeenCalledTimes(1);
+  });
+
+  it('FOCUS_CONFIG: strikeBowl is invoked exactly once at phase1', async () => {
+    const { strikeBowl } = await import('../sounds/singingBowl');
+    const engine = new AlarmEngine();
+    await startEngine(engine, FOCUS_CONFIG);
+
+    vi.advanceTimersByTime(FOCUS_CONFIG.phase1DurationMs + 1);
+
+    expect(strikeBowl).toHaveBeenCalledTimes(1);
+  });
+
+  // ---- Pause/resume snapshot from each entry phase (regression for SEG-05) ----
+
+  it('pause/resume from phase1 entry: phase2 still fires after the remaining gap', async () => {
+    const engine = new AlarmEngine();
+    const phases: string[] = [];
+    engine.onPhaseChange((p) => phases.push(p));
+    await startEngine(engine, DEFAULT_CONFIG);
+
+    // Advance into phase1
+    vi.advanceTimersByTime(DEFAULT_CONFIG.phase1DurationMs + 100);
+    expect(phases).toContain('phase1');
+
+    // Pause for 1 second, then resume
+    engine.pause();
+    vi.advanceTimersByTime(1000);
+    engine.resume();
+
+    // Advance the remaining phase2 duration; phase2 should fire
+    vi.advanceTimersByTime(DEFAULT_CONFIG.phase2DurationMs + 100);
+    expect(phases).toContain('phase2');
+  });
+
+  it('pause/resume from phase2 entry: phase3 still fires after the remaining gap', async () => {
+    const engine = new AlarmEngine();
+    const phases: string[] = [];
+    engine.onPhaseChange((p) => phases.push(p));
+    vi.stubGlobal('navigator', { vibrate: vi.fn() });
+    await startEngine(engine, DEFAULT_CONFIG);
+
+    // Advance to phase2
+    vi.advanceTimersByTime(
+      DEFAULT_CONFIG.phase1DurationMs + DEFAULT_CONFIG.phase2DurationMs + 100
+    );
+    expect(phases).toContain('phase2');
+
+    engine.pause();
+    vi.advanceTimersByTime(1000);
+    engine.resume();
+
+    // Advance the remaining gap; phase3 should fire
+    vi.advanceTimersByTime(DEFAULT_CONFIG.phase2to3GapMs + 100);
+    expect(phases).toContain('phase3');
+  });
+
+  it('pause/resume during phase3 does not throw and engine remains in phase3', async () => {
+    // The top-level vi.mock for '../sounds/phase3Tone' returns a single object from
+    // startPhase3Swell, but the real source contract returns OscillatorNode[] (see
+    // AlarmEngine.ts:202 — "returns an array of 6 oscillators"). The existing tests
+    // never drive into phase3 AND then iterate the swell nodes (cleanup() iterates
+    // them, but the existing tests stop() before phase3SwellNodes is populated).
+    // This new test is the first to do so. Override the mock per-test to return a
+    // properly-shaped array — matching the real source contract — using the same
+    // mockReturnValue idiom already used elsewhere in this file.
+    const { startPhase3Swell } = await import('../sounds/phase3Tone');
+    const swellNodes = [
+      { stop: vi.fn(), connect: vi.fn(), start: vi.fn(), frequency: { setValueAtTime: vi.fn(), linearRampToValueAtTime: vi.fn() } },
+      { stop: vi.fn(), connect: vi.fn(), start: vi.fn(), frequency: { setValueAtTime: vi.fn(), linearRampToValueAtTime: vi.fn() } },
+    ];
+    (startPhase3Swell as ReturnType<typeof vi.fn>).mockReturnValue(swellNodes);
+
+    const engine = new AlarmEngine();
+    vi.stubGlobal('navigator', { vibrate: vi.fn() });
+    await startEngine(engine, DEFAULT_CONFIG);
+
+    vi.advanceTimersByTime(
+      DEFAULT_CONFIG.phase1DurationMs +
+        DEFAULT_CONFIG.phase2DurationMs +
+        DEFAULT_CONFIG.phase2to3GapMs +
+        100
+    );
+    expect(engine.getPhase()).toBe('phase3');
+
+    expect(() => engine.pause()).not.toThrow();
+    expect(() => engine.resume()).not.toThrow();
+    expect(engine.getPhase()).toBe('phase3');
+  });
 });
