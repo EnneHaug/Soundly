@@ -47,10 +47,12 @@ All v1.0 requirements are validated and live. Phase references in the Traceabili
 
 User-composed alarms run alongside the v1.0 continuous-phase model. Quick Nap and Focus stay byte-identical on the v1 path.
 
-- [ ] **SEG-01**: Segment-based alarm data model — `Segment = { id, durationMs, endSound: 'gentle' | 'triangle' | 'alarm' }`. A segment plays mostly silence, then triggers its `endSound` at the tail.
+- [x] **SEG-01
+**: Segment-based alarm data model — `Segment = { id, durationMs, endSound: 'gentle' | 'triangle' | 'alarm' }`. A segment plays mostly silence, then triggers its `endSound` at the tail.
 - [ ] **SEG-02**: Segment runtime fires segment boundaries via absolute scheduling (compute all fire times at `start()`, not chained `setTimeout`). Sound strikes are scheduled against `AudioContext.currentTime`. Drift across a 17-minute Wake Easy preset must be < 2 s.
 - [ ] **SEG-03**: Pause/resume preserves mid-segment progress — resuming continues from the snapshot point within the current segment, mirroring v1.0 pause semantics. Pause is disabled during the final alarm-sound segment.
-- [ ] **SEG-04**: Segment-config validation rejects empty segment lists, NaN/zero/negative durations, and unknown sound keys before the alarm starts. Validation surfaces a user-readable error in the composer; never throws into the runtime.
+- [x] **SEG-04
+**: Segment-config validation rejects empty segment lists, NaN/zero/negative durations, and unknown sound keys before the alarm starts. Validation surfaces a user-readable error in the composer; never throws into the runtime.
 - [x] **SEG-05
 **: v1.0 paths are byte-identical — `AlarmEngine`, `AlarmConfig`, `validateConfig`, `Quick Nap`, `Focus`, `useAlarm`, `Countdown.tsx`, `ProgressRing.tsx`, and all existing `src/engine/sounds/*.ts` (except the new `triangle.ts`) carry zero diff in v2.0.
 - [ ] **SEG-06**: Wake Easy preset ships as the third dashboard preset card — 4 × (4 min ending in gentle chime) + 1 × (1 min ending in alarm) = 17 min total. The displayed total label matches the actual segment sum exactly.
@@ -98,7 +100,8 @@ All meta + JSON-LD lives in static HTML, never React-rendered, so OG/Twitter/iMe
 A composed alarm can be shared as a URL — recipient opens the link and the composer pre-loads with the shared segments. No backend, no localStorage, no accounts. Reinforces the no-persistence design by making compositions portable without storage.
 
 - [ ] **SHR-01**: Composer "Share" button serializes the current segment list into a versioned URL hash fragment (e.g. `/app#c=v1:240000-0,240000-0,240000-0,240000-0,60000-2`) and invokes `navigator.share({ url, title, text })`. Falls back to copy-to-clipboard with a confirmation toast on browsers without Web Share API support.
-- [ ] **SHR-02**: When the app loads with a shared composition in `location.hash`, the composer mounts pre-loaded with the decoded segments (instead of the Wake Easy template). Decoded configs pass through the same SEG-04 validation gate before being accepted.
+- [x] **SHR-02**: When the app loads with a shared composition in `location.hash`, the composer mounts pre-loaded with the decoded segments (instead of the Wake Easy template). Decoded configs pass through the same SEG-04
+ validation gate before being accepted.
 - [ ] **SHR-03**: Invalid, malformed, or oversized shared URLs fail gracefully — composer falls back to the Wake Easy default and surfaces an unobtrusive "couldn't load shared alarm" notice. The runtime never throws on tampered URL input.
 - [ ] **SHR-04**: Encoding format begins with a single-token version prefix (`v1:`). Decoders reject unknown versions cleanly. The format is documented in source so future versions remain backward-compatible (or explicit about breaking).
 
