@@ -39,7 +39,7 @@ The original v1.0 alarm engine, three-phase escalation, presets, PWA shell, and 
 ## Phases
 
 - [x] **Phase 6: AlarmSession Refactor + v1 Regression Guard** — Extract shared session lifecycle from `AlarmEngine`; preserve byte-identical v1 behavior (SEG-05 zero-diff guarantee)
-- [ ] **Phase 7: Segment Engine + Triangle Sound** — Additive engine + new sound; no UI changes; runtime validated by tests
+- [x] **Phase 7: Segment Engine + Triangle Sound** — Additive engine + new sound; no UI changes; runtime validated by tests
 - [ ] **Phase 8: Wake Easy Preset + Segment Countdown UI** — Third dashboard preset card + N-segment countdown UI; validates segment runtime end-to-end
 - [ ] **Phase 9: Custom Composer + Share via URL** — Modal segment builder with stepper inputs and duplicate; share link round-trip
 - [ ] **Phase 10: SEO Meta + JSON-LD + Service Worker Update Infra** — Static-HTML meta, OG, Twitter, JSON-LD; SW autoUpdate + skipWaiting + clientsClaim
@@ -77,7 +77,7 @@ The original v1.0 alarm engine, three-phase escalation, presets, PWA shell, and 
   - [x] 07-02-PLAN.md — SegmentState (types + validateSegmentConfig discriminated-union + WAKE_EASY_CONFIG) + validator coverage tests
   - [x] 07-03-PLAN.md — segmentSound dispatcher (gentle/triangle keys; alarm carve-out) + routing tests
   - [x] 07-04-PLAN.md — SegmentEngine class (mirrors AlarmEngine shape; absolute scheduling; alarm-segment ramp+swell; pause snapshot; per-key auto-stop) + ~22-test regression net
-  - [ ] 07-05-PLAN.md — SegmentHarness (Vite-DEV-gated) + barrel exports (D-24 append-only) + App.tsx mount line + AGGREGATED SEG-05 zero-diff guardrail
+  - [x] 07-05-PLAN.md — SegmentHarness (Vite-DEV-gated) + barrel exports (D-24 append-only) + App.tsx mount line + AGGREGATED SEG-05 zero-diff guardrail
 **UI hint**: no
 
 ### Phase 8: Wake Easy Preset + Segment Countdown UI
@@ -147,7 +147,7 @@ Phase 10 may ship in parallel with Phases 6–9 if desired (orthogonal track); P
 | 4. PWA Shell | 1/1 | Shipped | v1.0 |
 | 5. iOS Audio Loudness Fixes | 1/1 | Shipped | v1.0 |
 | 6. AlarmSession Refactor + v1 Regression Guard | 3/3 | Shipped | v2.0 |
-| 7. Segment Engine + Triangle Sound | 4/5 | Executing | - |
+| 7. Segment Engine + Triangle Sound | 5/5 | Shipped | v2.0 |
 | 8. Wake Easy Preset + Segment Countdown UI | 0/0 | Planned | - |
 | 9. Custom Composer + Share via URL | 0/0 | Planned | - |
 | 10. SEO Meta + JSON-LD + SW Update Infra | 0/0 | Planned | - |
