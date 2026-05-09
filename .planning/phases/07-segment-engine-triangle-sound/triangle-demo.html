@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Triangle Sound Preview — Phase 7</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #1a1a2e; color: #e0e0e0;
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: flex-start; min-height: 100vh; padding: 2rem;
+  }
+  h1 { font-size: 1.5rem; margin-bottom: 0.5rem; color: #a0c4ff; }
+  p.subtitle { font-size: 0.9rem; color: #888; margin-bottom: 2rem; text-align: center; max-width: 600px; }
+  .options { display: flex; flex-direction: column; gap: 1.25rem; max-width: 640px; width: 100%; }
+  .option {
+    background: #16213e; border: 1px solid #333; border-radius: 12px;
+    padding: 1.25rem 1.5rem; transition: all 0.2s;
+  }
+  .option:hover { border-color: #a0c4ff; background: #1a2744; }
+  .option.playing { border-color: #7ec8e3; box-shadow: 0 0 20px rgba(126,200,227,0.2); }
+  .option h2 { font-size: 1.05rem; margin-bottom: 0.3rem; color: #c9d6ff; }
+  .option .desc { font-size: 0.85rem; color: #999; margin-bottom: 0.6rem; line-height: 1.45; }
+  .option .tech { font-size: 0.72rem; color: #666; font-style: italic; margin-bottom: 0.9rem; }
+  button {
+    background: #a0c4ff; color: #1a1a2e; border: none; border-radius: 8px;
+    padding: 0.55rem 1.3rem; font-size: 0.9rem; font-weight: 600;
+    cursor: pointer; transition: background 0.15s; margin-right: 0.5rem;
+  }
+  button:hover { background: #7ec8e3; }
+  button:disabled { background: #555; color: #888; cursor: not-allowed; }
+  .ab {
+    background: #2a2a3e; color: #c9d6ff;
+  }
+  .ab:hover { background: #34344e; }
+  .reference {
+    margin-top: 2rem; max-width: 640px; width: 100%;
+    background: #0e1828; border: 1px dashed #2a3a55;
+    border-radius: 12px; padding: 1.25rem 1.5rem;
+  }
+  .reference h2 { font-size: 0.95rem; margin-bottom: 0.5rem; color: #ffb38a; }
+  .reference p { font-size: 0.8rem; color: #888; margin-bottom: 0.8rem; }
+  .note { font-size: 0.8rem; color: #666; margin-top: 2rem; text-align: center; max-width: 500px; line-height: 1.5; }
+  .pinned {
+    position: sticky; top: 1rem; align-self: flex-end; margin-bottom: 1rem;
+    font-size: 0.75rem; color: #888;
+  }
+</style>
+</head>
+<body>
+<h1>Triangle Sound Preview — Phase 7</h1>
+<p class="subtitle">
+  Audition the four candidate triangle synths. The "vs Bowl" button on each option plays the bowl
+  immediately followed by the triangle so you can hear whether they sit in different registers.
+</p>
+
+<div class="options">
+  <p style="font-size: 0.78rem; color: #ffb38a; margin-bottom: 1rem; text-align: center; max-width: 600px;">
+    v2 — fundamentals lowered to sit just above the AUD-05 floor (≥3006 Hz, one octave above the bowl's top partial at 1503 Hz). FM option removed.
+  </p>
+  <div class="option" id="opt-stack">
+    <h2>A) Inharmonic sine stack</h2>
+    <p class="desc">Four sine partials at 3136 Hz (~G7) + ×2.43 + ×4.17 + ×6.27, with exponential decay (faster on uppers). Mirrors the singing-bowl recipe but at a higher register — metallic, bell-like, unambiguously a "triangle ting."</p>
+    <p class="tech">4 sine partials, inharmonic ratios, peak gains 0.30/0.18/0.10/0.05, decays 1.4/1.0/0.8/0.6 s, attack 5–8 ms</p>
+    <button onclick="play('stack')">Play</button>
+    <button class="ab" onclick="playVsBowl('stack')">Bowl → Stack</button>
+  </div>
+
+  <div class="option" id="opt-sine">
+    <h2>B) Pure sine — 2793.83 Hz (F7) — LOCKED</h2>
+    <p class="desc">Single sine oscillator at exact F7 = 2793.83 Hz with 8 ms linear attack and 2.0 s exponential decay. Major-flavored against the bowl (F over A = major 3rd inverted = F major) — warm, cheerful end-of-segment ping.</p>
+    <p class="tech">Single OscillatorNode, type=sine, freq=2793.83 Hz, peak gain 0.4, attack 8 ms linear, decay 2.0 s exponential to 0.001. AUD-05 reframed to floor at the bowl's dominant partials (~2076 Hz) so this value is compliant.</p>
+    <button onclick="play('sine')">Play</button>
+    <button class="ab" onclick="playVsBowl('sine')">Bowl → Sine</button>
+  </div>
+
+  <div class="option" id="opt-sine-fs">
+    <h2>B.1) Pure sine — 2960 Hz (F#7)</h2>
+    <p class="desc">Same envelope as B but at F#7. Minor-flavored against the bowl (F# over A = minor 3rd inverted = F# minor) — contemplative, slightly melancholic ping.</p>
+    <p class="tech">Single OscillatorNode, type=sine, freq=2960 Hz (F#7 equal-temperament), attack 8 ms linear, decay 2.0 s exponential — note: still below the AUD-05 ≥3006 Hz floor (by ~46 Hz)</p>
+    <button onclick="play('sine-fs')">Play</button>
+    <button class="ab" onclick="playVsBowl('sine-fs')">Bowl → Sine F#</button>
+  </div>
+
+  <div class="option" id="opt-sine-g">
+    <h2>B.2) Pure sine — 3136 Hz (G7)</h2>
+    <p class="desc">Same envelope as B but at G7. Suspended/unresolved against the bowl (G over A = major 2nd inverted = minor 7th) — neither major nor minor; sits "in motion," wants to lean somewhere.</p>
+    <p class="tech">Single OscillatorNode, type=sine, freq=3136 Hz (G7 equal-temperament), attack 8 ms linear, decay 2.0 s exponential — above the AUD-05 ≥3006 Hz floor ✓</p>
+    <button onclick="play('sine-g')">Play</button>
+    <button class="ab" onclick="playVsBowl('sine-g')">Bowl → Sine G</button>
+  </div>
+
+  <div class="option" id="opt-tri">
+    <h2>C) Triangle waveform osc</h2>
+    <p class="desc">Single OscillatorNode, type=triangle, fundamental 2800 Hz (same pitch as B — direct sine vs triangle waveform comparison). Natural odd-harmonic content (3rd/5th/7th) gives a slightly hollow electronic-triangle character versus B's pure sine. Both share the F-major-flavored interval against the bowl's A root.</p>
+    <p class="tech">Single OscillatorNode, type=triangle, freq=2800 Hz, attack 8 ms linear, decay 1.5 s exponential — note: below the AUD-05 ≥3006 Hz floor</p>
+    <button onclick="play('tri')">Play</button>
+    <button class="ab" onclick="playVsBowl('tri')">Bowl → Triangle-osc</button>
+  </div>
+</div>
+
+<div class="reference">
+  <h2>Reference: existing singing bowl</h2>
+  <p>This is what's currently in <code>src/engine/sounds/singingBowl.ts</code>. Use it to calibrate "sonically distinct."</p>
+  <button onclick="playBowl()">Play singing bowl</button>
+</div>
+
+<p class="note">
+  Tip: use headphones at a comfortable mid-volume. The triangle should sit clearly above the bowl —
+  if either option sounds "too close" to the bowl's upper partials, that's a candidate to reject.
+</p>
+
+<script>
+  let ac = null;
+  function ctx() {
+    if (!ac) ac = new (window.AudioContext || window.webkitAudioContext)();
+    if (ac.state === 'suspended') ac.resume();
+    return ac;
+  }
+
+  // ---- singing bowl (mirrors src/engine/sounds/singingBowl.ts) ----
+  function partial(ac, freq, peak, attack, decay, start) {
+    const osc = new OscillatorNode(ac, { type: 'sine', frequency: freq });
+    const g = new GainNode(ac, { gain: 0 });
+    g.gain.setValueAtTime(0, start);
+    g.gain.linearRampToValueAtTime(peak, start + attack);
+    g.gain.exponentialRampToValueAtTime(0.001, start + attack + decay);
+    osc.connect(g).connect(ac.destination);
+    osc.start(start);
+    osc.stop(start + attack + decay + 0.1);
+  }
+
+  function strikeBowl(ac, t = ac.currentTime, masterGain = 0.7) {
+    const fund = 220;
+    partial(ac, fund,            0.35 * masterGain, 0.08, 6.0, t);
+    partial(ac, fund * 2.76,     0.20 * masterGain, 0.05, 4.5, t);
+    partial(ac, fund * 4.72,     0.12 * masterGain, 0.03, 3.5, t);
+    partial(ac, fund * 6.83,     0.06 * masterGain, 0.02, 2.5, t);
+    partial(ac, fund * 1.003,    0.15 * masterGain, 0.08, 5.5, t);
+  }
+
+  // ---- A: inharmonic sine stack ----
+  function strikeStack(ac, t = ac.currentTime) {
+    const fund = 3136; // ~G7 — just above the 3006 Hz AUD-05 floor
+    partial(ac, fund,            0.30, 0.008, 1.4, t);
+    partial(ac, fund * 2.43,     0.18, 0.006, 1.0, t);
+    partial(ac, fund * 4.17,     0.10, 0.005, 0.8, t);
+    partial(ac, fund * 6.27,     0.05, 0.005, 0.6, t);
+  }
+
+  // ---- B / B.1 / B.2: pure sine, same envelope, varying fundamental ----
+  function strikePureSine(ac, freq, t = ac.currentTime) {
+    const osc = new OscillatorNode(ac, { type: 'sine', frequency: freq });
+    const g = new GainNode(ac, { gain: 0 });
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(0.4, t + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 2.0);
+    osc.connect(g).connect(ac.destination);
+    osc.start(t);
+    osc.stop(t + 2.1);
+  }
+  const strikeSine   = (ac, t) => strikePureSine(ac, 2793.83, t); // B   F7 exact 2793.83 Hz — major flavor — LOCKED
+  const strikeSineFs = (ac, t) => strikePureSine(ac, 2960, t); // B.1 F#7  2960 Hz — minor flavor
+  const strikeSineG  = (ac, t) => strikePureSine(ac, 3136, t); // B.2 G7   3136 Hz — suspended
+
+  // ---- C: triangle waveform osc ----
+  function strikeTri(ac, t = ac.currentTime) {
+    const osc = new OscillatorNode(ac, { type: 'triangle', frequency: 2800 });
+    const g = new GainNode(ac, { gain: 0 });
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(0.35, t + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 1.5);
+    osc.connect(g).connect(ac.destination);
+    osc.start(t);
+    osc.stop(t + 1.6);
+  }
+
+  const STRIKERS = {
+    stack:    strikeStack,
+    sine:     strikeSine,    // B   2800 Hz F
+    'sine-fs': strikeSineFs, // B.1 2960 Hz F#
+    'sine-g':  strikeSineG,  // B.2 3136 Hz G
+    tri:      strikeTri,
+  };
+
+  function flash(id, ms = 1600) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.classList.add('playing');
+    setTimeout(() => el.classList.remove('playing'), ms);
+  }
+
+  function play(key) {
+    const c = ctx();
+    STRIKERS[key](c);
+    flash('opt-' + key);
+  }
+
+  function playBowl() {
+    const c = ctx();
+    strikeBowl(c);
+  }
+
+  function playVsBowl(key) {
+    const c = ctx();
+    const t = c.currentTime;
+    strikeBowl(c, t, 0.7);
+    STRIKERS[key](c, t + 2.2); // bowl plays first, triangle ~2.2s later
+    flash('opt-' + key, 4000);
+  }
+</script>
+</body>
+</html>

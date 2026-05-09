@@ -68,7 +68,7 @@ User-composed alarms run alongside the v1.0 continuous-phase model. Quick Nap an
 
 ### Sound (AUD continued)
 
-- [ ] **AUD-05**: Triangle sound — synthesized Web Audio strike, ~1–2 s decay, click-free attack (≥5 ms `linearRampToValueAtTime`), fundamental frequency ≥1 octave above the singing-bowl partials so the two tones never sonically clash.
+- [ ] **AUD-05**: Triangle sound — synthesized Web Audio strike, ~1–2 s decay, click-free attack (≥5 ms `linearRampToValueAtTime`), fundamental frequency ≥1 octave above the singing-bowl's **dominant** partials (defined as partials with peak gain ≥0.10 — the 220 / 607 / 1038 Hz partials, giving an effective floor of ~2076 Hz) so the two tones do not sonically clash. The bowl's quietest partial at 1503 Hz (peak gain 0.06 — at noise-floor level) is intentionally not a constraint, since it is not a perceptible component of the bowl's timbre. Phase 7 design auditioning settled on F7 (2793.83 Hz) as the chosen fundamental, which is above this floor and forms a major-third-flavored interval against the bowl's A root for a warm "ping" feel.
 
 ### Discoverability — SEO (SEO)
 
