@@ -73,7 +73,7 @@ The original v1.0 alarm engine, three-phase escalation, presets, PWA shell, and 
   4. The triangle sound (`src/engine/sounds/triangle.ts`) plays a single bright strike with a click-free attack (≥5 ms `linearRampToValueAtTime`), exponential decay over ~1–2 s, and a fundamental at least one octave above the singing-bowl partials; on headphones at 50% volume the attack is inaudible as a separate event from the tone
   5. v1 paths still carry zero diff: AlarmEngine, AlarmConfig, useAlarm, Countdown, ProgressRing, and every existing sound file (other than the new `triangle.ts`) are unchanged this phase
 **Plans:** 5 plans
-  - [ ] 07-01-PLAN.md — Triangle sound (strikeTriangle at F7 = 2793.83 Hz with click-free 8 ms attack + 2.0 s exp decay) + envelope unit tests
+  - [x] 07-01-PLAN.md — Triangle sound (strikeTriangle at F7 = 2793.83 Hz with click-free 8 ms attack + 2.0 s exp decay) + envelope unit tests
   - [ ] 07-02-PLAN.md — SegmentState (types + validateSegmentConfig discriminated-union + WAKE_EASY_CONFIG) + validator coverage tests
   - [ ] 07-03-PLAN.md — segmentSound dispatcher (gentle/triangle keys; alarm carve-out) + routing tests
   - [ ] 07-04-PLAN.md — SegmentEngine class (mirrors AlarmEngine shape; absolute scheduling; alarm-segment ramp+swell; pause snapshot; per-key auto-stop) + ~22-test regression net
