@@ -74,9 +74,9 @@ The original v1.0 alarm engine, three-phase escalation, presets, PWA shell, and 
   5. v1 paths still carry zero diff: AlarmEngine, AlarmConfig, useAlarm, Countdown, ProgressRing, and every existing sound file (other than the new `triangle.ts`) are unchanged this phase
 **Plans:** 5 plans
   - [x] 07-01-PLAN.md — Triangle sound (strikeTriangle at F7 = 2793.83 Hz with click-free 8 ms attack + 2.0 s exp decay) + envelope unit tests
-  - [ ] 07-02-PLAN.md — SegmentState (types + validateSegmentConfig discriminated-union + WAKE_EASY_CONFIG) + validator coverage tests
-  - [ ] 07-03-PLAN.md — segmentSound dispatcher (gentle/triangle keys; alarm carve-out) + routing tests
-  - [ ] 07-04-PLAN.md — SegmentEngine class (mirrors AlarmEngine shape; absolute scheduling; alarm-segment ramp+swell; pause snapshot; per-key auto-stop) + ~22-test regression net
+  - [x] 07-02-PLAN.md — SegmentState (types + validateSegmentConfig discriminated-union + WAKE_EASY_CONFIG) + validator coverage tests
+  - [x] 07-03-PLAN.md — segmentSound dispatcher (gentle/triangle keys; alarm carve-out) + routing tests
+  - [x] 07-04-PLAN.md — SegmentEngine class (mirrors AlarmEngine shape; absolute scheduling; alarm-segment ramp+swell; pause snapshot; per-key auto-stop) + ~22-test regression net
   - [ ] 07-05-PLAN.md — SegmentHarness (Vite-DEV-gated) + barrel exports (D-24 append-only) + App.tsx mount line + AGGREGATED SEG-05 zero-diff guardrail
 **UI hint**: no
 
@@ -147,7 +147,7 @@ Phase 10 may ship in parallel with Phases 6–9 if desired (orthogonal track); P
 | 4. PWA Shell | 1/1 | Shipped | v1.0 |
 | 5. iOS Audio Loudness Fixes | 1/1 | Shipped | v1.0 |
 | 6. AlarmSession Refactor + v1 Regression Guard | 3/3 | Shipped | v2.0 |
-| 7. Segment Engine + Triangle Sound | 2/5 | Executing | - |
+| 7. Segment Engine + Triangle Sound | 4/5 | Executing | - |
 | 8. Wake Easy Preset + Segment Countdown UI | 0/0 | Planned | - |
 | 9. Custom Composer + Share via URL | 0/0 | Planned | - |
 | 10. SEO Meta + JSON-LD + SW Update Infra | 0/0 | Planned | - |

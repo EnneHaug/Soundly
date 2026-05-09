@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: — Foundations
 status: executing
-stopped_at: Completed 07-03-PLAN.md
-last_updated: "2026-05-09T20:19:25.726Z"
+stopped_at: Completed 07-04-PLAN.md
+last_updated: "2026-05-09T20:31:49.984Z"
 last_activity: 2026-05-09
 progress:
   total_phases: 7
   completed_phases: 6
   total_plans: 17
-  completed_plans: 15
-  percent: 88
+  completed_plans: 16
+  percent: 94
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-05-04)
 ## Current Position
 
 Phase: 7 (Segment Engine + Triangle Sound) — EXECUTING
-Plan: 4 of 5
+Plan: 5 of 5
 Status: Ready to execute
 Last activity: 2026-05-09
 
-Progress: [█████████░] 88%
+Progress: [█████████░] 94%
 
 ## Performance Metrics
 
@@ -63,6 +63,7 @@ Progress: [█████████░] 88%
 | Phase 07 P01 | 2m 22s | 2 tasks | 2 files |
 | Phase 07 P02 | 3m 22s | 2 tasks | 2 files |
 | Phase 07 P03 | 1m 41s | 2 tasks | 2 files |
+| Phase 07 P04 | 6m 41s | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -85,6 +86,7 @@ Recent decisions affecting current work:
 - [Phase 07 P01]: AUD-05 implemented as strikeTriangle(ac, masterGain=1.0) in src/engine/sounds/triangle.ts — single OscillatorNode (sine, 2793.83 Hz) with 8 ms linearRamp attack to 0.4*masterGain peak, 2.0 s exponentialRamp decay to 0.001 (Web Audio spec compliance — never to 0), osc.stop(t+2.1). 9-test constructor-stub regression net mirrors singingBowl.test.ts pattern. v1 zero-diff floor preserved.
 - [Phase 07 P02]: SegmentState.ts shipped — 6 type exports (Segment, SegmentConfig, SegmentEngineState, SegmentChangeEvent, SegmentPauseSnapshot, SegmentValidationResult) + validateSegmentConfig (discriminated-union, never throws per SEG-04 / D-11) + WAKE_EASY_CONFIG (5 segments, 17 min). 22/22 tests passing including 5 explicit .not.toThrow() defensive-contract assertions and first-failure-wins ordering verification. v1 zero-diff floor preserved.
 - [Phase 07 P03]: fireSegmentEndSound dispatcher shipped at src/engine/sounds/segmentSound.ts — type-narrowed key union ('gentle' | 'triangle') deliberately excludes 'alarm' at compile time per D-13 carve-out (alarm needs ramp+loop, not one-shot strike). 3-test routing regression net (gentle/triangle/identity passthrough) at src/engine/__tests__/segmentSound.test.ts. SegmentEngine (07-04) consumes via 'if (endSound === alarm) ... else fireSegmentEndSound(ac, endSound)' — TS narrows the union automatically. v1 zero-diff floor preserved.
+- [Phase 07 P04]: SegmentEngine class shipped at src/engine/SegmentEngine.ts mirroring AlarmEngine shape per D-07. 10 public methods (start/pause/resume/stop/dismiss/getState/getCurrentSegment/isPaused/canPause/onSegmentChange) + private handleSegmentFire and cleanup. Three Phase-7 deltas: (1) absolute-epoch scheduleAt loop replaces three discrete phase fires (SEG-02 / D-16); (2) alarm-segment fire enters firing-alarm state BEFORE createPhase3Ramp call so canPause() flips atomically (D-01..D-03); (3) per-key auto-stop window (gentle=6100ms, triangle=2100ms) for last gentle/triangle (D-04) — alarm-tail compositions run forever per D-02. cleanup() ordering verbatim from AlarmEngine.cleanup():354-407 with phase3*->alarm* rename and Phase 2 vibration/tick blocks dropped. 23-test regression net at src/engine/__tests__/SegmentEngine.test.ts spanning the full D-23 coverage matrix. Timer-mock pattern (vi.mock('../timer')) lets tests synthesize fires by invoking captured callbacks rather than advancing fake timers through scheduleAt polling. v1 zero-diff floor preserved.
 
 ### Pending Todos
 
@@ -109,8 +111,8 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-05-09T20:19:25.712Z
-Stopped at: Completed 07-03-PLAN.md
+Last session: 2026-05-09T20:31:49.969Z
+Stopped at: Completed 07-04-PLAN.md
 Resume file: None
 
 **Planned Phase:** 7 (Segment Engine + Triangle Sound) — 5 plans — 2026-05-09T19:59:23.067Z
