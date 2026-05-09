@@ -28,3 +28,14 @@ export { startVibration, stopVibration } from '../platform/vibration';
 export { acquireWakeLock, releaseWakeLock, attachVisibilityReacquire } from '../platform/wakeLock';
 export { startAlarmSession, endAlarmSession } from './AlarmSession';
 export type { SessionHandle } from './AlarmSession';
+
+// === Phase 7 additions (CONTEXT D-24) — Segment Engine + Triangle Sound ===
+export { SegmentEngine } from './SegmentEngine';
+export type {
+  Segment,
+  SegmentConfig,
+  SegmentEngineState,
+  SegmentChangeEvent,
+} from './SegmentState';
+export { validateSegmentConfig, WAKE_EASY_CONFIG } from './SegmentState';
+export { strikeTriangle } from './sounds/triangle';
