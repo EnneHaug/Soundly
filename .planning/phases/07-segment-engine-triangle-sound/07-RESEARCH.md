@@ -1068,32 +1068,39 @@ All other primitives (Web Audio API, AlarmSession, scheduleAt, strikeBowl, phase
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
+
+> All five questions were materially resolved during planning (gsd-planner pass on 2026-05-09). Resolutions are recorded inline below; the planning artifacts cited are the authoritative implementations.
 
 1. **Auto-stop decay window for D-04 — per-segment-key vs uniform 6100 ms?**
    - What we know: Triangle decays in 2.1s; bowl in ~6.1s. D-04 says "after the final tail strike's ~2s decay" — but ~2s is only correct for triangle.
    - What's unclear: Whether to use per-key value (cleaner, slightly more code) or uniform 6100 ms (simpler, may delay state→'dismissed' for triangle-tailed compositions by 4s).
    - Recommendation: **Per-key value** — cleaner UX, trivial implementation. Wrap in a tiny helper `getSoundDecayMs('gentle' | 'triangle')`.
+   - **RESOLVED:** per-key decay window — `07-04-PLAN.md` defines `DECAY_WINDOW_MS = { gentle: 6100, triangle: 2100 }` and uses it for the auto-stop scheduling on `endSound: 'gentle' | 'triangle'` tails.
 
 2. **Validator: does `start()` throw on `!ok` OR return early silently?**
    - What we know: SEG-04 says validator never throws into the runtime; D-11 says runtime gates on `result.ok`.
    - What's unclear: Whether the engine itself should also throw (composer catches) or just no-op (composer must validate first).
    - Recommendation: **Throw inside `start()`** — defense-in-depth. Composer's contract is to call validator first; engine is the second gate. This matches v1 `validateConfig` behavior, which is what existing test patterns expect.
+   - **RESOLVED:** throw inside `start()` — `07-04-PLAN.md` Task 1 calls `validateSegmentConfig(config)` and `throw new Error(result.error)` when `!result.ok`, mirroring AlarmEngine's v1 contract.
 
 3. **Should `triangle.ts` expose any helpers beyond `strikeTriangle`?**
    - What we know: The single-strike API is sufficient for Phase 7.
    - What's unclear: Whether Phase 9 composer needs a `previewTriangle()` (separate name) for its sound-picker preview.
    - Recommendation: **Single export for Phase 7.** Phase 9 can add `previewTriangle` (lower volume, e.g. masterGain=0.3) without changing the existing API.
+   - **RESOLVED:** single `strikeTriangle` export for Phase 7 — `07-01-PLAN.md` writes `triangle.ts` with the single function only; Phase 9 may add `previewTriangle` later without breaking changes.
 
 4. **Harness logging style — DOM table vs console only?**
    - What we know: D-14 says "console-style event log capturing onSegmentChange events with `performance.now()` timestamps"; D-19 explicitly Claude's-Discretion.
    - What's unclear: DOM-rendered log helps on-device verification (mobile dev tools awkward); console-only is simpler.
    - Recommendation: **DOM table.** Mobile DevTools usability matters for the on-device drift verification. Lightweight — `<table>` of timestamps in monospace.
+   - **RESOLVED:** DOM table — `07-05-PLAN.md` Task 1 renders a `<table>` of timestamped `onSegmentChange` events in `SegmentHarness.tsx`.
 
 5. **Static vs dynamic import for SegmentHarness in App.tsx?**
    - What we know: Static is verified tree-shaken; dynamic provides explicit chunk separation.
    - What's unclear: Whether the team prefers paranoid extra-isolation.
    - Recommendation: **Static.** Simpler, verifiably DCE'd, easier to remove in Phase 8 (one line vs five).
+   - **RESOLVED:** static import — `07-05-PLAN.md` Task 3 adds `import SegmentHarness from './dev/SegmentHarness'` to `App.tsx` behind the `import.meta.env.DEV` guard; tree-shake verified by post-build grep returning 0.
 
 ---
 
