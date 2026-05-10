@@ -102,4 +102,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-06 — Milestone v2.0 (Custom Alarm Composer) scope confirmed; SEO/discoverability + share-via-URL added; 34 requirements defined.*
+*Last updated: 2026-05-10 — Phase 8 complete: Wake Easy "4 x 4" preset + SegmentCountdown UI + useActiveAlarm dispatcher shipped (5/5 codebase criteria verified; 4 on-device gates queued in 08-HUMAN-UAT.md). SEG-05 v1 byte-identical floor preserved across all 20 protected paths. Composer modal + share-via-URL remain ahead in Phase 9.*
