@@ -934,32 +934,37 @@ describe('useActiveAlarm', () => {
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Test framework: install `@testing-library/react` or test hooks via `react-test-renderer`?**
    - What we know: No DOM-test infra exists today. Vitest 3.1.2 is installed.
    - What's unclear: Whether the planner wants to budget the install (~2 deps) for this phase or defer.
    - Recommendation: Install `@testing-library/react` as part of an early Wave 0 task. The hooks tests (`useSegmentAlarm.test.ts`, `useActiveAlarm.test.ts`) are simpler with `renderHook`. Component tests (`SegmentCountdown.test.tsx`, `SegmentProgressRing.test.tsx`) need it anyway.
+   - **RESOLVED:** Plan 01 Task 1 installs `@testing-library/react@^16.0.0` + `@testing-library/dom@^10.4.0` + `jsdom@^26.0.0` as dev dependencies and configures Vitest's jsdom environment in `vitest.config.ts`. Recommendation accepted in full.
 
 2. **`@testing-library/jest-dom` matchers — needed?**
    - What we know: Vitest can do `expect(element).toBeInTheDocument()` with jest-dom matchers.
    - What's unclear: Whether the test list in D-20 needs DOM-assertion matchers or if pure structural assertions suffice.
    - Recommendation: Add jest-dom only if a test fails to express cleanly without it. Often pure `expect(container.querySelector('...')).toBeTruthy()` works.
+   - **RESOLVED:** Plan 01 explicitly omits `@testing-library/jest-dom`. The existing Vitest `expect(...)` matchers (`toBeTruthy`, `toBe`, `toContain`, attribute reads via `.getAttribute()`, class-list reads via `.className.split(' ').includes(...)`) are sufficient for the assertion shapes Phase 8 needs (text content, attribute presence, class membership). Plan 01 Task 1 acceptance criteria require `@testing-library/jest-dom` to NOT appear in `package.json` devDependencies.
 
 3. **Segment-index display position (Claude's Discretion in CONTEXT).**
    - What we know: D-05 says phase label = friendly description ("Gentle chime"). CONTEXT recommends combining: `"Segment {idx} of {total} — {soundLabel}"`.
    - What's unclear: User testing might prefer a separate badge or pill above the timer.
    - Recommendation: Ship the combined-label form per CONTEXT recommendation. Iterate if visual review during dev finds it cluttered.
+   - **RESOLVED:** CONTEXT.md D-05 (LOCKED) + UI-SPEC.md "Center stack" section fix the format as `Segment {idx+1} of {total} — {soundLabel}` and place it in the slot that v1's `PHASE_LABELS` previously occupied (text-text-secondary text-sm mt-2, single-line, transition-opacity duration-500). No separate badge or pill — combined-label form ships as recommended. Plan 05 (SegmentCountdown) consumes this format verbatim from `SOUND_LABELS` mapping in §"Pattern 3".
 
 4. **`pendingMode` race window in `useActiveAlarm`.**
    - What we know: `engine.start()` is async. There's a microtask gap between `setPendingMode('segments')` and `isRunning: true`.
    - What's unclear: Whether the gap is visually perceptible (likely sub-frame on desktop, possibly perceptible on slower mobile).
    - Recommendation: Include `pendingMode` in the implementation per Pattern 2 — cheap insurance against flicker; trivial to remove if metrics show no benefit.
+   - **RESOLVED:** CONTEXT.md D-07 (LOCKED discriminated-union shape) + D-08 (both hooks mounted unconditionally) + Plan 04 implement Pattern 2's recommended form: `useActiveAlarm` mounts `useAlarm()` and `useSegmentAlarm()` unconditionally, holds an internal `pendingMode: 'continuous' | 'segments' | null` snapshot via `useState`, and derives `mode = continuous.isRunning ? 'continuous' : segments.isRunning ? 'segments' : pendingMode ?? 'idle'`. The discriminated union narrows correctly throughout the start window — Dashboard never re-renders during the async gap. Plan 04 Task 1 includes a dedicated `pendingMode` race-window unit test (`useActiveAlarm.test.ts` describe block "useActiveAlarm — pendingMode race-window (RESEARCH Pattern 2)").
 
 5. **Pulse animation — keyframes in `index.css` vs scoped to component?**
    - What we know: Three options. Recommendation given (global CSS).
    - What's unclear: Style coupling preferences across the codebase. The repo currently has `src/index.css` doing only `@theme` setup; introducing animations there is a precedent.
    - Recommendation: Global `index.css` per Code Example 1. If the team wants strict component encapsulation later, refactor in Phase 9.
+   - **RESOLVED:** Plan 01 Task 2 appends `@keyframes pulse-active-arc` (50% opacity 0.7, 0%/100% opacity 1.0) + `.pulse-active { animation: pulse-active-arc 1s ease-in-out infinite; }` rule to `src/index.css`, gated behind `@media (prefers-reduced-motion: no-preference)`. Single global source of truth — `src/index.css` is NOT in the SEG-05 protected list, so the append is safe. Plan 03 (SegmentProgressRing) and Plan 05 (SegmentCountdown) consume the `.pulse-active` class via `className` toggling on the active arc when `state === 'firing-alarm'`.
 
 ---
 
