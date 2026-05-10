@@ -97,6 +97,13 @@ export function useSegmentAlarm(): UseSegmentAlarmReturn {
       let currentSegment = prev.currentSegment;
 
       if (event.kind === 'start') {
+        // SegmentEngine.resume() synchronously re-fires 'start' for the current segment as a
+        // UI repaint signal (SegmentEngine.ts:331-336). If the hook still believes it's paused,
+        // this is the resume repaint — preserve the snapshot remaining-ms; resume() itself
+        // will convert it to epoch ms after this callback returns.
+        if (prev.isPaused) {
+          return prev;
+        }
         segmentEndsAt = Date.now() + event.segment.durationMs;
         currentSegment = {
           index: event.segmentIndex,

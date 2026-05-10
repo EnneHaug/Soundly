@@ -227,6 +227,45 @@ describe('useSegmentAlarm — pause/resume snapshot semantics', () => {
     expect(result.current.totalEndsAt).toBe(Date.now() + pausedTotal);
   });
 
+  it('resume() ignores engine.resume()\'s synchronous onSegmentChange repaint (H-01 regression)', async () => {
+    // SegmentEngine.resume() synchronously fires onSegmentChange({kind:'start'}) as a UI repaint
+    // signal (SegmentEngine.ts:331-336). The hook must treat this as a no-op while still
+    // paused — otherwise segmentEndsAt is overwritten with a full segment duration before
+    // resume()'s explicit setState converts the snapshot back to epoch ms.
+    const { result } = renderHook(() => useSegmentAlarm());
+    await act(async () => {
+      await result.current.start(WAKE_EASY_CONFIG);
+    });
+    // Pause 30s into the first 4-minute segment → snapshot = 210_000 ms remaining
+    vi.advanceTimersByTime(30_000);
+    act(() => {
+      result.current.pause();
+    });
+    const pausedSeg = result.current.segmentEndsAt;
+    const pausedTotal = result.current.totalEndsAt;
+    expect(pausedSeg).toBe(210_000);
+    // Hold paused for 60s, then resume — and have the mock simulate the engine's synchronous
+    // start-repaint, the way the real SegmentEngine does.
+    vi.advanceTimersByTime(60_000);
+    mockEngineInstance.resume.mockImplementationOnce(() => {
+      mockSegmentChangeCb!({
+        kind: 'start',
+        segmentIndex: 0,
+        totalSegments: 5,
+        segment: WAKE_EASY_CONFIG.segments[0],
+      });
+    });
+    act(() => {
+      result.current.resume();
+    });
+    // Timer must continue at the snapshot, not reset to the full 4-minute duration
+    expect(result.current.isPaused).toBe(false);
+    expect(result.current.segmentEndsAt).toBe(Date.now() + pausedSeg);
+    expect(result.current.totalEndsAt).toBe(Date.now() + pausedTotal);
+    // Sanity: must NOT equal Date.now() + 240_000 (the full first-segment duration)
+    expect(result.current.segmentEndsAt).not.toBe(Date.now() + 240_000);
+  });
+
   it('pause() is silent no-op when engine.canPause() returns false (e.g. during firing-alarm)', async () => {
     const { result } = renderHook(() => useSegmentAlarm());
     await act(async () => {
