@@ -40,7 +40,7 @@ The original v1.0 alarm engine, three-phase escalation, presets, PWA shell, and 
 
 - [x] **Phase 6: AlarmSession Refactor + v1 Regression Guard** — Extract shared session lifecycle from `AlarmEngine`; preserve byte-identical v1 behavior (SEG-05 zero-diff guarantee)
 - [x] **Phase 7: Segment Engine + Triangle Sound** — Additive engine + new sound; no UI changes; runtime validated by tests
-- [ ] **Phase 8: Wake Easy Preset + Segment Countdown UI** — Third dashboard preset card + N-segment countdown UI; validates segment runtime end-to-end
+- [x] **Phase 8: Wake Easy Preset + Segment Countdown UI** — Third dashboard preset card + N-segment countdown UI; validates segment runtime end-to-end
 - [ ] **Phase 9: Custom Composer + Share via URL** — Modal segment builder with stepper inputs and duplicate; share link round-trip
 - [ ] **Phase 10: SEO Meta + JSON-LD + Service Worker Update Infra** — Static-HTML meta, OG, Twitter, JSON-LD; SW autoUpdate + skipWaiting + clientsClaim
 - [ ] **Phase 11: Multi-page Split + Landing Page** — Two HTML entries; hand-authored marketing landing; SW scope rescoped to `/app`; sitemap.xml; robots.txt; install CTA
@@ -93,10 +93,10 @@ The original v1.0 alarm engine, three-phase escalation, presets, PWA shell, and 
 **Plans:** 6 plans
   - [x] 08-01-PLAN.md — Wave 1 test infrastructure (RTL + jsdom + vitest jsdom env) + index.css @keyframes pulse-active-arc append
   - [x] 08-02-PLAN.md — useSegmentAlarm hook (mirror useAlarm; D-09 surface) + tests (Wave 2 leaf, parallel-safe with 08-03)
-  - [ ] 08-03-PLAN.md — SegmentProgressRing.tsx N-arc duration-proportional ring + tests (Wave 2 leaf, parallel-safe with 08-02)
-  - [ ] 08-04-PLAN.md — useActiveAlarm dispatcher hook (D-07 discriminated union; both-mounted) + tests (Wave 3, depends on 08-02)
-  - [ ] 08-05-PLAN.md — SegmentCountdown.tsx component + tests (Wave 3, depends on 08-02 + 08-03)
-  - [ ] 08-06-PLAN.md — Dashboard 4 x 4 card + App.tsx 3-way routing + SegmentHarness deletion + AGGREGATED SEG-05 byte-identical guardrail (Wave 4)
+  - [x] 08-03-PLAN.md — SegmentProgressRing.tsx N-arc duration-proportional ring + tests (Wave 2 leaf, parallel-safe with 08-02)
+  - [x] 08-04-PLAN.md — useActiveAlarm dispatcher hook (D-07 discriminated union; both-mounted) + tests (Wave 3, depends on 08-02)
+  - [x] 08-05-PLAN.md — SegmentCountdown.tsx component + tests (Wave 3, depends on 08-02 + 08-03)
+  - [x] 08-06-PLAN.md — Dashboard 4 x 4 card + App.tsx 3-way routing + SegmentHarness deletion + AGGREGATED SEG-05 byte-identical guardrail (Wave 4)
 **UI hint**: yes
 
 ### Phase 9: Custom Composer + Share via URL
