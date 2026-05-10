@@ -157,7 +157,7 @@ v2.0 traceability:
 | SEG-03 | Phase 7 | Complete |
 | SEG-04 | Phase 7 | Complete |
 | AUD-05 | Phase 7 | Complete |
-| SEG-06 | Phase 8 | Pending |
+| SEG-06 | Phase 8 | Complete |
 | COMP-01 | Phase 9 | Pending |
 | COMP-02 | Phase 9 | Pending |
 | COMP-03 | Phase 9 | Pending |

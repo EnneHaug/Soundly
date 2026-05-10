@@ -92,7 +92,7 @@ The original v1.0 alarm engine, three-phase escalation, presets, PWA shell, and 
   5. v1 byte-identical guarantee still holds: Quick Nap and Focus continue running through the unmodified `Countdown.tsx` + `useAlarm.ts` + `AlarmEngine.ts` paths
 **Plans:** 6 plans
   - [x] 08-01-PLAN.md — Wave 1 test infrastructure (RTL + jsdom + vitest jsdom env) + index.css @keyframes pulse-active-arc append
-  - [ ] 08-02-PLAN.md — useSegmentAlarm hook (mirror useAlarm; D-09 surface) + tests (Wave 2 leaf, parallel-safe with 08-03)
+  - [x] 08-02-PLAN.md — useSegmentAlarm hook (mirror useAlarm; D-09 surface) + tests (Wave 2 leaf, parallel-safe with 08-03)
   - [ ] 08-03-PLAN.md — SegmentProgressRing.tsx N-arc duration-proportional ring + tests (Wave 2 leaf, parallel-safe with 08-02)
   - [ ] 08-04-PLAN.md — useActiveAlarm dispatcher hook (D-07 discriminated union; both-mounted) + tests (Wave 3, depends on 08-02)
   - [ ] 08-05-PLAN.md — SegmentCountdown.tsx component + tests (Wave 3, depends on 08-02 + 08-03)

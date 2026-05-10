@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: — Foundations
 status: executing
-stopped_at: Completed 08-01-PLAN.md
-last_updated: "2026-05-10T18:50:37.347Z"
+stopped_at: Completed 08-02-PLAN.md
+last_updated: "2026-05-10T18:58:54.830Z"
 last_activity: 2026-05-10
 progress:
   total_phases: 8
   completed_phases: 7
   total_plans: 23
-  completed_plans: 18
-  percent: 78
+  completed_plans: 19
+  percent: 83
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-05-04)
 ## Current Position
 
 Phase: 08 (wake-easy-preset-segment-countdown-ui) — EXECUTING
-Plan: 2 of 6
+Plan: 3 of 6
 Status: Ready to execute
 Last activity: 2026-05-10
 
-Progress: [████████░░] 78%
+Progress: [████████░░] 83%
 
 ## Performance Metrics
 
@@ -66,6 +66,7 @@ Progress: [████████░░] 78%
 | Phase 07 P04 | 6m 41s | 2 tasks | 2 files |
 | Phase 07 P05 | 4m 26s | 3 tasks | 3 files |
 | Phase 08 P08-01 | 3m 0s | 2 tasks tasks | 5 files files |
+| Phase 08 P02 | 3m 44s | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -91,6 +92,7 @@ Recent decisions affecting current work:
 - [Phase 07 P04]: SegmentEngine class shipped at src/engine/SegmentEngine.ts mirroring AlarmEngine shape per D-07. 10 public methods (start/pause/resume/stop/dismiss/getState/getCurrentSegment/isPaused/canPause/onSegmentChange) + private handleSegmentFire and cleanup. Three Phase-7 deltas: (1) absolute-epoch scheduleAt loop replaces three discrete phase fires (SEG-02 / D-16); (2) alarm-segment fire enters firing-alarm state BEFORE createPhase3Ramp call so canPause() flips atomically (D-01..D-03); (3) per-key auto-stop window (gentle=6100ms, triangle=2100ms) for last gentle/triangle (D-04) — alarm-tail compositions run forever per D-02. cleanup() ordering verbatim from AlarmEngine.cleanup():354-407 with phase3*->alarm* rename and Phase 2 vibration/tick blocks dropped. 23-test regression net at src/engine/__tests__/SegmentEngine.test.ts spanning the full D-23 coverage matrix. Timer-mock pattern (vi.mock('../timer')) lets tests synthesize fires by invoking captured callbacks rather than advancing fake timers through scheduleAt polling. v1 zero-diff floor preserved.
 - [Phase 07 P05]: Phase 7 final wiring shipped — SegmentHarness (Vite-DEV-gated React component at src/dev/SegmentHarness.tsx) + D-24 barrel append (8 Phase 7 exports added to src/engine/index.ts with 11 insertions / 0 deletions) + minimal App.tsx mount line (1 import + 1 const + 1 ternary branch wrap, gated by import.meta.env.DEV && URL ?dev=segments). Production build tree-shakes the harness — grep -c SegmentHarness dist/assets/*.js returns 0. AGGREGATED SEG-05 zero-diff guardrail across full Phase 7 series: 0 modifications across all 17 protected v1 paths. Full test suite 320/320 passing across 27 test files. Phase 7 declared complete; Phase 8 unblocked.
 - [Phase 08 P01]: Vitest jsdom environment wired with globals: false (matches existing pattern of explicit vitest imports in all 16 test files); RTL@^16 + @testing-library/dom@^10.4 + jsdom@^26 installed; src/test/setup.ts as documented stub (export {}); @keyframes pulse-active-arc + .pulse-active rule appended to src/index.css behind prefers-reduced-motion: no-preference gate. 320-test suite still passing. SEG-05 zero-diff floor intact across all 20 protected paths.
+- [Phase 08 P02]: useSegmentAlarm hook shipped at src/hooks/useSegmentAlarm.ts mirroring useAlarm.ts:65-137 line-for-line per CONTEXT D-09. Three deltas: SegmentEngineState replaces AlarmPhase; segmentEndsAt+totalEndsAt+alarmStartedAt replace single phaseEndsAt (D-05/D-03 segment-remaining + total caption + count-up since alarm-start); onSegmentChange registered in body (last-wins) and polls engine.getState() to capture pre-callback firing-alarm transition (verified SegmentEngine.ts:212). Pause guard duplicated at hook level (if !engine.canPause() return) prevents local isPaused desync from engine silent no-op during firing-alarm (D-03). 11-test regression net at src/hooks/__tests__/useSegmentAlarm.test.ts using engine-class mock idiom (one vi.mock returning shared mockEngineInstance) — first hook test in repo using @testing-library/react renderHook+act on the vitest jsdom env from Plan 08-01. TDD gate sequence honored: test(08-02) RED commit 70ea5e9 followed by feat(08-02) GREEN commit b9d5a7f. Full suite 331/331 passing across 28 test files. SEG-05 byte-identical floor preserved (zero diff across all 20 protected paths).
 
 ### Pending Todos
 
@@ -115,8 +117,8 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-05-10T18:50:37.333Z
-Stopped at: Completed 08-01-PLAN.md
+Last session: 2026-05-10T18:58:54.814Z
+Stopped at: Completed 08-02-PLAN.md
 Resume file: None
 
 **Planned Phase:** 8 (Wake Easy Preset + Segment Countdown UI) — 6 plans — 2026-05-10T18:43:39.524Z
