@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: — Foundations
-status: verifying
-stopped_at: Phase 8 context gathered
-last_updated: "2026-05-10T16:42:19.595Z"
-last_activity: 2026-05-09
+status: executing
+stopped_at: Completed 08-01-PLAN.md
+last_updated: "2026-05-10T18:50:37.347Z"
+last_activity: 2026-05-10
 progress:
   total_phases: 8
   completed_phases: 7
-  total_plans: 17
-  completed_plans: 17
-  percent: 100
+  total_plans: 23
+  completed_plans: 18
+  percent: 78
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-04)
 
 **Core value:** The alarm must actually wake the user — gently first, reliably always.
-**Current focus:** Phase 7 — Segment Engine + Triangle Sound
+**Current focus:** Phase 08 — wake-easy-preset-segment-countdown-ui
 
 ## Current Position
 
-Phase: 7 (Segment Engine + Triangle Sound) — EXECUTING
-Plan: 5 of 5
-Status: Phase complete — ready for verification
-Last activity: 2026-05-09
+Phase: 08 (wake-easy-preset-segment-countdown-ui) — EXECUTING
+Plan: 2 of 6
+Status: Ready to execute
+Last activity: 2026-05-10
 
-Progress: [██████████] 100%
+Progress: [████████░░] 78%
 
 ## Performance Metrics
 
@@ -65,6 +65,7 @@ Progress: [██████████] 100%
 | Phase 07 P03 | 1m 41s | 2 tasks | 2 files |
 | Phase 07 P04 | 6m 41s | 2 tasks | 2 files |
 | Phase 07 P05 | 4m 26s | 3 tasks | 3 files |
+| Phase 08 P08-01 | 3m 0s | 2 tasks tasks | 5 files files |
 
 ## Accumulated Context
 
@@ -89,6 +90,7 @@ Recent decisions affecting current work:
 - [Phase 07 P03]: fireSegmentEndSound dispatcher shipped at src/engine/sounds/segmentSound.ts — type-narrowed key union ('gentle' | 'triangle') deliberately excludes 'alarm' at compile time per D-13 carve-out (alarm needs ramp+loop, not one-shot strike). 3-test routing regression net (gentle/triangle/identity passthrough) at src/engine/__tests__/segmentSound.test.ts. SegmentEngine (07-04) consumes via 'if (endSound === alarm) ... else fireSegmentEndSound(ac, endSound)' — TS narrows the union automatically. v1 zero-diff floor preserved.
 - [Phase 07 P04]: SegmentEngine class shipped at src/engine/SegmentEngine.ts mirroring AlarmEngine shape per D-07. 10 public methods (start/pause/resume/stop/dismiss/getState/getCurrentSegment/isPaused/canPause/onSegmentChange) + private handleSegmentFire and cleanup. Three Phase-7 deltas: (1) absolute-epoch scheduleAt loop replaces three discrete phase fires (SEG-02 / D-16); (2) alarm-segment fire enters firing-alarm state BEFORE createPhase3Ramp call so canPause() flips atomically (D-01..D-03); (3) per-key auto-stop window (gentle=6100ms, triangle=2100ms) for last gentle/triangle (D-04) — alarm-tail compositions run forever per D-02. cleanup() ordering verbatim from AlarmEngine.cleanup():354-407 with phase3*->alarm* rename and Phase 2 vibration/tick blocks dropped. 23-test regression net at src/engine/__tests__/SegmentEngine.test.ts spanning the full D-23 coverage matrix. Timer-mock pattern (vi.mock('../timer')) lets tests synthesize fires by invoking captured callbacks rather than advancing fake timers through scheduleAt polling. v1 zero-diff floor preserved.
 - [Phase 07 P05]: Phase 7 final wiring shipped — SegmentHarness (Vite-DEV-gated React component at src/dev/SegmentHarness.tsx) + D-24 barrel append (8 Phase 7 exports added to src/engine/index.ts with 11 insertions / 0 deletions) + minimal App.tsx mount line (1 import + 1 const + 1 ternary branch wrap, gated by import.meta.env.DEV && URL ?dev=segments). Production build tree-shakes the harness — grep -c SegmentHarness dist/assets/*.js returns 0. AGGREGATED SEG-05 zero-diff guardrail across full Phase 7 series: 0 modifications across all 17 protected v1 paths. Full test suite 320/320 passing across 27 test files. Phase 7 declared complete; Phase 8 unblocked.
+- [Phase 08 P01]: Vitest jsdom environment wired with globals: false (matches existing pattern of explicit vitest imports in all 16 test files); RTL@^16 + @testing-library/dom@^10.4 + jsdom@^26 installed; src/test/setup.ts as documented stub (export {}); @keyframes pulse-active-arc + .pulse-active rule appended to src/index.css behind prefers-reduced-motion: no-preference gate. 320-test suite still passing. SEG-05 zero-diff floor intact across all 20 protected paths.
 
 ### Pending Todos
 
@@ -113,8 +115,8 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: --stopped-at
-Stopped at: Phase 8 context gathered
-Resume file: --resume-file
+Last session: 2026-05-10T18:50:37.333Z
+Stopped at: Completed 08-01-PLAN.md
+Resume file: None
 
-**Planned Phase:** 7 (Segment Engine + Triangle Sound) — 5 plans — 2026-05-09T19:59:23.067Z
+**Planned Phase:** 8 (Wake Easy Preset + Segment Countdown UI) — 6 plans — 2026-05-10T18:43:39.524Z

@@ -52,7 +52,8 @@ User-composed alarms run alongside the v1.0 continuous-phase model. Quick Nap an
 - [x] **SEG-03**: Pause/resume preserves mid-segment progress — resuming continues from the snapshot point within the current segment, mirroring v1.0 pause semantics. Pause is disabled during the final alarm-sound segment.
 - [x] **SEG-04**: Segment-config validation rejects empty segment lists, NaN/zero/negative durations, and unknown sound keys before the alarm starts. Validation surfaces a user-readable error in the composer; never throws into the runtime.
 - [x] **SEG-05**: v1.0 paths are byte-identical — `AlarmEngine`, `AlarmConfig`, `validateConfig`, `Quick Nap`, `Focus`, `useAlarm`, `Countdown.tsx`, `ProgressRing.tsx`, and all existing `src/engine/sounds/*.ts` (except the new `triangle.ts`) carry zero diff in v2.0.
-- [ ] **SEG-06**: Wake Easy preset ships as the third dashboard preset card — 4 × (4 min ending in gentle chime) + 1 × (1 min ending in alarm) = 17 min total. The displayed total label matches the actual segment sum exactly.
+- [x] **SEG-06
+**: Wake Easy preset ships as the third dashboard preset card — 4 × (4 min ending in gentle chime) + 1 × (1 min ending in alarm) = 17 min total. The displayed total label matches the actual segment sum exactly.
 
 ### Composer UI (COMP)
 

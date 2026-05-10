@@ -91,7 +91,7 @@ The original v1.0 alarm engine, three-phase escalation, presets, PWA shell, and 
   4. End-to-end run on desktop with the screen visible: Wake Easy fires the gentle chime at exactly t = 4:00, 8:00, 12:00, 16:00 (± 2 s) and the final alarm sound at t = 17:00 (± 2 s); pause-resume integrity test extends total duration by the pause length
   5. v1 byte-identical guarantee still holds: Quick Nap and Focus continue running through the unmodified `Countdown.tsx` + `useAlarm.ts` + `AlarmEngine.ts` paths
 **Plans:** 6 plans
-  - [ ] 08-01-PLAN.md — Wave 1 test infrastructure (RTL + jsdom + vitest jsdom env) + index.css @keyframes pulse-active-arc append
+  - [x] 08-01-PLAN.md — Wave 1 test infrastructure (RTL + jsdom + vitest jsdom env) + index.css @keyframes pulse-active-arc append
   - [ ] 08-02-PLAN.md — useSegmentAlarm hook (mirror useAlarm; D-09 surface) + tests (Wave 2 leaf, parallel-safe with 08-03)
   - [ ] 08-03-PLAN.md — SegmentProgressRing.tsx N-arc duration-proportional ring + tests (Wave 2 leaf, parallel-safe with 08-02)
   - [ ] 08-04-PLAN.md — useActiveAlarm dispatcher hook (D-07 discriminated union; both-mounted) + tests (Wave 3, depends on 08-02)
