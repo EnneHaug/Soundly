@@ -8,7 +8,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render } from '@testing-library/react';
+import { render, cleanup } from '@testing-library/react';
 import SegmentCountdown from '../SegmentCountdown';
 import { WAKE_EASY_CONFIG } from '../../engine/SegmentState';
 import type { UseSegmentAlarmReturn } from '../../hooks/useSegmentAlarm';
@@ -42,6 +42,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  cleanup();
   vi.useRealTimers();
 });
 
