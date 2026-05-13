@@ -1,25 +1,31 @@
 /**
- * SegmentProgressRing — SVG N-arc duration-proportional progress ring (D-01, D-02, D-03, D-19).
+ * SegmentProgressRing — SVG continuous duration-proportional progress ring.
  *
- * Renders one arc per segment in a SegmentConfig, with arc width proportional to
- * segment.durationMs and color keyed by segment.endSound:
- *   - gentle   → var(--color-sage)
- *   - triangle → var(--color-sand)
- *   - alarm    → var(--color-accent)
+ * Renders ONE continuous ring (same radius/stroke as v1 ProgressRing) starting at
+ * 12 o'clock and progressing clockwise as time elapses across all N segments —
+ * NOT N disjoint arcs. Boundary markers (small dots colored by the ending
+ * segment's endSound) sit on the ring at each segment-end angle.
  *
- * Visual states per arc:
- *   - Past (i < currentIndex):   faded gray stroke, opacity 0.6
- *   - Current (i === currentIndex): colored stroke, width clipped to (1 - progress) * arcLen
- *     - +pulseActive: className="pulse-active" → 1 Hz opacity pulse via @keyframes (D-03)
- *     - +pausedDimming: opacity drops to 0.5 (D-19)
- *   - Future (i > currentIndex): colored stroke at opacity 1.0
+ * UAT feedback (Phase 8 Test 1, 2026-05-12) replaced the original N-arc design
+ * because the per-segment offset positions read as visually disjoint rather than
+ * a single continuous countdown. The new design matches v1 ProgressRing's
+ * "filling" mental model while still surfacing segment boundaries via tick dots.
  *
- * Children render centered inside the ring via absolute positioning (matches
- * ProgressRing.tsx:188-203 byte-identical wrapper structure).
+ * Visual states:
+ *   - Track (background): full circle in --color-faded
+ *   - Elapsed arc: 0° → elapsedAngle clockwise, colored by current segment's
+ *     endSound (so the arc takes on the upcoming sound's color as it advances).
+ *     pausedDimming reduces opacity to 0.5 per D-19.
+ *   - Pulsing alarm arc: when pulseActive (state === 'firing-alarm'), the alarm
+ *     segment's slice renders as a separate arc in --color-accent with the
+ *     .pulse-active CSS class (1 Hz opacity pulse per D-03/D-04).
+ *   - Boundary dots: small filled circles at each non-final segment-end angle,
+ *     colored by the ending segment's endSound. Past dots fade to opacity 0.4;
+ *     future dots stay at opacity 1.
  *
- * This component is NEW (NOT a refactor of ProgressRing.tsx — that file is SEG-05
- * byte-identical-protected). The geometry helpers and SVG wrapper are CLONED
- * verbatim from ProgressRing.tsx to keep visual consistency with v1's continuous-mode ring.
+ * Children render centered inside the ring via absolute positioning (wrapper
+ * structure cloned verbatim from ProgressRing.tsx — SEG-05 byte-identical-protected,
+ * NOT modified).
  */
 
 import React from 'react';
@@ -30,15 +36,15 @@ export interface SegmentProgressRingProps {
   currentIndex: number;       // 0..N-1 of the segment currently elapsing; N when dismissed
   progress: number;           // 0..1: how far through the CURRENT segment
   pulseActive?: boolean;      // true when state === 'firing-alarm' (D-03)
-  pausedDimming?: boolean;    // true when paused — drops active arc opacity to 0.5 (D-19)
+  pausedDimming?: boolean;    // true when paused — drops elapsed-arc opacity to 0.5 (D-19)
   children?: React.ReactNode;
 }
 
 const CENTER = 100;       // SVG viewBox 200x200
 const RADIUS = 80;
 const STROKE_WIDTH = 14;
-const GAP_RADIANS = 0.05; // small visual gap between segments
 const TWO_PI = 2 * Math.PI;
+const FULL_ARC_EPS = 0.001; // SVG arc with identical start/end won't render — close the loop with a hair less
 
 const SOUND_COLORS: Record<'gentle' | 'triangle' | 'alarm', string> = {
   gentle:   'var(--color-sage)',
@@ -47,13 +53,13 @@ const SOUND_COLORS: Record<'gentle' | 'triangle' | 'alarm', string> = {
 };
 
 /**
- * Convert a clockwise angle (radians, 0 = top) to SVG x,y coordinates.
+ * Convert a clockwise angle (radians, 0 = top) at radius r to SVG x,y.
  */
-function polarToCartesian(angleCw: number): { x: number; y: number } {
+function polarToCartesian(angleCw: number, r: number = RADIUS): { x: number; y: number } {
   const theta = angleCw - Math.PI / 2; // start from top
   return {
-    x: CENTER + RADIUS * Math.cos(theta),
-    y: CENTER + RADIUS * Math.sin(theta),
+    x: CENTER + r * Math.cos(theta),
+    y: CENTER + r * Math.sin(theta),
   };
 }
 
@@ -78,91 +84,105 @@ export default function SegmentProgressRing({
   const segments = config.segments;
   const N = segments.length;
   const totalDuration = segments.reduce((sum, s) => sum + s.durationMs, 0);
-  // N gaps total — one after each arc, the final one closing the loop for visual symmetry
-  // (RESEARCH §"Three subtleties"; PATTERNS L582-763 critical implementation note).
-  const totalGap = N * GAP_RADIANS;
-  const availableArc = TWO_PI - totalGap;
 
-  let cursor = 0;
-  const arcs = segments.map((seg, i) => {
-    const arcLen = (seg.durationMs / totalDuration) * availableArc;
-    const start = cursor;
-    const end = cursor + arcLen;
-    cursor = end + GAP_RADIANS;
-    return { i, segment: seg, start, end, arcLen };
-  });
+  // Cumulative angles: cumulative[i] = angle at END of segment i (clockwise from top)
+  const cumulative: number[] = [];
+  let acc = 0;
+  for (const s of segments) {
+    acc += (s.durationMs / totalDuration) * TWO_PI;
+    cumulative.push(acc);
+  }
 
   const clampedProgress = Math.min(1, Math.max(0, progress));
+  const currentIdx = Math.max(0, Math.min(N - 1, currentIndex));
+  const currentStart = currentIdx > 0 ? cumulative[currentIdx - 1] : 0;
+  const currentSegmentArc = cumulative[currentIdx] - currentStart;
 
-  const renderedArcs = arcs.map(({ i, segment, start, end, arcLen }) => {
-    const color = SOUND_COLORS[segment.endSound];
-    const isPast = i < currentIndex;
-    const isCurrent = i === currentIndex;
-    const isFuture = i > currentIndex;
+  // During firing-alarm the alarm segment itself is the pulsing arc; the
+  // baseline elapsed arc stops at the alarm-segment's start angle.
+  const elapsedAngle = pulseActive
+    ? currentStart
+    : currentStart + currentSegmentArc * clampedProgress;
 
-    const track = (
+  // Background track — two half-arcs so SVG renders a full circle reliably.
+  const trackArcs = (
+    <>
       <path
-        key={`track-${i}`}
-        d={arcPath(start, end)}
+        key="track-half-1"
+        d={arcPath(0, Math.PI)}
         fill="none"
         stroke="var(--color-faded)"
         strokeWidth={STROKE_WIDTH}
         strokeLinecap="round"
         opacity={0.4}
       />
+      <path
+        key="track-half-2"
+        d={arcPath(Math.PI, TWO_PI - FULL_ARC_EPS)}
+        fill="none"
+        stroke="var(--color-faded)"
+        strokeWidth={STROKE_WIDTH}
+        strokeLinecap="round"
+        opacity={0.4}
+      />
+    </>
+  );
+
+  // Elapsed foreground arc (one continuous path).
+  const elapsedColor = SOUND_COLORS[segments[currentIdx].endSound];
+  const showElapsed = elapsedAngle > FULL_ARC_EPS;
+  const elapsedArc = showElapsed ? (
+    <path
+      key="elapsed"
+      className="transition-opacity duration-200"
+      d={arcPath(0, Math.min(elapsedAngle, TWO_PI - FULL_ARC_EPS))}
+      fill="none"
+      stroke={elapsedColor}
+      strokeWidth={STROKE_WIDTH}
+      strokeLinecap="round"
+      opacity={pausedDimming ? 0.5 : 1}
+    />
+  ) : null;
+
+  // Pulsing alarm segment overlay during firing-alarm. The alarm segment is the
+  // one with endSound === 'alarm' (CONTEXT D-02). Locate by endSound, not by index.
+  const alarmIdx = segments.findIndex(s => s.endSound === 'alarm');
+  const pulsingAlarmArc =
+    pulseActive && alarmIdx >= 0
+      ? (() => {
+          const alarmStart = alarmIdx > 0 ? cumulative[alarmIdx - 1] : 0;
+          const alarmEnd = cumulative[alarmIdx];
+          return (
+            <path
+              key="alarm-pulse"
+              className="pulse-active"
+              d={arcPath(alarmStart, Math.min(alarmEnd, TWO_PI - FULL_ARC_EPS))}
+              fill="none"
+              stroke="var(--color-accent)"
+              strokeWidth={STROKE_WIDTH}
+              strokeLinecap="round"
+              opacity={pausedDimming ? 0.5 : 1}
+            />
+          );
+        })()
+      : null;
+
+  // Boundary marker dots — one per non-final segment-end angle.
+  // The final segment's end angle == 2π == start angle, no need to mark it twice.
+  const boundaryDots = cumulative.slice(0, -1).map((angle, i) => {
+    const pos = polarToCartesian(angle);
+    const tickColor = SOUND_COLORS[segments[i].endSound];
+    const isPast = angle <= elapsedAngle + FULL_ARC_EPS;
+    return (
+      <circle
+        key={`boundary-${i}`}
+        cx={pos.x}
+        cy={pos.y}
+        r={STROKE_WIDTH / 2 - 2}
+        fill={tickColor}
+        opacity={isPast ? 0.4 : 1}
+      />
     );
-
-    let activeFill: React.ReactNode = null;
-
-    if (isPast) {
-      activeFill = (
-        <path
-          key={`fill-${i}`}
-          d={arcPath(start, end)}
-          fill="none"
-          stroke="var(--color-faded)"
-          strokeWidth={STROKE_WIDTH}
-          strokeLinecap="round"
-          opacity={0.6}
-        />
-      );
-    } else if (isCurrent) {
-      const remainingArc = (1 - clampedProgress) * arcLen;
-      if (remainingArc > 0.001) {
-        const className = [
-          pulseActive ? 'pulse-active' : null,
-          'transition-opacity duration-200',
-        ]
-          .filter(Boolean)
-          .join(' ');
-        activeFill = (
-          <path
-            key={`fill-${i}`}
-            className={className}
-            d={arcPath(start, start + remainingArc)}
-            fill="none"
-            stroke={color}
-            strokeWidth={STROKE_WIDTH}
-            strokeLinecap="round"
-            opacity={pausedDimming ? 0.5 : 1}
-          />
-        );
-      }
-    } else if (isFuture) {
-      activeFill = (
-        <path
-          key={`fill-${i}`}
-          d={arcPath(start, end)}
-          fill="none"
-          stroke={color}
-          strokeWidth={STROKE_WIDTH}
-          strokeLinecap="round"
-          opacity={1}
-        />
-      );
-    }
-
-    return [track, activeFill];
   });
 
   return (
@@ -173,7 +193,10 @@ export default function SegmentProgressRing({
         role="img"
         aria-label="Alarm progress"
       >
-        {renderedArcs.map((pair) => pair)}
+        {trackArcs}
+        {elapsedArc}
+        {pulsingAlarmArc}
+        {boundaryDots}
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         {children}

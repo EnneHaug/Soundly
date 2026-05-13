@@ -1,16 +1,31 @@
 /**
- * SegmentProgressRing test suite — locks the D-01/D-02/D-03/D-19 visual contract.
+ * SegmentProgressRing test suite — locks the continuous-ring visual contract.
  *
- * Pure-presentation tests; no fake timers. Asserts SVG attribute shape rather than
- * pixel-level rendering to match the codebase's direct-DOM-read convention
- * (see src/test/setup.ts header for the rationale).
+ * Replaces the original N-arc geometry test suite after Phase 8 UAT (2026-05-12)
+ * surfaced that users read the staggered per-segment offsets as visually disjoint
+ * rather than a single continuous countdown. The new contract:
+ *
+ *   - Background: two faded half-arcs that together form a full circle (single
+ *     SVG path can't span the full 0→2π reliably, so the implementation draws
+ *     two halves).
+ *   - Elapsed: ONE arc from 0° to (cumulative-past-segments + current-segment-elapsed),
+ *     colored by the current segment's endSound.
+ *   - Pulsing alarm: separate accent arc with `.pulse-active` class during firing-alarm.
+ *   - Boundary dots: N-1 small `<circle>` markers at each segment-end angle,
+ *     colored by the ending segment's endSound. Past dots fade to opacity 0.4.
+ *   - pausedDimming drops the elapsed-arc opacity to 0.5 (D-19).
+ *
+ * Pure-presentation tests; no fake timers. Asserts SVG attribute shape per the
+ * codebase's direct-DOM-read convention (see src/test/setup.ts header).
  */
 
-import { describe, it, expect } from 'vitest';
-import { render } from '@testing-library/react';
+import { describe, it, expect, afterEach } from 'vitest';
+import { render, cleanup } from '@testing-library/react';
 import SegmentProgressRing from '../SegmentProgressRing';
 import { WAKE_EASY_CONFIG } from '../../engine/SegmentState';
 import type { SegmentConfig } from '../../engine/SegmentState';
+
+afterEach(() => cleanup());
 
 describe('SegmentProgressRing — SVG wrapper', () => {
   it('renders <svg> with viewBox 200x200, role=img, aria-label="Alarm progress"', () => {
@@ -34,101 +49,148 @@ describe('SegmentProgressRing — SVG wrapper', () => {
   });
 });
 
-describe('SegmentProgressRing — N-arc rendering', () => {
-  it('renders N track paths for an N-segment config (Wake Easy = 5 segments)', () => {
+describe('SegmentProgressRing — continuous track + elapsed arc', () => {
+  it('renders exactly TWO background track paths (two halves forming a full circle)', () => {
     const { container } = render(
       <SegmentProgressRing config={WAKE_EASY_CONFIG} currentIndex={0} progress={0} />,
     );
-    const tracks = container.querySelectorAll('path[stroke="var(--color-faded)"][opacity="0.4"]');
-    expect(tracks.length).toBe(5);
+    const tracks = container.querySelectorAll(
+      'path[stroke="var(--color-faded)"][opacity="0.4"]',
+    );
+    expect(tracks.length).toBe(2);
   });
 
-  it('renders N=3 arcs for a 3-segment config', () => {
+  it('renders no elapsed arc when progress=0 and currentIndex=0 (nothing has elapsed yet)', () => {
+    const { container } = render(
+      <SegmentProgressRing config={WAKE_EASY_CONFIG} currentIndex={0} progress={0} />,
+    );
+    const sage = Array.from(container.querySelectorAll('path')).filter(
+      (p) => p.getAttribute('stroke') === 'var(--color-sage)',
+    );
+    expect(sage.length).toBe(0);
+  });
+
+  it('renders ONE elapsed arc colored by current segment endSound when progress > 0', () => {
+    const { container } = render(
+      <SegmentProgressRing config={WAKE_EASY_CONFIG} currentIndex={0} progress={0.5} />,
+    );
+    const elapsed = Array.from(container.querySelectorAll('path')).filter(
+      (p) => p.getAttribute('stroke') === 'var(--color-sage)',
+    );
+    expect(elapsed.length).toBe(1);
+    const d = elapsed[0].getAttribute('d');
+    expect(d).toMatch(/^M /);
+    expect(d).toContain('A 80 80');
+  });
+
+  it('renders one elapsed arc when progressing within a later segment (currentIndex > 0)', () => {
+    const { container } = render(
+      <SegmentProgressRing config={WAKE_EASY_CONFIG} currentIndex={2} progress={0.5} />,
+    );
+    // segment 2 (third one) is gentle; elapsed reaches mid-way through it
+    const elapsed = Array.from(container.querySelectorAll('path')).filter(
+      (p) => p.getAttribute('stroke') === 'var(--color-sage)',
+    );
+    expect(elapsed.length).toBe(1);
+  });
+});
+
+describe('SegmentProgressRing — elapsed-arc color follows current segment endSound (D-02)', () => {
+  it('paints elapsed arc with var(--color-sage) when current segment endSound is gentle', () => {
     const cfg: SegmentConfig = {
       segments: [
-        { id: 'a', durationMs: 60_000, endSound: 'gentle' },
-        { id: 'b', durationMs: 60_000, endSound: 'triangle' },
-        { id: 'c', durationMs: 60_000, endSound: 'alarm' },
+        { id: 'g', durationMs: 60_000, endSound: 'gentle' },
+        { id: 'a', durationMs: 60_000, endSound: 'alarm' },
       ],
     };
     const { container } = render(
-      <SegmentProgressRing config={cfg} currentIndex={0} progress={0} />,
+      <SegmentProgressRing config={cfg} currentIndex={0} progress={0.5} />,
     );
-    const tracks = container.querySelectorAll('path[stroke="var(--color-faded)"][opacity="0.4"]');
-    expect(tracks.length).toBe(3);
-  });
-});
-
-describe('SegmentProgressRing — color by endSound (D-02)', () => {
-  it('paints gentle endSound with var(--color-sage)', () => {
-    const cfg: SegmentConfig = {
-      segments: [{ id: 'g', durationMs: 60_000, endSound: 'gentle' }],
-    };
-    const { container } = render(
-      <SegmentProgressRing config={cfg} currentIndex={0} progress={0} />,
-    );
-    const fills = Array.from(container.querySelectorAll('path')).filter(
+    const elapsed = Array.from(container.querySelectorAll('path')).filter(
       (p) => p.getAttribute('stroke') === 'var(--color-sage)',
     );
-    expect(fills.length).toBeGreaterThanOrEqual(1);
+    expect(elapsed.length).toBe(1);
   });
 
-  it('paints triangle endSound with var(--color-sand)', () => {
+  it('paints elapsed arc with var(--color-sand) when current segment endSound is triangle', () => {
     const cfg: SegmentConfig = {
-      segments: [{ id: 't', durationMs: 60_000, endSound: 'triangle' }],
+      segments: [
+        { id: 'g', durationMs: 60_000, endSound: 'gentle' },
+        { id: 't', durationMs: 60_000, endSound: 'triangle' },
+        { id: 'a', durationMs: 60_000, endSound: 'alarm' },
+      ],
     };
     const { container } = render(
-      <SegmentProgressRing config={cfg} currentIndex={0} progress={0} />,
+      <SegmentProgressRing config={cfg} currentIndex={1} progress={0.5} />,
     );
-    const fills = Array.from(container.querySelectorAll('path')).filter(
+    const elapsed = Array.from(container.querySelectorAll('path')).filter(
       (p) => p.getAttribute('stroke') === 'var(--color-sand)',
     );
-    expect(fills.length).toBeGreaterThanOrEqual(1);
+    expect(elapsed.length).toBe(1);
   });
 
-  it('paints alarm endSound with var(--color-accent)', () => {
+  it('paints elapsed arc with var(--color-accent) when current segment endSound is alarm', () => {
     const cfg: SegmentConfig = {
-      segments: [{ id: 'a', durationMs: 60_000, endSound: 'alarm' }],
+      segments: [
+        { id: 'g', durationMs: 60_000, endSound: 'gentle' },
+        { id: 'a', durationMs: 60_000, endSound: 'alarm' },
+      ],
     };
     const { container } = render(
-      <SegmentProgressRing config={cfg} currentIndex={0} progress={0} />,
+      <SegmentProgressRing config={cfg} currentIndex={1} progress={0.3} />,
     );
-    const fills = Array.from(container.querySelectorAll('path')).filter(
-      (p) => p.getAttribute('stroke') === 'var(--color-accent)',
+    const elapsed = Array.from(container.querySelectorAll('path')).filter(
+      (p) => p.getAttribute('stroke') === 'var(--color-accent)' &&
+             !p.classList.contains('pulse-active'),
     );
-    expect(fills.length).toBeGreaterThanOrEqual(1);
+    expect(elapsed.length).toBe(1);
   });
 });
 
-describe('SegmentProgressRing — past/current/future opacity contract', () => {
-  it('past segments (i < currentIndex) render with stroke=var(--color-faded) opacity=0.6', () => {
-    const { container } = render(
-      <SegmentProgressRing config={WAKE_EASY_CONFIG} currentIndex={2} progress={0} />,
-    );
-    const pastFills = Array.from(container.querySelectorAll('path')).filter(
-      (p) =>
-        p.getAttribute('stroke') === 'var(--color-faded)' &&
-        p.getAttribute('opacity') === '0.6',
-    );
-    expect(pastFills.length).toBe(2);
-  });
-
-  it('future segments render at full color opacity=1', () => {
+describe('SegmentProgressRing — boundary marker dots', () => {
+  it('renders N-1 boundary <circle> dots for an N-segment config (Wake Easy = 5 segments → 4 dots)', () => {
     const { container } = render(
       <SegmentProgressRing config={WAKE_EASY_CONFIG} currentIndex={0} progress={0} />,
     );
-    const sageFutureFills = Array.from(container.querySelectorAll('path')).filter(
-      (p) =>
-        p.getAttribute('stroke') === 'var(--color-sage)' &&
-        p.getAttribute('opacity') === '1',
+    const dots = container.querySelectorAll('circle');
+    expect(dots.length).toBe(4);
+  });
+
+  it('colors boundary dots by the ending segment endSound', () => {
+    // Wake Easy: segs 0..3 are gentle (dots after each), seg 4 is alarm (no dot after).
+    // So we should see 4 sage-colored dots.
+    const { container } = render(
+      <SegmentProgressRing config={WAKE_EASY_CONFIG} currentIndex={0} progress={0} />,
     );
-    // Segments 1, 2, 3 are gentle and future at currentIndex=0 (not segment 0 which is current)
-    expect(sageFutureFills.length).toBeGreaterThanOrEqual(3);
+    const sageDots = Array.from(container.querySelectorAll('circle')).filter(
+      (c) => c.getAttribute('fill') === 'var(--color-sage)',
+    );
+    expect(sageDots.length).toBe(4);
+  });
+
+  it('fades past boundary dots to opacity 0.4 once the elapsed arc has crossed them', () => {
+    // currentIndex=2 with progress=0 means segments 0 and 1 are past — their boundary
+    // dots (at end of seg 0 and end of seg 1) should be past.
+    const { container } = render(
+      <SegmentProgressRing config={WAKE_EASY_CONFIG} currentIndex={2} progress={0} />,
+    );
+    const dots = Array.from(container.querySelectorAll('circle'));
+    const pastDots = dots.filter((c) => c.getAttribute('opacity') === '0.4');
+    expect(pastDots.length).toBe(2);
+  });
+
+  it('keeps future boundary dots at full opacity', () => {
+    const { container } = render(
+      <SegmentProgressRing config={WAKE_EASY_CONFIG} currentIndex={0} progress={0} />,
+    );
+    const dots = Array.from(container.querySelectorAll('circle'));
+    const futureDots = dots.filter((c) => c.getAttribute('opacity') === '1');
+    expect(futureDots.length).toBe(4);
   });
 });
 
-describe('SegmentProgressRing — pulseActive prop (D-03)', () => {
-  it('applies pulse-active className to the current arc when pulseActive=true', () => {
+describe('SegmentProgressRing — pulseActive prop (D-03 / D-04)', () => {
+  it('applies .pulse-active to the alarm-segment overlay arc when pulseActive=true', () => {
     const { container } = render(
       <SegmentProgressRing
         config={WAKE_EASY_CONFIG}
@@ -139,9 +201,10 @@ describe('SegmentProgressRing — pulseActive prop (D-03)', () => {
     );
     const pulsing = container.querySelectorAll('path.pulse-active');
     expect(pulsing.length).toBe(1);
+    expect(pulsing[0].getAttribute('stroke')).toBe('var(--color-accent)');
   });
 
-  it('applies NO pulse-active class when pulseActive=false', () => {
+  it('renders no .pulse-active path when pulseActive=false', () => {
     const { container } = render(
       <SegmentProgressRing
         config={WAKE_EASY_CONFIG}
@@ -150,21 +213,19 @@ describe('SegmentProgressRing — pulseActive prop (D-03)', () => {
         pulseActive={false}
       />,
     );
-    const pulsing = container.querySelectorAll('path.pulse-active');
-    expect(pulsing.length).toBe(0);
+    expect(container.querySelectorAll('path.pulse-active').length).toBe(0);
   });
 
-  it('applies NO pulse-active class when pulseActive prop is omitted', () => {
+  it('renders no .pulse-active path when pulseActive prop is omitted', () => {
     const { container } = render(
       <SegmentProgressRing config={WAKE_EASY_CONFIG} currentIndex={4} progress={0} />,
     );
-    const pulsing = container.querySelectorAll('path.pulse-active');
-    expect(pulsing.length).toBe(0);
+    expect(container.querySelectorAll('path.pulse-active').length).toBe(0);
   });
 });
 
 describe('SegmentProgressRing — pausedDimming prop (D-19)', () => {
-  it('drops current arc opacity to 0.5 when pausedDimming=true', () => {
+  it('drops elapsed-arc opacity to 0.5 when pausedDimming=true', () => {
     const { container } = render(
       <SegmentProgressRing
         config={WAKE_EASY_CONFIG}
@@ -181,7 +242,7 @@ describe('SegmentProgressRing — pausedDimming prop (D-19)', () => {
     expect(dimmed.length).toBe(1);
   });
 
-  it('keeps current arc opacity=1 when pausedDimming=false', () => {
+  it('keeps elapsed-arc opacity=1 when pausedDimming=false', () => {
     const { container } = render(
       <SegmentProgressRing
         config={WAKE_EASY_CONFIG}
@@ -199,19 +260,15 @@ describe('SegmentProgressRing — pausedDimming prop (D-19)', () => {
   });
 });
 
-describe('SegmentProgressRing — duration-proportional widths (D-01)', () => {
-  it('Wake Easy alarm arc (60s of 1020s) renders an SVG arc path with the correct radius', () => {
+describe('SegmentProgressRing — arc path uses RADIUS=80', () => {
+  it('elapsed-arc d attribute contains "A 80 80" (correct radius)', () => {
     const { container } = render(
-      <SegmentProgressRing config={WAKE_EASY_CONFIG} currentIndex={0} progress={0} />,
+      <SegmentProgressRing config={WAKE_EASY_CONFIG} currentIndex={0} progress={0.5} />,
     );
-    const alarmFill = Array.from(container.querySelectorAll('path')).find(
-      (p) =>
-        p.getAttribute('stroke') === 'var(--color-accent)' &&
-        p.getAttribute('opacity') === '1',
+    const elapsed = Array.from(container.querySelectorAll('path')).find(
+      (p) => p.getAttribute('stroke') === 'var(--color-sage)',
     );
-    expect(alarmFill).toBeDefined();
-    const d = alarmFill!.getAttribute('d');
-    expect(d).toMatch(/^M /);
-    expect(d).toContain('A 80 80');
+    expect(elapsed).toBeDefined();
+    expect(elapsed!.getAttribute('d')).toContain('A 80 80');
   });
 });

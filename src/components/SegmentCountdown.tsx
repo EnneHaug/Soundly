@@ -118,14 +118,16 @@ export default function SegmentCountdown({ alarm }: SegmentCountdownProps) {
               {formatMmSs(totalRemainingMs)} total
             </span>
           )}
-
-          {/* Phase label — segment-index format during running, "Wake" during firing-alarm. */}
-          <span className="text-text-secondary text-sm mt-2 transition-opacity duration-500">
-            {isFiringAlarm
-              ? 'Wake'
-              : `Segment ${currentSegment.index + 1} of ${currentSegment.total} — ${SOUND_LABELS[currentSegment.segment.endSound]}`}
-          </span>
         </SegmentProgressRing>
+      )}
+
+      {/* Phase label below the ring (UAT 2026-05-12 — moved out of the SVG overlay). */}
+      {config && currentSegment && (
+        <span className="text-text-secondary text-sm mt-6 transition-opacity duration-500">
+          {isFiringAlarm
+            ? 'Wake'
+            : `Segment ${currentSegment.index + 1} of ${currentSegment.total} — ${SOUND_LABELS[currentSegment.segment.endSound]}`}
+        </span>
       )}
 
       {/* Controls below ring — verbatim from Countdown.tsx:136-151 with one delta on Pause (D-03). */}

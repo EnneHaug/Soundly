@@ -239,9 +239,13 @@ describe('SegmentCountdown — SegmentProgressRing wiring', () => {
   });
 
   it('passes pausedDimming=true to SegmentProgressRing when isPaused', () => {
-    const alarm = makeAlarm({ isPaused: true });
+    // Use a partway-through-segment state so progress > 0 and the elapsed arc renders.
+    const alarm = makeAlarm({
+      isPaused: true,
+      segmentEndsAt: Date.now() + 120_000, // 2 min remaining → 50% through segment 0
+    });
     const { container } = render(<SegmentCountdown alarm={alarm} />);
-    // Current segment 0 is gentle (sage); when pausedDimming=true, opacity drops to 0.5
+    // Current segment 0 is gentle (sage); when pausedDimming=true, elapsed arc opacity drops to 0.5
     const dimmed = Array.from(container.querySelectorAll('path')).filter(
       (p) =>
         p.getAttribute('stroke') === 'var(--color-sage)' &&
