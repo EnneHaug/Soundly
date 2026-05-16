@@ -156,17 +156,42 @@ describe('SegmentProgressRing — boundary marker dots', () => {
     expect(dots.length).toBe(4);
   });
 
-  it('colors all boundary dots with var(--color-accent) (terracotta against the sage ring)', () => {
-    // Boundary dots use a uniform terracotta accent so they contrast against the sage
-    // elapsed arc. Per-segment endSound info is carried by the below-ring label, not
-    // the dot color.
+  it('colors gentle/triangle boundary dots with var(--color-sand) (Wake Easy = 4 sand dots)', () => {
+    // Wake Easy ends segments 0..3 with gentle endSound; no dot after segment 4 (the alarm
+    // segment is the final one — only N-1 dots are rendered). All 4 dots are sand.
     const { container } = render(
       <SegmentProgressRing config={WAKE_EASY_CONFIG} currentIndex={0} progress={0} />,
     );
+    const sandDots = Array.from(container.querySelectorAll('circle')).filter(
+      (c) => c.getAttribute('fill') === 'var(--color-sand)',
+    );
+    expect(sandDots.length).toBe(4);
     const accentDots = Array.from(container.querySelectorAll('circle')).filter(
       (c) => c.getAttribute('fill') === 'var(--color-accent)',
     );
-    expect(accentDots.length).toBe(4);
+    expect(accentDots.length).toBe(0);
+  });
+
+  it('colors alarm-endSound boundary dots with var(--color-accent) (mid-composition alarm)', () => {
+    // Hypothetical composer config with an alarm segment in the middle of the sequence.
+    // The boundary dot AFTER the alarm segment should render in terracotta.
+    const cfg: SegmentConfig = {
+      segments: [
+        { id: 'g', durationMs: 60_000, endSound: 'gentle' },
+        { id: 'a', durationMs: 60_000, endSound: 'alarm' },
+        { id: 't', durationMs: 60_000, endSound: 'triangle' },
+      ],
+    };
+    const { container } = render(
+      <SegmentProgressRing config={cfg} currentIndex={0} progress={0} />,
+    );
+    // 3 segments → 2 boundary dots: one after the gentle (sand), one after the alarm (accent).
+    const dots = Array.from(container.querySelectorAll('circle'));
+    expect(dots.length).toBe(2);
+    const sandDots = dots.filter((c) => c.getAttribute('fill') === 'var(--color-sand)');
+    const accentDots = dots.filter((c) => c.getAttribute('fill') === 'var(--color-accent)');
+    expect(sandDots.length).toBe(1);
+    expect(accentDots.length).toBe(1);
   });
 
   it('fades past boundary dots to opacity 0.4 once the elapsed arc has crossed them', () => {

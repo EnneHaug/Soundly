@@ -169,19 +169,24 @@ export default function SegmentProgressRing({
 
   // Boundary marker dots — one per non-final segment-end angle.
   // The final segment's end angle == 2π == start angle, no need to mark it twice.
-  // Uniform terracotta (--color-accent) for elegant contrast with the typically-sage
-  // elapsed arc. Per-segment endSound info is carried by the below-ring label, not the
-  // dot color. Past dots fade once the elapsed arc crosses them.
+  // Two-color encoding by ending segment's endSound:
+  //   - gentle / triangle → sand (calm earth tones grouped — same warm-beige family)
+  //   - alarm             → accent (terracotta — reserved for the urgent signal)
+  // Past dots fade once the elapsed arc crosses them.
   const boundaryDots = cumulative.slice(0, -1).map((angle, i) => {
     const pos = polarToCartesian(angle);
     const isPast = angle <= elapsedAngle + FULL_ARC_EPS;
+    const dotColor =
+      segments[i].endSound === 'alarm'
+        ? 'var(--color-accent)'
+        : 'var(--color-sand)';
     return (
       <circle
         key={`boundary-${i}`}
         cx={pos.x}
         cy={pos.y}
         r={STROKE_WIDTH / 2 - 2}
-        fill="var(--color-accent)"
+        fill={dotColor}
         opacity={isPast ? 0.4 : 1}
       />
     );
