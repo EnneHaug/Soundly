@@ -28,3 +28,37 @@
     animation: pulse-active-arc 1s ease-in-out infinite;
   }
 }
+
+/* Phase 9: Composer modal scrim + open animation (D-15) */
+dialog::backdrop {
+  background: rgba(61, 74, 56, 0.4);   /* --color-text-primary at 40% alpha */
+  opacity: 0;
+  animation: dialog-backdrop-in 200ms ease-out forwards;
+}
+
+dialog[open] {
+  opacity: 0;
+  transform: translateY(16px);
+  animation: dialog-in 240ms ease-out forwards;
+}
+
+@keyframes dialog-backdrop-in {
+  to { opacity: 1; }
+}
+@keyframes dialog-in {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  dialog::backdrop {
+    animation-duration: 100ms;
+  }
+  dialog[open] {
+    transform: none;
+    animation: dialog-in-reduced 100ms ease-out forwards;
+  }
+  @keyframes dialog-in-reduced {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+}
