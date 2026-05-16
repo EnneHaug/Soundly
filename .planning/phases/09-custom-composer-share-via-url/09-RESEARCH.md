@@ -957,7 +957,7 @@ export function rowValidityArray(config: SegmentConfig): boolean[] {
 
 **Why:**
 - PresetCard is a v1 file but **not** in the SEG-05 protected list per `.planning/milestones/v1.0-ROADMAP.md` (PresetCard is NOT one of the 20 protected paths — I verified: protected paths are `AlarmEngine`, `AlarmState`, `AlarmSession`, `AudioContext`, `timer`, `useAlarm`, `Countdown`, `ProgressRing`, `engine/sounds/*` minus triangle/segmentSound, and `platform/*`). So extending PresetCard would not technically violate SEG-05. **However**, the v1 strict-floor posture established in STATE.md "Phase 6-8 byte-identical-floor preservation" treats PresetCard as effectively frozen.
-- Parallel files preserve the Phase 8 P06 pattern (Dashboard already imports `PresetCard` three times without modification) and matches the strong-preference call in CONTEXT D-180.
+- Parallel files preserve the Phase 8 P06 pattern (Dashboard already imports `PresetCard` three times without modification) and matches the strong-preference call in CONTEXT.md `canonical_refs` (see 09-CONTEXT.md `<canonical_refs>` section).
 - ~20 LoC duplication. Acceptable tradeoff for the structural isolation.
 
 **Shape:**
@@ -1178,9 +1178,9 @@ return (
 ### Pattern 12: Test infrastructure (composer-specific)
 
 **Existing test infra (consumed unchanged):**
-- jsdom env wired by Phase 8 P01 [VERIFIED: STATE.md "Phase 08 P01: Vitest jsdom environment wired"]
+- jsdom env wired by Phase 8 P01 [VERIFIED: STATE.md "Phase 8 P01: Vitest jsdom environment wired"]
 - RTL + @testing-library/dom installed [VERIFIED: package.json]
-- `cleanup()` pattern in afterEach [VERIFIED: STATE.md "Phase 08 P05: imported cleanup() and calling it in afterEach"]
+- `cleanup()` pattern in afterEach [VERIFIED: STATE.md "Phase 8 P05: imported cleanup() and calling it in afterEach"]
 
 **Composer-specific test patterns:**
 
@@ -1513,31 +1513,31 @@ No new dependencies. No missing dependencies.
 | A3 | `inputMode="none"` reliably suppresses the mobile keypad on all target browsers for `<input type="number">` with `readOnly` | Pattern 3 | [VERIFIED: MDN HTML inputmode attribute docs] — but some browsers may still show focus indicators. **Mitigation:** if visible, hide with `&:focus { outline: none }` — but DON'T remove the focus visibility for keyboard users |
 | A4 | `navigator.canShare({ url })` returns `true` consistently across iOS Safari, Android Chrome, and desktop Chrome | Pattern 5 | [CITED: MDN canShare docs above; CITED: MDN PWA share guide] — well-supported |
 | A5 | WCAG SC 2.2.1 (Timing Adjustable) does NOT require user-extensible duration for non-essential toasts | Pattern 11 toast WCAG | [VERIFIED: WCAG 2.2 SC 2.2.1 spec text: "...except when the timing is an essential part of the event or activity, or when the event or activity is not affected by the timing"] — informational toasts qualify |
-| A6 | The Phase 8 PresetCard.tsx is not protected under SEG-05 per v1.0-ROADMAP.md (parallel CustomCard.tsx is a "strong preference" not a requirement) | Pattern 8 | [VERIFIED: read v1.0-ROADMAP.md "Cross-Milestone Notes" — listed 20 paths; PresetCard not among them]. CONTEXT D-180 says "Strong preference: parallel CustomCard.tsx to preserve the byte-identical guardrail." Treating as preference, recommending parallel file approach |
+| A6 | The Phase 8 PresetCard.tsx is not protected under SEG-05 per v1.0-ROADMAP.md (parallel CustomCard.tsx is a "strong preference" not a requirement) | Pattern 8 | [VERIFIED: read v1.0-ROADMAP.md "Cross-Milestone Notes" — listed 20 paths; PresetCard not among them]. CONTEXT.md `canonical_refs` (see 09-CONTEXT.md `<canonical_refs>` section) says "Strong preference: parallel CustomCard.tsx to preserve the byte-identical guardrail." Treating as preference, recommending parallel file approach |
 
 **Items needing user confirmation before execution:** A1 (iOS hash quirk smoke-test) is the only one that could surface as a real-device bug; recommend logging as a Wave-N integration verification step. All other assumptions are either verified or have clear in-band mitigations.
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Should the modal trap browser-back?** D-14 says "browser-back closes the modal," which works automatically with `<dialog>` on Chrome+Safari (pressing back when a modal is open closes it). But Android Chrome history-back behavior in standalone PWA mode may differ — sometimes pops the PWA itself.
+1. **[RESOLVED] Should the modal trap browser-back?** D-14 says "browser-back closes the modal," which works automatically with `<dialog>` on Chrome+Safari (pressing back when a modal is open closes it). But Android Chrome history-back behavior in standalone PWA mode may differ — sometimes pops the PWA itself.
    - What we know: `<dialog>.close()` is the canonical behavior on Escape; browser-back is an OS-level signal.
    - What's unclear: Does Android Chrome PWA standalone treat browser-back as "close dialog if one is open" or "exit PWA"?
    - Recommendation: Leave default `<dialog>` behavior; if real-device testing surfaces wrong behavior, add a `popstate` listener inside the Composer that closes on back-button.
 
-2. **Should `prefers-reduced-motion` users also skip the modal slide?** D-15 says "skip the slide and shorten the fade to 100 ms." Pattern 1's CSS gates this — but the `prefers-reduced-motion: reduce` media query is a user system preference, and we should verify it works alongside the existing `pulse-active` Phase 8 gate.
+2. **[RESOLVED] Should `prefers-reduced-motion` users also skip the modal slide?** D-15 says "skip the slide and shorten the fade to 100 ms." Pattern 1's CSS gates this — but the `prefers-reduced-motion: reduce` media query is a user system preference, and we should verify it works alongside the existing `pulse-active` Phase 8 gate.
    - Recommendation: confirm during integration; the gate in Pattern 1 CSS is the standard idiom.
 
-3. **What should the share-URL's `text` field say?** Pattern 5 uses `'Open this gentle alarm in Soundly'`. iOS share-sheet shows `title` prominently; Android shows `text`. The composer doesn't know the composition's user-intent (is it "wake at 8am"? a meditation timer? a Pomodoro?), so a generic text is fine.
+3. **[RESOLVED] What should the share-URL's `text` field say?** Pattern 5 uses `'Open this gentle alarm in Soundly'`. iOS share-sheet shows `title` prominently; Android shows `text`. The composer doesn't know the composition's user-intent (is it "wake at 8am"? a meditation timer? a Pomodoro?), so a generic text is fine.
    - What we know: The choice doesn't affect functionality, only the share-sheet preview.
    - Recommendation: lock to `'Open this gentle alarm in Soundly'` (current) unless the discuss-phase user prefers different copy.
 
-4. **Should the composer remember segments after Cancel?** CONTEXT explicitly says NO (zen friction-free reversal). But a paranoid user might lose 10 minutes of work to an accidental Cancel tap.
+4. **[RESOLVED] Should the composer remember segments after Cancel?** CONTEXT explicitly says NO (zen friction-free reversal). But a paranoid user might lose 10 minutes of work to an accidental Cancel tap.
    - What we know: D-14 says Cancel closes without saving; CONTEXT Claude's Discretion says "no" to caching.
    - Recommendation: Honor the lock. Do not implement caching. (User has the share-URL as a workaround for portability.)
 
-5. **Should we run `validateSegmentConfig` ALSO at hash-decode time, or only at composer-Start?**
+5. **[RESOLVED] Should we run `validateSegmentConfig` ALSO at hash-decode time, or only at composer-Start?**
    - What we know: Pattern 6's `decodeComposition` runs it as defence-in-depth (returns `'failed_validation'` reason).
    - Recommendation: Yes, decoder runs it. Belt + suspenders given SHR-02 + SHR-03.
 
@@ -1598,5 +1598,3 @@ No new dependencies. No missing dependencies.
 
 **Research date:** 2026-05-10
 **Valid until:** 2026-06-10 (30 days; browser APIs stable, project stack stable; revisit only if a major React/Vite/Tailwind release lands)
-
-## RESEARCH COMPLETE

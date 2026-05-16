@@ -10,7 +10,7 @@
 > 2. **No analog (NEW pattern)** — the codebase has no precedent. Cite the line-anchored excerpt in `09-RESEARCH.md` + verbatim contract in `09-UI-SPEC.md`. The planner's `<read_first>` block must point at those.
 > 3. **Self-analog (modification)** — `Dashboard.tsx` / `App.tsx`. Read the current file and apply a minimal diff.
 >
-> **SEG-05 / byte-identical floor**: Phase 7/8 deliverables (`SegmentEngine`, `SegmentState`, `SegmentCountdown`, `SegmentProgressRing`, `useSegmentAlarm`, `useActiveAlarm`, `triangle`, `segmentSound`) and v1 protected paths (`Countdown`, `ProgressRing`, `useAlarm`, `AlarmEngine`, `AlarmState`, `AlarmSession`, `AudioContext`, `timer`, `engine/sounds/*` minus phase-7 additions, `platform/*`) are **READ-ONLY**. They appear in `<read_first>` to copy idioms FROM, never in `<action>` to modify. `PresetCard.tsx` is not formally SEG-05 protected but is treated as frozen per CONTEXT D-180 (strong preference: parallel file).
+> **SEG-05 / byte-identical floor**: Phase 7/8 deliverables (`SegmentEngine`, `SegmentState`, `SegmentCountdown`, `SegmentProgressRing`, `useSegmentAlarm`, `useActiveAlarm`, `triangle`, `segmentSound`) and v1 protected paths (`Countdown`, `ProgressRing`, `useAlarm`, `AlarmEngine`, `AlarmState`, `AlarmSession`, `AudioContext`, `timer`, `engine/sounds/*` minus phase-7 additions, `platform/*`) are **READ-ONLY**. They appear in `<read_first>` to copy idioms FROM, never in `<action>` to modify. `PresetCard.tsx` is not formally SEG-05 protected but is treated as frozen per CONTEXT.md `canonical_refs` strong preference for parallel CustomCard.tsx (see 09-CONTEXT.md `<canonical_refs>` section: strong preference: parallel file).
 
 ---
 
@@ -91,7 +91,7 @@
 </button>
 ```
 
-**SEG-05 status:** CustomCard is NEW (not protected). PresetCard is NOT formally SEG-05 protected per `.planning/milestones/v1.0-ROADMAP.md` (verified via RESEARCH Assumption A6 at `09-RESEARCH.md:1516`), but is treated as frozen per CONTEXT D-180 — **strong preference: parallel file, do NOT extend PresetCard with a `variant` prop**.
+**SEG-05 status:** CustomCard is NEW (not protected). PresetCard is NOT formally SEG-05 protected per `.planning/milestones/v1.0-ROADMAP.md` (verified via RESEARCH Assumption A6 at `09-RESEARCH.md:1516`), but is treated as frozen per CONTEXT.md `canonical_refs` strong preference for parallel CustomCard.tsx (see 09-CONTEXT.md `<canonical_refs>` section) — **strong preference: parallel file, do NOT extend PresetCard with a `variant` prop**.
 
 ---
 
@@ -813,7 +813,7 @@ These files appear in this PATTERNS.md as analogs to COPY FROM. They MUST NOT ap
 
 | File | Cited as analog for | Reason it's READ-ONLY |
 |------|---------------------|------------------------|
-| `src/components/PresetCard.tsx` | CustomCard.tsx (mirror), SegmentRow.tsx (shell idiom) | Treated as frozen per CONTEXT D-180 (strong preference) |
+| `src/components/PresetCard.tsx` | CustomCard.tsx (mirror), SegmentRow.tsx (shell idiom) | Treated as frozen per CONTEXT.md `canonical_refs` strong preference for parallel CustomCard.tsx (see 09-CONTEXT.md `<canonical_refs>` section) |
 | `src/components/Countdown.tsx` | Composer footer buttons (byte-identical class strings) | v1 SEG-05 byte-identical protected (line 1, line 138-150 verbatim) |
 | `src/components/SegmentCountdown.tsx` | Composer page wrapper, disabled-button idiom, tabular-nums | Phase 8 deliverable; consumed unchanged |
 | `src/components/SegmentProgressRing.tsx` | (not cited — only mentioned as downstream consumer) | Phase 8 deliverable; consumed unchanged |
