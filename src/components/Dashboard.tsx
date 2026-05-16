@@ -20,14 +20,16 @@
 import { QUICK_NAP_CONFIG, FOCUS_CONFIG, WAKE_EASY_CONFIG } from '../engine';
 import type { ActiveAlarmState } from '../hooks/useActiveAlarm';
 import PresetCard from './PresetCard';
+import CustomCard from './CustomCard';
 import TestSoundButton from './TestSoundButton';
 import IosInstallBanner from './IosInstallBanner';
 
 interface DashboardProps {
   activeAlarm: Extract<ActiveAlarmState, { mode: 'idle' }>;
+  onCustomClick: () => void;   // D-08 LOCKED — opens Composer modal
 }
 
-export default function Dashboard({ activeAlarm }: DashboardProps) {
+export default function Dashboard({ activeAlarm, onCustomClick }: DashboardProps) {
   return (
     <div className="flex flex-col items-center w-full max-w-md mx-auto px-6 py-12">
       {/* Header */}
@@ -51,6 +53,7 @@ export default function Dashboard({ activeAlarm }: DashboardProps) {
           description="4 chimes over 16 min, then alarm"
           onStart={() => activeAlarm.start({ kind: 'segments', config: WAKE_EASY_CONFIG })}
         />
+        <CustomCard onClick={onCustomClick} />
       </div>
 
       {/* Test Sound button */}
