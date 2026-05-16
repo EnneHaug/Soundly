@@ -169,9 +169,9 @@ export default function SegmentProgressRing({
 
   // Boundary marker dots — one per non-final segment-end angle.
   // The final segment's end angle == 2π == start angle, no need to mark it twice.
-  // Uniform sand color (warm earth palette pairing with sage elapsed-arc) — visually
-  // distinct from the typically-sage ring without competing for attention. Per-segment
-  // endSound info is carried by the below-ring label, not the dot color.
+  // Uniform terracotta (--color-accent) for elegant contrast with the typically-sage
+  // elapsed arc. Per-segment endSound info is carried by the below-ring label, not the
+  // dot color. Past dots fade once the elapsed arc crosses them.
   const boundaryDots = cumulative.slice(0, -1).map((angle, i) => {
     const pos = polarToCartesian(angle);
     const isPast = angle <= elapsedAngle + FULL_ARC_EPS;
@@ -181,7 +181,7 @@ export default function SegmentProgressRing({
         cx={pos.x}
         cy={pos.y}
         r={STROKE_WIDTH / 2 - 2}
-        fill="var(--color-sand)"
+        fill="var(--color-accent)"
         opacity={isPast ? 0.4 : 1}
       />
     );

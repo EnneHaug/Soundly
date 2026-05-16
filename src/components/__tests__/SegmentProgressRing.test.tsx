@@ -156,17 +156,17 @@ describe('SegmentProgressRing — boundary marker dots', () => {
     expect(dots.length).toBe(4);
   });
 
-  it('colors all boundary dots with var(--color-sand) (uniform warm-earth pairing)', () => {
-    // Boundary dots use a uniform sand color so they contrast against the sage elapsed
-    // arc without competing for attention. Per-segment endSound info is carried by the
-    // below-ring label, not the dot color.
+  it('colors all boundary dots with var(--color-accent) (terracotta against the sage ring)', () => {
+    // Boundary dots use a uniform terracotta accent so they contrast against the sage
+    // elapsed arc. Per-segment endSound info is carried by the below-ring label, not
+    // the dot color.
     const { container } = render(
       <SegmentProgressRing config={WAKE_EASY_CONFIG} currentIndex={0} progress={0} />,
     );
-    const sandDots = Array.from(container.querySelectorAll('circle')).filter(
-      (c) => c.getAttribute('fill') === 'var(--color-sand)',
+    const accentDots = Array.from(container.querySelectorAll('circle')).filter(
+      (c) => c.getAttribute('fill') === 'var(--color-accent)',
     );
-    expect(sandDots.length).toBe(4);
+    expect(accentDots.length).toBe(4);
   });
 
   it('fades past boundary dots to opacity 0.4 once the elapsed arc has crossed them', () => {
