@@ -1,17 +1,17 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: — Foundations
-status: milestone_complete
-stopped_at: Completed 08-06-PLAN.md
-last_updated: "2026-05-10T19:29:31.953Z"
-last_activity: 2026-05-10
+milestone: v2.0
+milestone_name: — Custom Alarm Composer + Discoverability
+status: in_progress
+stopped_at: v1.0 archived; ready to plan Phase 9 (Custom Composer + Share via URL)
+last_updated: "2026-05-16T07:35:00.000Z"
+last_activity: 2026-05-16
 progress:
-  total_phases: 8
-  completed_phases: 9
-  total_plans: 23
-  completed_plans: 23
-  percent: 113
+  total_phases: 6
+  completed_phases: 3
+  total_plans: 14
+  completed_plans: 14
+  percent: 50
 ---
 
 # Project State
@@ -21,16 +21,17 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-04)
 
 **Core value:** The alarm must actually wake the user — gently first, reliably always.
-**Current focus:** Phase 08 — wake-easy-preset-segment-countdown-ui
+**Current focus:** v2.0 milestone — Phase 9 next (Custom Composer + Share via URL)
 
 ## Current Position
 
-Phase: 8
-Plan: Not started
-Status: Milestone complete
-Last activity: 2026-05-10
+Milestone: v2.0 — Custom Alarm Composer + Discoverability
+Phase: 9 (planned, not started)
+Plan: Not started — awaiting `/gsd-discuss-phase 9`
+Status: v1.0 archived; v2.0 phases 6-8 shipped, phases 9-11 pending
+Last activity: 2026-05-16
 
-Progress: [██████████] 100%
+v2.0 Progress: [█████░░░░░] 50% (3/6 phases shipped — 6, 7, 8)
 
 ## Performance Metrics
 
