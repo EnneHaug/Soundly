@@ -112,7 +112,7 @@ The original v1.0 alarm engine, three-phase escalation, presets, PWA shell, and 
 **Plans:** 9 plans
   - [x] 09-01-PLAN.md — shareUrl.ts encode/decode + DecodeResult Result type + tests (SHR-01..04) — Wave 1 leaf, pure lib
   - [x] 09-02-PLAN.md — composerReducer.ts (6-action useReducer) + composerValidation.ts + tests (COMP-04, COMP-05) — Wave 1 leaf, pure lib
-  - [ ] 09-03-PLAN.md — CustomCard.tsx (parallel-file PresetCard clone) + Toast.tsx (role=status) + tests (COMP-01 visual) — Wave 1 leaf
+  - [x] 09-03-PLAN.md — CustomCard.tsx (parallel-file PresetCard clone) + Toast.tsx (role=status) + tests (COMP-01 visual) — Wave 1 leaf
   - [ ] 09-04-PLAN.md — StepperInput.tsx (D-01 adaptive step + boundary at 5:00; D-02 keyboard map) + tests (COMP-03 stepper) — Wave 2 atomic
   - [ ] 09-05-PLAN.md — SoundPicker.tsx (role=radiogroup + roving tabindex; D-06 Alarm vs Wake label divergence; D-07 keyboard) + tests (COMP-03 picker) — Wave 2 atomic
   - [ ] 09-06-PLAN.md — SegmentRow.tsx (Stepper + SoundPicker + Duplicate + Delete in CSS Grid; D-11 invalid border; D-12 last-segment guard) + tests (COMP-03, COMP-05) — Wave 3 composition

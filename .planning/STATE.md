@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: — Foundations
 status: executing
-stopped_at: Completed 09-02-PLAN.md
-last_updated: "2026-05-16T13:04:39.730Z"
+stopped_at: Completed 09-03-PLAN.md
+last_updated: "2026-05-16T13:11:19.190Z"
 last_activity: 2026-05-16
 progress:
   total_phases: 9
   completed_phases: 8
   total_plans: 32
-  completed_plans: 25
-  percent: 78
+  completed_plans: 26
+  percent: 81
 ---
 
 # Project State
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-05-04)
 
 Milestone: v2.0 — Custom Alarm Composer + Discoverability
 Phase: 09 (custom-composer-share-via-url) — EXECUTING
-Plan: 3 of 9
+Plan: 4 of 9
 Status: Ready to execute
 Last activity: 2026-05-16
 
@@ -75,6 +75,7 @@ v2.0 Progress: [█████░░░░░] 50% (3/6 phases shipped — 6, 7
 | Phase 08 P06 | 3m 48s | 2 tasks tasks | 4 files files |
 | Phase 09 P01 | 3m 19s | 2 tasks tasks | 2 files files |
 | Phase Phase 09 PP02 | 3m 37s | 2 tasks tasks | 4 files files |
+| Phase Phase 09 PP03 | 2m 59s | 2 tasks tasks | 4 files files |
 
 ## Accumulated Context
 
@@ -107,6 +108,7 @@ Recent decisions affecting current work:
 - [Phase 08 P06]: Phase 8 integration finale shipped — Dashboard.tsx wired with the third "4 x 4" PresetCard (D-12 locked label, single ASCII spaces, dispatches { kind: 'segments', config: WAKE_EASY_CONFIG }); App.tsx rewritten end-to-end (17 lines, net -8) using useActiveAlarm() with three &&-guarded branches narrowing on activeAlarm.mode (idle/continuous/segments); src/dev/SegmentHarness.tsx deleted per D-14/D-16 (164 lines removed). Dashboard.test.tsx new file (5 tests) provides ROADMAP success criterion #1 automated coverage — document-order via compareDocumentPosition + DOCUMENT_POSITION_FOLLOWING bit, plus dispatch payload assertions for all 3 cards. AGGREGATED SEG-05 byte-identical guardrail: ZERO diff across all 20 v1-protected paths vs Phase 7 final baseline (commit abd667d) — Quick Nap and Focus continue running through unmodified v1 stack. Full suite 378/378 across 32 files; tsc clean; npm run build clean; dist/ grep "SegmentHarness" returns 0. Phase 8 milestone v1.0 declared complete.
 - [Phase 09 P01]: shareUrl.ts shipped at src/lib/shareUrl.ts (174 lines) — encodeComposition + decodeComposition + DecodeResult discriminated-union per D-16/D-17/SHR-01..04. Sound idx map: gentle=0, triangle=1, alarm=2. Size caps 1024 chars / 32 segments. Strict integer-regex parsing guards NaN coercion (Pitfall 3 / T-09-01-01). VERSION_PREFIX v1: gate routes future vN: inputs to wrong_version (SHR-04 non-breaking extension). decodeComposition tolerates '#c=', 'c=', and bare 'v1:' prefixes — caller can pass raw location.hash. shareUrl.ts deliberately does NOT build the full URL — caller composes the share URL itself to honor GitHub Pages base path (Pitfall 9). 28-test TDD net at src/lib/__tests__/shareUrl.test.ts: 4/5 DecodeResult reasons directly triggered; failed_validation documented as defence-in-depth backstop for future engine rules. RED d5b713c then GREEN 77676b6. Full suite 412/412 across 33 files; tsc --noEmit clean. SEG-05 zero-diff floor preserved (no engine, hook, or component file touched).
 - [Phase 09 P02]: composerReducer + composerValidation pure-TS libs shipped at src/lib/ (89 + 32 lines, 4 new files total). First useReducer in the codebase per 09-PATTERNS.md — 6-action discriminated union (load | add | duplicate | delete | update_duration | update_sound) with MAX_SEGMENTS=32 cap mirroring shareUrl.ts D-17 and D-12 last-segment delete guard at reducer level (belt-and-suspenders with UI's disabled Delete). load action regenerates all ids so React keys stay stable across re-decodes of the same shared URL. rowIsValid + rowValidityArray drive D-11 inline red-border state + disabled-Start gate; 14_400_000 ms ceiling duplicated inline because SegmentState.ts is SEG-05 frozen. Reference-equality tests pin both no-op-returns-state AND mutating-actions-keep-untouched-rows-ref-equal — proves immutability without diffing JSON. TDD gate sequence: test() RED commit 86638e6 (vite resolve-import failure) -> feat() GREEN commit 10fff2f (32/32 passing). Full suite 444/444 across 35 files; tsc --noEmit clean. SEG-05 zero-diff floor preserved across all 26 protected paths.
+- [Phase 09 P03]: Toast.tsx + CustomCard.tsx atomic-component plan shipped — both built TDD-first with verbatim class strings from 09-UI-SPEC.md. Parallel-file pattern locked in: CustomCard.tsx is a sibling of PresetCard.tsx (NOT a variant prop); PresetCard.tsx remains BYTE-IDENTICAL (hash 4328729671d76beff93247d5a0e46c24ff56dfd5 baseline+post = matched). Toast pattern: single-instance live-region (role='status' + aria-live='polite'); useEffect+setTimeout with cleanup return clears pending timeout on unmount/message-change/durationMs-change (T-09-03-02 DoS mitigation). CustomCard onClick (not onStart) — semantically distinct from PresetCard.onStart since clicking CustomCard opens a modal rather than starting an alarm. 10 new tests added (5 + 5); full suite 454/454 across 37 files; tsc --noEmit clean; SEG-05 zero-diff floor preserved (no engine/hook/v1-component touched). TDD gate sequence: test(09-03) RED 882a01d -> feat(09-03) GREEN 07091c9 for CustomCard; test(09-03) RED 22f0c49 -> feat(09-03) GREEN 389d27a for Toast.
 
 ### Pending Todos
 
@@ -131,8 +133,8 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-05-16T13:04:39.713Z
-Stopped at: Completed 09-02-PLAN.md
+Last session: 2026-05-16T13:11:19.172Z
+Stopped at: Completed 09-03-PLAN.md
 Resume file: None
 
 **Planned Phase:** 9 (custom-composer-share-via-url) — 9 plans — 2026-05-16T12:50:39.793Z
