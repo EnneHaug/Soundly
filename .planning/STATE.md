@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: — Foundations
 status: executing
-stopped_at: Completed 09-03-PLAN.md
-last_updated: "2026-05-16T13:11:19.190Z"
+stopped_at: Completed 09-04-PLAN.md
+last_updated: "2026-05-16T13:17:42Z"
 last_activity: 2026-05-16
 progress:
   total_phases: 9
   completed_phases: 8
   total_plans: 32
-  completed_plans: 26
-  percent: 81
+  completed_plans: 27
+  percent: 84
 ---
 
 # Project State
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-05-04)
 
 Milestone: v2.0 — Custom Alarm Composer + Discoverability
 Phase: 09 (custom-composer-share-via-url) — EXECUTING
-Plan: 4 of 9
+Plan: 5 of 9
 Status: Ready to execute
 Last activity: 2026-05-16
 
@@ -76,6 +76,7 @@ v2.0 Progress: [█████░░░░░] 50% (3/6 phases shipped — 6, 7
 | Phase 09 P01 | 3m 19s | 2 tasks tasks | 2 files files |
 | Phase Phase 09 PP02 | 3m 37s | 2 tasks tasks | 4 files files |
 | Phase Phase 09 PP03 | 2m 59s | 2 tasks tasks | 4 files files |
+| Phase 09 P04 | 4m 16s | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -109,6 +110,7 @@ Recent decisions affecting current work:
 - [Phase 09 P01]: shareUrl.ts shipped at src/lib/shareUrl.ts (174 lines) — encodeComposition + decodeComposition + DecodeResult discriminated-union per D-16/D-17/SHR-01..04. Sound idx map: gentle=0, triangle=1, alarm=2. Size caps 1024 chars / 32 segments. Strict integer-regex parsing guards NaN coercion (Pitfall 3 / T-09-01-01). VERSION_PREFIX v1: gate routes future vN: inputs to wrong_version (SHR-04 non-breaking extension). decodeComposition tolerates '#c=', 'c=', and bare 'v1:' prefixes — caller can pass raw location.hash. shareUrl.ts deliberately does NOT build the full URL — caller composes the share URL itself to honor GitHub Pages base path (Pitfall 9). 28-test TDD net at src/lib/__tests__/shareUrl.test.ts: 4/5 DecodeResult reasons directly triggered; failed_validation documented as defence-in-depth backstop for future engine rules. RED d5b713c then GREEN 77676b6. Full suite 412/412 across 33 files; tsc --noEmit clean. SEG-05 zero-diff floor preserved (no engine, hook, or component file touched).
 - [Phase 09 P02]: composerReducer + composerValidation pure-TS libs shipped at src/lib/ (89 + 32 lines, 4 new files total). First useReducer in the codebase per 09-PATTERNS.md — 6-action discriminated union (load | add | duplicate | delete | update_duration | update_sound) with MAX_SEGMENTS=32 cap mirroring shareUrl.ts D-17 and D-12 last-segment delete guard at reducer level (belt-and-suspenders with UI's disabled Delete). load action regenerates all ids so React keys stay stable across re-decodes of the same shared URL. rowIsValid + rowValidityArray drive D-11 inline red-border state + disabled-Start gate; 14_400_000 ms ceiling duplicated inline because SegmentState.ts is SEG-05 frozen. Reference-equality tests pin both no-op-returns-state AND mutating-actions-keep-untouched-rows-ref-equal — proves immutability without diffing JSON. TDD gate sequence: test() RED commit 86638e6 (vite resolve-import failure) -> feat() GREEN commit 10fff2f (32/32 passing). Full suite 444/444 across 35 files; tsc --noEmit clean. SEG-05 zero-diff floor preserved across all 26 protected paths.
 - [Phase 09 P03]: Toast.tsx + CustomCard.tsx atomic-component plan shipped — both built TDD-first with verbatim class strings from 09-UI-SPEC.md. Parallel-file pattern locked in: CustomCard.tsx is a sibling of PresetCard.tsx (NOT a variant prop); PresetCard.tsx remains BYTE-IDENTICAL (hash 4328729671d76beff93247d5a0e46c24ff56dfd5 baseline+post = matched). Toast pattern: single-instance live-region (role='status' + aria-live='polite'); useEffect+setTimeout with cleanup return clears pending timeout on unmount/message-change/durationMs-change (T-09-03-02 DoS mitigation). CustomCard onClick (not onStart) — semantically distinct from PresetCard.onStart since clicking CustomCard opens a modal rather than starting an alarm. 10 new tests added (5 + 5); full suite 454/454 across 37 files; tsc --noEmit clean; SEG-05 zero-diff floor preserved (no engine/hook/v1-component touched). TDD gate sequence: test(09-03) RED 882a01d -> feat(09-03) GREEN 07091c9 for CustomCard; test(09-03) RED 22f0c49 -> feat(09-03) GREEN 389d27a for Toast.
+- [Phase 09 P04]: StepperInput.tsx shipped — first number stepper in the codebase (157 lines). D-01 LOCKED adaptive step constants verbatim (SMALL_STEP_THRESHOLD_MS=300_000, SMALL_STEP_MS=30_000, LARGE_STEP_MS=60_000, SHIFT_STEP_MS=300_000, DEFAULT_MIN=5_000, DEFAULT_MAX=3_600_000); Pitfall 7 boundary case implemented as explicit `currentMs === SMALL_STEP_THRESHOLD_MS → LARGE_STEP_MS` branch in `decreaseStep()` so '−' at exactly 5:00 drops by 1 min to 4:00 (asymmetric with '+' which goes 5:00→6:00 by 1 min — verified by dedicated boundary tests). D-02 keyboard map covers ArrowUp/Down (adaptive), Shift+Arrow + PageUp/Down (SHIFT_STEP_MS 5 min); e.preventDefault() on all four to suppress page scroll. **Discretionary fallback applied (PLAN line 234):** input uses `type="text" + role="spinbutton"` rather than `type="number"` because `<input type="number">` refuses to render mm:ss-formatted values (`.value === ""` in jsdom and real browsers). `aria-valuemin/max/now` (raw ms) + `aria-valuetext` (mm:ss) preserve spinbutton SR contract. `inputMode="none" + readOnly` suppresses mobile soft keyboard (T-09-04-04 mitigation). 23-test TDD net at src/components/__tests__/StepperInput.test.tsx covering adaptive step + boundary, min/max clamps via disabled-button + keyboard-clamp, full keyboard map, ARIA contract. TDD gate sequence: test(09-04) RED commit 16707f8 -> feat(09-04) GREEN commit b7052bf. Full suite 477/477 across 38 files; tsc --noEmit clean. SEG-05 zero-diff floor preserved across all 26 protected paths (only StepperInput.tsx + its test created; no existing file modified).
 
 ### Pending Todos
 
