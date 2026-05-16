@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: — Foundations
 status: executing
-stopped_at: Completed 09-06-PLAN.md
-last_updated: "2026-05-16T13:32:26.106Z"
+stopped_at: Completed 09-07-PLAN.md
+last_updated: "2026-05-16T13:38:56.085Z"
 last_activity: 2026-05-16
 progress:
   total_phases: 9
   completed_phases: 8
   total_plans: 32
-  completed_plans: 29
-  percent: 91
+  completed_plans: 30
+  percent: 94
 ---
 
 # Project State
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-05-04)
 
 Milestone: v2.0 — Custom Alarm Composer + Discoverability
 Phase: 09 (custom-composer-share-via-url) — EXECUTING
-Plan: 7 of 9
+Plan: 8 of 9
 Status: Ready to execute
 Last activity: 2026-05-16
 
@@ -79,6 +79,7 @@ v2.0 Progress: [█████░░░░░] 50% (3/6 phases shipped — 6, 7
 | Phase 09 P04 | 4m 16s | 2 tasks | 2 files |
 | Phase 09 P05 | 2m 54s | 2 tasks tasks | 2 files files |
 | Phase 09 P06 | 2m 51s | 2 tasks | 2 files |
+| Phase 09 P07 | 2m 28s | 2 tasks tasks | 2 files files |
 
 ## Accumulated Context
 
@@ -115,6 +116,7 @@ Recent decisions affecting current work:
 - [Phase 09 P04]: StepperInput.tsx shipped — first number stepper in the codebase (157 lines). D-01 LOCKED adaptive step constants verbatim (SMALL_STEP_THRESHOLD_MS=300_000, SMALL_STEP_MS=30_000, LARGE_STEP_MS=60_000, SHIFT_STEP_MS=300_000, DEFAULT_MIN=5_000, DEFAULT_MAX=3_600_000); Pitfall 7 boundary case implemented as explicit `currentMs === SMALL_STEP_THRESHOLD_MS → LARGE_STEP_MS` branch in `decreaseStep()` so '−' at exactly 5:00 drops by 1 min to 4:00 (asymmetric with '+' which goes 5:00→6:00 by 1 min — verified by dedicated boundary tests). D-02 keyboard map covers ArrowUp/Down (adaptive), Shift+Arrow + PageUp/Down (SHIFT_STEP_MS 5 min); e.preventDefault() on all four to suppress page scroll. **Discretionary fallback applied (PLAN line 234):** input uses `type="text" + role="spinbutton"` rather than `type="number"` because `<input type="number">` refuses to render mm:ss-formatted values (`.value === ""` in jsdom and real browsers). `aria-valuemin/max/now` (raw ms) + `aria-valuetext` (mm:ss) preserve spinbutton SR contract. `inputMode="none" + readOnly` suppresses mobile soft keyboard (T-09-04-04 mitigation). 23-test TDD net at src/components/__tests__/StepperInput.test.tsx covering adaptive step + boundary, min/max clamps via disabled-button + keyboard-clamp, full keyboard map, ARIA contract. TDD gate sequence: test(09-04) RED commit 16707f8 -> feat(09-04) GREEN commit b7052bf. Full suite 477/477 across 38 files; tsc --noEmit clean. SEG-05 zero-diff floor preserved across all 26 protected paths (only StepperInput.tsx + its test created; no existing file modified).
 - [Phase 09 P05]: SoundPicker shipped at src/components/SoundPicker.tsx (110 lines) — first ARIA radiogroup in the codebase and first roving tabindex implementation. PILL_OPTIONS array locked: gentle/triangle/alarm with sage/sand/accent tints; selected sand pill uses text-text-primary (NOT text-white) per UI-SPEC L165-170 contrast (light-tone-needs-dark-text). D-06 LOCKED 'Alarm' label divergence preserved — SoundPicker uses 'Alarm' (calmer composer form context) while SegmentCountdown.SOUND_LABELS keeps 'Wake' for the running-alarm screen; explicit test 'does NOT render Wake' guards against future consolidation and SegmentCountdown.tsx byte-identical (hash b07fc29... unchanged). D-07 LOCKED ArrowLeft/Right + ArrowUp/Down mirrored with modulo-3 wrap math (idx + 1) % 3 / (idx - 1 + 3) % 3 — arrow keys move BOTH focus (refs.current[next]?.focus()) and selection (onChange(next.value)). MDN-canonical roving tabindex: tabIndex={i === currentIdx ? 0 : -1} — exactly one pill is tab-focusable; verified by dedicated invariant test that sweeps all 3 values. Per-pill --pill-tint CSS variable (var(--color-sage|sand|accent)) injected via inline style drives unselected hover/focus 10% preview via bg-[color-mix(in_srgb,var(--pill-tint)_10%,transparent)] — first color-mix usage in the codebase. 23-test TDD net at src/components/__tests__/SoundPicker.test.tsx across 7 describe blocks (rendering / selection state / roving tabindex / click selection / keyboard map / touch target / className passthrough). TDD gate sequence: test(09-05) RED commit 3a28936 (vite import resolution failure) -> feat(09-05) GREEN commit 0cf6c84 (23/23 passing). Full suite 500/500 across 39 test files; tsc --noEmit clean. SEG-05 zero-diff floor preserved across all 26 protected paths (only SoundPicker.tsx + its test created; zero existing-file modifications).
 - [Phase 09 P06]: SegmentRow shipped at src/components/SegmentRow.tsx (105 lines) — first composite-row component in the codebase (Pattern 10 — composes StepperInput + SoundPicker + Duplicate (⧉) + Delete (×) icon buttons in verbatim UI-SPEC L354-391 CSS Grid). Desktop grid-cols-[auto_1fr_auto_auto], mobile max-[480px]:grid-cols-[1fr_auto_auto] + max-[480px]:grid-rows-[auto_auto] with SoundPicker wrapping under stepper+icons via className='max-[480px]:col-span-3' passthrough. D-11 LOCKED invalid-row border (' border border-accent/50 rounded-lg' suffix) + aria-invalid={isInvalid} propagates to StepperInput. D-12 LOCKED last-segment Delete guard via native disabled={isOnlyRow} + title='At least one segment required' — React's synthetic event respects disabled before firing onClick, so no defensive guard needed (mirrors SegmentCountdown.tsx:135-141 Pause button idiom). Per-row aria-label 'Segment N sound' (1-indexed) flows via rowIndex prop pass-through to SoundPicker (T-09-06-02 mitigation). 25-test TDD net at src/components/__tests__/SegmentRow.test.tsx across 8 describe blocks; React.ComponentProps<typeof SegmentRow> in makeProps fixture builder avoids exporting Props interface. TDD gate: test() RED c492887 (vite resolve-import failure) -> feat() GREEN 3fff074 (25/25 passing). Full suite 525/525 across 40 test files; tsc --noEmit clean. Wave-2 deliverables StepperInput.tsx + SoundPicker.tsx byte-identical (git diff --quiet exits 0).
+- [Phase 09 P07]: useHashComposition shipped at src/hooks/useHashComposition.ts (72 lines) — first URL-routing hook in the codebase. Synchronous-read-in-useState-initializer + post-commit-clear-in-useEffect split locked per Pattern 6 / Pitfall 2 / Pitfall 5: location.hash read ONCE before first render (no Dashboard flicker), history.replaceState fires in [] -deps useEffect AFTER first commit (D-18 info-disclosure mitigation, refresh idempotency). '#c=' prefix discriminator gates BOTH decode AND clear — non-composer hashes silently ignored (not errors). Return shape { composition: SegmentConfig | null, error: DecodeResult.reason | null, clearError: () => void } projects DecodeResult into mutable state so Composer can dismiss the error toast via clearError without re-running decodeComposition. SHR-02 locked via decodeComposition's validateSegmentConfig defence-in-depth pass; SHR-03 locked via Result-type never-throws contract (binary-garbage test pins). 18-test TDD net at src/hooks/__tests__/useHashComposition.test.ts covering all 5 DecodeResult reasons (wrong_version/malformed/too_long/invalid_segment_data + failed_validation flows through same code path) across 7 describe blocks including a dedicated Pitfall-2 synchronous-read invariant assertion. Hash mocking idiom new to src/hooks/__tests__/: Object.defineProperty(window, 'location', { value: { hash, pathname, search, origin }, writable: true, configurable: true }) + setHash() helper + beforeEach replaceStateSpy + afterEach restore (cribbed from standalone.test.ts:7-14). TDD gate: test() RED commit 7a79932 (vite import resolution failure on missing hook) -> feat() GREEN commit 0c775df (18/18 passing). Full suite 543/543 across 41 test files; tsc --noEmit clean. SEG-05 zero-diff floor preserved — src/lib/shareUrl.ts AND src/hooks/useActiveAlarm.ts both git diff --quiet exit 0.
 
 ### Pending Todos
 
@@ -139,8 +141,8 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-05-16T13:32:26.090Z
-Stopped at: Completed 09-06-PLAN.md
+Last session: 2026-05-16T13:38:41.300Z
+Stopped at: Completed 09-07-PLAN.md
 Resume file: None
 
 **Planned Phase:** 9 (custom-composer-share-via-url) — 9 plans — 2026-05-16T12:50:39.793Z
