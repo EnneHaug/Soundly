@@ -97,10 +97,14 @@ All meta + JSON-LD lives in static HTML, never React-rendered, so OG/Twitter/iMe
 
 A composed alarm can be shared as a URL — recipient opens the link and the composer pre-loads with the shared segments. No backend, no localStorage, no accounts. Reinforces the no-persistence design by making compositions portable without storage.
 
-- [ ] **SHR-01**: Composer "Share" button serializes the current segment list into a versioned URL hash fragment (e.g. `/app#c=v1:240000-0,240000-0,240000-0,240000-0,60000-2`) and invokes `navigator.share({ url, title, text })`. Falls back to copy-to-clipboard with a confirmation toast on browsers without Web Share API support.
-- [ ] **SHR-02**: When the app loads with a shared composition in `location.hash`, the composer mounts pre-loaded with the decoded segments (instead of the Wake Easy template). Decoded configs pass through the same SEG-04 validation gate before being accepted.
-- [ ] **SHR-03**: Invalid, malformed, or oversized shared URLs fail gracefully — composer falls back to the Wake Easy default and surfaces an unobtrusive "couldn't load shared alarm" notice. The runtime never throws on tampered URL input.
-- [ ] **SHR-04**: Encoding format begins with a single-token version prefix (`v1:`). Decoders reject unknown versions cleanly. The format is documented in source so future versions remain backward-compatible (or explicit about breaking).
+- [x] **SHR-01
+**: Composer "Share" button serializes the current segment list into a versioned URL hash fragment (e.g. `/app#c=v1:240000-0,240000-0,240000-0,240000-0,60000-2`) and invokes `navigator.share({ url, title, text })`. Falls back to copy-to-clipboard with a confirmation toast on browsers without Web Share API support.
+- [x] **SHR-02
+**: When the app loads with a shared composition in `location.hash`, the composer mounts pre-loaded with the decoded segments (instead of the Wake Easy template). Decoded configs pass through the same SEG-04 validation gate before being accepted.
+- [x] **SHR-03
+**: Invalid, malformed, or oversized shared URLs fail gracefully — composer falls back to the Wake Easy default and surfaces an unobtrusive "couldn't load shared alarm" notice. The runtime never throws on tampered URL input.
+- [x] **SHR-04
+**: Encoding format begins with a single-token version prefix (`v1:`). Decoders reject unknown versions cleanly. The format is documented in source so future versions remain backward-compatible (or explicit about breaking).
 
 ---
 

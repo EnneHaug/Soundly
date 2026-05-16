@@ -1,17 +1,17 @@
 ---
 gsd_state_version: 1.0
-milestone: v2.0
-milestone_name: — Custom Alarm Composer + Discoverability
-status: in_progress
-stopped_at: v1.0 archived; ready to plan Phase 9 (Custom Composer + Share via URL)
-last_updated: "2026-05-16T07:35:00.000Z"
+milestone: v1.0
+milestone_name: — Foundations
+status: executing
+stopped_at: Completed 09-01-PLAN.md
+last_updated: "2026-05-16T12:57:24.917Z"
 last_activity: 2026-05-16
 progress:
-  total_phases: 6
-  completed_phases: 3
-  total_plans: 14
-  completed_plans: 14
-  percent: 50
+  total_phases: 9
+  completed_phases: 8
+  total_plans: 32
+  completed_plans: 24
+  percent: 75
 ---
 
 # Project State
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-04)
 
 **Core value:** The alarm must actually wake the user — gently first, reliably always.
-**Current focus:** v2.0 milestone — Phase 9 next (Custom Composer + Share via URL)
+**Current focus:** Phase 09 — custom-composer-share-via-url
 
 ## Current Position
 
 Milestone: v2.0 — Custom Alarm Composer + Discoverability
-Phase: 9 (planned, not started)
-Plan: Not started — awaiting `/gsd-discuss-phase 9`
-Status: v1.0 archived; v2.0 phases 6-8 shipped, phases 9-11 pending
+Phase: 09 (custom-composer-share-via-url) — EXECUTING
+Plan: 2 of 9
+Status: Ready to execute
 Last activity: 2026-05-16
 
 v2.0 Progress: [█████░░░░░] 50% (3/6 phases shipped — 6, 7, 8)
@@ -73,6 +73,7 @@ v2.0 Progress: [█████░░░░░] 50% (3/6 phases shipped — 6, 7
 | Phase 08 P04 | 5m | 2 tasks tasks | 2 files files |
 | Phase 08 P05 | 4m 42s | 2 tasks tasks | 2 files files |
 | Phase 08 P06 | 3m 48s | 2 tasks tasks | 4 files files |
+| Phase 09 P01 | 3m 19s | 2 tasks tasks | 2 files files |
 
 ## Accumulated Context
 
@@ -103,6 +104,7 @@ Recent decisions affecting current work:
 - [Phase 08 P04]: useActiveAlarm dispatcher shipped at src/hooks/useActiveAlarm.ts (76 lines) — composes useAlarm + useSegmentAlarm unconditionally per D-08 always-both-mounted; returns LOCKED CONTEXT D-07 discriminated union (mode: 'idle' | 'continuous' | 'segments'). pendingMode (useState<'continuous' | 'segments' | null>) covers the microtask race-window between start() invocation and underlying isRunning flipping true; setPendingMode(null) lives in finally so failure path also resets (T-08-04-02 mitigation). Defensive ordering picks continuous if both somehow flip true (D-10 UI-takeover should make this impossible). Idle-branch return deliberately excludes raw continuous/segments objects — only the dispatcher's own start(preset) is exposed (T-03-01 controlled methods only). 9-test TDD net at src/hooks/__tests__/useActiveAlarm.test.ts using vi.mock('../useAlarm') + vi.mock('../useSegmentAlarm') with per-test mutable mocks; covers initial state, both-mounted assertion, dispatch on isRunning, start() routing both kinds, pendingMode mid-flight non-flicker, mode reset on stop. RED 089bf1d → GREEN 77cba30. Full suite 355/355 across 30 files; tsc --noEmit clean. SEG-05 zero-diff floor preserved across all 7 protected paths.
 - [Phase 08 P05]: SegmentCountdown shipped at src/components/SegmentCountdown.tsx (135 lines) — production active-alarm screen for segment-mode pairing with v1's Countdown.tsx (SEG-05 protected). Layout class strings copied verbatim from Countdown.tsx (outer wrapper, big mm:ss timer, control row, Stop button); the four locked Phase 8 deltas applied (D-03 count-up + Pause disabled with disabled:opacity-40 cursor-not-allowed; D-05 total caption + hide during firing-alarm; D-06 formatMmSs reuse; D-19 paused dimming). Three-state ticker (segmentRemainingMs/totalRemainingMs/elapsedSinceAlarmMs) with 250ms cadence + freeze-on-pause + cleanup-on-unmount mirrors Countdown.tsx:74-93 verbatim. SOUND_LABELS map locked per UI-SPEC L174-180 (gentle->'Gentle chime', triangle->'Triangle ping', alarm->'Wake'). Two auto-fixes during GREEN: (1) Rule 3 - RTL DOM leak between tests with vitest globals: false fixed by importing cleanup() and calling it in afterEach; (2) Rule 1 - progress=1 during firing-alarm dropped the alarm arc (since SegmentProgressRing gates current-arc render on remainingArc > 0.001 and segmentEndsAt=0 yields progress=1) fixed by force-pinning progress=0 during firing-alarm so the full alarm arc renders for the .pulse-active keyframe to drive. 18-test TDD net at src/components/__tests__/SegmentCountdown.test.tsx using makeAlarm(Partial<UseSegmentAlarmReturn>) fixture builder + vi.useFakeTimers + setSystemTime for deterministic Date.now math. RED 5c0488d -> GREEN db1acb4. Full suite 373/373 across 31 files; tsc --noEmit clean. SEG-05 zero-diff floor preserved across all 8 protected paths.
 - [Phase 08 P06]: Phase 8 integration finale shipped — Dashboard.tsx wired with the third "4 x 4" PresetCard (D-12 locked label, single ASCII spaces, dispatches { kind: 'segments', config: WAKE_EASY_CONFIG }); App.tsx rewritten end-to-end (17 lines, net -8) using useActiveAlarm() with three &&-guarded branches narrowing on activeAlarm.mode (idle/continuous/segments); src/dev/SegmentHarness.tsx deleted per D-14/D-16 (164 lines removed). Dashboard.test.tsx new file (5 tests) provides ROADMAP success criterion #1 automated coverage — document-order via compareDocumentPosition + DOCUMENT_POSITION_FOLLOWING bit, plus dispatch payload assertions for all 3 cards. AGGREGATED SEG-05 byte-identical guardrail: ZERO diff across all 20 v1-protected paths vs Phase 7 final baseline (commit abd667d) — Quick Nap and Focus continue running through unmodified v1 stack. Full suite 378/378 across 32 files; tsc clean; npm run build clean; dist/ grep "SegmentHarness" returns 0. Phase 8 milestone v1.0 declared complete.
+- [Phase 09 P01]: shareUrl.ts shipped at src/lib/shareUrl.ts (174 lines) — encodeComposition + decodeComposition + DecodeResult discriminated-union per D-16/D-17/SHR-01..04. Sound idx map: gentle=0, triangle=1, alarm=2. Size caps 1024 chars / 32 segments. Strict integer-regex parsing guards NaN coercion (Pitfall 3 / T-09-01-01). VERSION_PREFIX v1: gate routes future vN: inputs to wrong_version (SHR-04 non-breaking extension). decodeComposition tolerates '#c=', 'c=', and bare 'v1:' prefixes — caller can pass raw location.hash. shareUrl.ts deliberately does NOT build the full URL — caller composes the share URL itself to honor GitHub Pages base path (Pitfall 9). 28-test TDD net at src/lib/__tests__/shareUrl.test.ts: 4/5 DecodeResult reasons directly triggered; failed_validation documented as defence-in-depth backstop for future engine rules. RED d5b713c then GREEN 77676b6. Full suite 412/412 across 33 files; tsc --noEmit clean. SEG-05 zero-diff floor preserved (no engine, hook, or component file touched).
 
 ### Pending Todos
 
@@ -127,8 +129,8 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-05-10T19:29:21.081Z
-Stopped at: Completed 08-06-PLAN.md
+Last session: 2026-05-16T12:57:24.901Z
+Stopped at: Completed 09-01-PLAN.md
 Resume file: None
 
-**Planned Phase:** 8 (Wake Easy Preset + Segment Countdown UI) — 6 plans — 2026-05-10T18:43:39.524Z
+**Planned Phase:** 9 (custom-composer-share-via-url) — 9 plans — 2026-05-16T12:50:39.793Z

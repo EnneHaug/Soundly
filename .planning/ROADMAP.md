@@ -110,7 +110,7 @@ The original v1.0 alarm engine, three-phase escalation, presets, PWA shell, and 
   4. When the app loads with a shared composition in `location.hash`, the composer mounts pre-loaded with the decoded segments (instead of the Wake Easy default); decoded configs pass through the same SEG-04 validation gate before being accepted
   5. Invalid, malformed, oversized, or unknown-version (`v2:` etc) shared URLs fall back silently to the Wake Easy default with an unobtrusive "couldn't load shared alarm" notice; the runtime never throws on tampered URL input; the encoding format and `v1:` version prefix are documented in source so future versions can break or extend explicitly
 **Plans:** 9 plans
-  - [ ] 09-01-PLAN.md — shareUrl.ts encode/decode + DecodeResult Result type + tests (SHR-01..04) — Wave 1 leaf, pure lib
+  - [x] 09-01-PLAN.md — shareUrl.ts encode/decode + DecodeResult Result type + tests (SHR-01..04) — Wave 1 leaf, pure lib
   - [ ] 09-02-PLAN.md — composerReducer.ts (6-action useReducer) + composerValidation.ts + tests (COMP-04, COMP-05) — Wave 1 leaf, pure lib
   - [ ] 09-03-PLAN.md — CustomCard.tsx (parallel-file PresetCard clone) + Toast.tsx (role=status) + tests (COMP-01 visual) — Wave 1 leaf
   - [ ] 09-04-PLAN.md — StepperInput.tsx (D-01 adaptive step + boundary at 5:00; D-02 keyboard map) + tests (COMP-03 stepper) — Wave 2 atomic
