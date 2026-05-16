@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useActiveAlarm } from './hooks/useActiveAlarm';
 import { useHashComposition } from './hooks/useHashComposition';
-import { WAKE_EASY_CONFIG } from './engine';
+import { WAKE_EASY_CONFIG, type SegmentConfig } from './engine';
 import Dashboard from './components/Dashboard';
 import Countdown from './components/Countdown';
 import SegmentCountdown from './components/SegmentCountdown';
@@ -12,7 +12,13 @@ export default function App() {
   const activeAlarm = useActiveAlarm();
   const hash = useHashComposition();
   const [composerOpen, setComposerOpen] = useState(hash.composition !== null);
-  const [initialConfig] = useState(hash.composition ?? WAKE_EASY_CONFIG);
+  // Tracks the most recently composed config so Stop returns the user to the Composer
+  // with their composition preserved (not Wake Easy default). Updated when Composer.onStart
+  // fires. Cancel does NOT reset — the composition persists for the session so a Cancel →
+  // re-open round-trip surfaces the same edits.
+  const [initialConfig, setInitialConfig] = useState<SegmentConfig>(
+    hash.composition ?? WAKE_EASY_CONFIG,
+  );
   const [toast, setToast] = useState<{ msg: string; ms: number } | null>(null);
 
   // Surface decode error once via toast (D-18 LOCKED — "Couldn't load shared
@@ -39,8 +45,11 @@ export default function App() {
             initialConfig={initialConfig}
             onClose={() => setComposerOpen(false)}
             onStart={async (cfg) => {
+              // Remember the composed config + keep composerOpen=true so when the alarm
+              // is stopped, the {mode === 'idle' && <Composer/>} conditional re-mounts the
+              // Composer with this config pre-loaded — small-tweak-then-restart flow.
+              setInitialConfig(cfg);
               await activeAlarm.start({ kind: 'segments', config: cfg });
-              setComposerOpen(false);
             }}
             onShareSuccess={(msg) => setToast({ msg, ms: 3000 })}
             onShareError={(msg) => setToast({ msg, ms: 4000 })}
