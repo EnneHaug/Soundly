@@ -41,7 +41,7 @@ The original v1.0 alarm engine, three-phase escalation, presets, PWA shell, and 
 - [x] **Phase 6: AlarmSession Refactor + v1 Regression Guard** — Extract shared session lifecycle from `AlarmEngine`; preserve byte-identical v1 behavior (SEG-05 zero-diff guarantee)
 - [x] **Phase 7: Segment Engine + Triangle Sound** — Additive engine + new sound; no UI changes; runtime validated by tests
 - [x] **Phase 8: Wake Easy Preset + Segment Countdown UI** — Third dashboard preset card + N-segment countdown UI; validates segment runtime end-to-end
-- [ ] **Phase 9: Custom Composer + Share via URL** — Modal segment builder with stepper inputs and duplicate; share link round-trip
+- [x] **Phase 9: Custom Composer + Share via URL** — Modal segment builder with stepper inputs and duplicate; share link round-trip
 - [ ] **Phase 10: SEO Meta + JSON-LD + Service Worker Update Infra** — Static-HTML meta, OG, Twitter, JSON-LD; SW autoUpdate + skipWaiting + clientsClaim
 - [ ] **Phase 11: Multi-page Split + Landing Page** — Two HTML entries; hand-authored marketing landing; SW scope rescoped to `/app`; sitemap.xml; robots.txt; install CTA
 

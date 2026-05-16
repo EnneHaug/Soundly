@@ -170,14 +170,14 @@ v2.0 traceability:
 | SEG-04 | Phase 7 | Complete |
 | AUD-05 | Phase 7 | Complete |
 | SEG-06 | Phase 8 | Complete |
-| COMP-01 | Phase 9 | Pending |
+| COMP-01 | Phase 9 | Complete |
 | COMP-02 | Phase 9 | Pending |
 | COMP-03 | Phase 9 | Pending |
 | COMP-04 | Phase 9 | Pending |
 | COMP-05 | Phase 9 | Pending |
 | COMP-06 | Phase 9 | Pending |
 | COMP-07 | Phase 9 | Pending |
-| COMP-08 | Phase 9 | Pending |
+| COMP-08 | Phase 9 | Complete |
 | SHR-01 | Phase 9 | Pending |
 | SHR-02 | Phase 9 | Pending |
 | SHR-03 | Phase 9 | Pending |
