@@ -59,16 +59,20 @@ User-composed alarms run alongside the v1.0 continuous-phase model. Quick Nap an
 
 - [x] **COMP-01
 **: Dashboard has a "Custom" entry button that opens the segment composer.
-- [ ] **COMP-02**: Composer opens pre-loaded with the Wake Easy template (5 editable segments) — never a blank screen.
+- [x] **COMP-02
+**: Composer opens pre-loaded with the Wake Easy template (5 editable segments) — never a blank screen.
 - [x] **COMP-03
 **: Each segment row shows: a stepper duration input (+/− buttons + arrow-key support), a sound picker (gentle / triangle / alarm), and an explicit delete button per row.
 - [x] **COMP-04
 **: An "Add segment" button appends a new segment to the list (default duration + gentle sound).
 - [x] **COMP-05
 **: Each segment row has a "Duplicate" action that clones the segment immediately below it.
-- [ ] **COMP-06**: A live total-duration display updates as the user edits segments.
-- [ ] **COMP-07**: Composer Start/Cancel buttons — Start launches the alarm with the composed segments; Cancel returns to the Dashboard without starting.
-- [ ] **COMP-08**: Composer is presented as a full-screen modal over the Dashboard (no separate route in the app shell).
+- [x] **COMP-06
+**: A live total-duration display updates as the user edits segments.
+- [x] **COMP-07
+**: Composer Start/Cancel buttons — Start launches the alarm with the composed segments; Cancel returns to the Dashboard without starting.
+- [x] **COMP-08
+**: Composer is presented as a full-screen modal over the Dashboard (no separate route in the app shell).
 
 ### Sound (AUD continued)
 
