@@ -14,8 +14,7 @@ export default function App() {
   const [composerOpen, setComposerOpen] = useState(hash.composition !== null);
   // Tracks the most recently composed config so Stop returns the user to the Composer
   // with their composition preserved (not Wake Easy default). Updated when Composer.onStart
-  // fires. Cancel does NOT reset — the composition persists for the session so a Cancel →
-  // re-open round-trip surfaces the same edits.
+  // fires; reset to Wake Easy when the user taps Cancel (discard intent — see onClose).
   const [initialConfig, setInitialConfig] = useState<SegmentConfig>(
     hash.composition ?? WAKE_EASY_CONFIG,
   );
@@ -43,7 +42,12 @@ export default function App() {
           <Composer
             open={composerOpen}
             initialConfig={initialConfig}
-            onClose={() => setComposerOpen(false)}
+            onClose={() => {
+              // Cancel discards the composition — next "+ Custom" tap starts fresh
+              // from Wake Easy. Start → Stop still preserves (see onStart below).
+              setComposerOpen(false);
+              setInitialConfig(WAKE_EASY_CONFIG);
+            }}
             onStart={async (cfg) => {
               // Remember the composed config + keep composerOpen=true so when the alarm
               // is stopped, the {mode === 'idle' && <Composer/>} conditional re-mounts the
