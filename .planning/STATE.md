@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: — Foundations
 status: executing
-stopped_at: Completed 09-04-PLAN.md
-last_updated: "2026-05-16T13:17:42Z"
+stopped_at: Completed 09-05-PLAN.md
+last_updated: "2026-05-16T13:26:31.666Z"
 last_activity: 2026-05-16
 progress:
   total_phases: 9
   completed_phases: 8
   total_plans: 32
-  completed_plans: 27
-  percent: 84
+  completed_plans: 28
+  percent: 88
 ---
 
 # Project State
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-05-04)
 
 Milestone: v2.0 — Custom Alarm Composer + Discoverability
 Phase: 09 (custom-composer-share-via-url) — EXECUTING
-Plan: 5 of 9
+Plan: 6 of 9
 Status: Ready to execute
 Last activity: 2026-05-16
 
@@ -77,6 +77,7 @@ v2.0 Progress: [█████░░░░░] 50% (3/6 phases shipped — 6, 7
 | Phase Phase 09 PP02 | 3m 37s | 2 tasks tasks | 4 files files |
 | Phase Phase 09 PP03 | 2m 59s | 2 tasks tasks | 4 files files |
 | Phase 09 P04 | 4m 16s | 2 tasks | 2 files |
+| Phase 09 P05 | 2m 54s | 2 tasks tasks | 2 files files |
 
 ## Accumulated Context
 
@@ -111,6 +112,7 @@ Recent decisions affecting current work:
 - [Phase 09 P02]: composerReducer + composerValidation pure-TS libs shipped at src/lib/ (89 + 32 lines, 4 new files total). First useReducer in the codebase per 09-PATTERNS.md — 6-action discriminated union (load | add | duplicate | delete | update_duration | update_sound) with MAX_SEGMENTS=32 cap mirroring shareUrl.ts D-17 and D-12 last-segment delete guard at reducer level (belt-and-suspenders with UI's disabled Delete). load action regenerates all ids so React keys stay stable across re-decodes of the same shared URL. rowIsValid + rowValidityArray drive D-11 inline red-border state + disabled-Start gate; 14_400_000 ms ceiling duplicated inline because SegmentState.ts is SEG-05 frozen. Reference-equality tests pin both no-op-returns-state AND mutating-actions-keep-untouched-rows-ref-equal — proves immutability without diffing JSON. TDD gate sequence: test() RED commit 86638e6 (vite resolve-import failure) -> feat() GREEN commit 10fff2f (32/32 passing). Full suite 444/444 across 35 files; tsc --noEmit clean. SEG-05 zero-diff floor preserved across all 26 protected paths.
 - [Phase 09 P03]: Toast.tsx + CustomCard.tsx atomic-component plan shipped — both built TDD-first with verbatim class strings from 09-UI-SPEC.md. Parallel-file pattern locked in: CustomCard.tsx is a sibling of PresetCard.tsx (NOT a variant prop); PresetCard.tsx remains BYTE-IDENTICAL (hash 4328729671d76beff93247d5a0e46c24ff56dfd5 baseline+post = matched). Toast pattern: single-instance live-region (role='status' + aria-live='polite'); useEffect+setTimeout with cleanup return clears pending timeout on unmount/message-change/durationMs-change (T-09-03-02 DoS mitigation). CustomCard onClick (not onStart) — semantically distinct from PresetCard.onStart since clicking CustomCard opens a modal rather than starting an alarm. 10 new tests added (5 + 5); full suite 454/454 across 37 files; tsc --noEmit clean; SEG-05 zero-diff floor preserved (no engine/hook/v1-component touched). TDD gate sequence: test(09-03) RED 882a01d -> feat(09-03) GREEN 07091c9 for CustomCard; test(09-03) RED 22f0c49 -> feat(09-03) GREEN 389d27a for Toast.
 - [Phase 09 P04]: StepperInput.tsx shipped — first number stepper in the codebase (157 lines). D-01 LOCKED adaptive step constants verbatim (SMALL_STEP_THRESHOLD_MS=300_000, SMALL_STEP_MS=30_000, LARGE_STEP_MS=60_000, SHIFT_STEP_MS=300_000, DEFAULT_MIN=5_000, DEFAULT_MAX=3_600_000); Pitfall 7 boundary case implemented as explicit `currentMs === SMALL_STEP_THRESHOLD_MS → LARGE_STEP_MS` branch in `decreaseStep()` so '−' at exactly 5:00 drops by 1 min to 4:00 (asymmetric with '+' which goes 5:00→6:00 by 1 min — verified by dedicated boundary tests). D-02 keyboard map covers ArrowUp/Down (adaptive), Shift+Arrow + PageUp/Down (SHIFT_STEP_MS 5 min); e.preventDefault() on all four to suppress page scroll. **Discretionary fallback applied (PLAN line 234):** input uses `type="text" + role="spinbutton"` rather than `type="number"` because `<input type="number">` refuses to render mm:ss-formatted values (`.value === ""` in jsdom and real browsers). `aria-valuemin/max/now` (raw ms) + `aria-valuetext` (mm:ss) preserve spinbutton SR contract. `inputMode="none" + readOnly` suppresses mobile soft keyboard (T-09-04-04 mitigation). 23-test TDD net at src/components/__tests__/StepperInput.test.tsx covering adaptive step + boundary, min/max clamps via disabled-button + keyboard-clamp, full keyboard map, ARIA contract. TDD gate sequence: test(09-04) RED commit 16707f8 -> feat(09-04) GREEN commit b7052bf. Full suite 477/477 across 38 files; tsc --noEmit clean. SEG-05 zero-diff floor preserved across all 26 protected paths (only StepperInput.tsx + its test created; no existing file modified).
+- [Phase 09 P05]: SoundPicker shipped at src/components/SoundPicker.tsx (110 lines) — first ARIA radiogroup in the codebase and first roving tabindex implementation. PILL_OPTIONS array locked: gentle/triangle/alarm with sage/sand/accent tints; selected sand pill uses text-text-primary (NOT text-white) per UI-SPEC L165-170 contrast (light-tone-needs-dark-text). D-06 LOCKED 'Alarm' label divergence preserved — SoundPicker uses 'Alarm' (calmer composer form context) while SegmentCountdown.SOUND_LABELS keeps 'Wake' for the running-alarm screen; explicit test 'does NOT render Wake' guards against future consolidation and SegmentCountdown.tsx byte-identical (hash b07fc29... unchanged). D-07 LOCKED ArrowLeft/Right + ArrowUp/Down mirrored with modulo-3 wrap math (idx + 1) % 3 / (idx - 1 + 3) % 3 — arrow keys move BOTH focus (refs.current[next]?.focus()) and selection (onChange(next.value)). MDN-canonical roving tabindex: tabIndex={i === currentIdx ? 0 : -1} — exactly one pill is tab-focusable; verified by dedicated invariant test that sweeps all 3 values. Per-pill --pill-tint CSS variable (var(--color-sage|sand|accent)) injected via inline style drives unselected hover/focus 10% preview via bg-[color-mix(in_srgb,var(--pill-tint)_10%,transparent)] — first color-mix usage in the codebase. 23-test TDD net at src/components/__tests__/SoundPicker.test.tsx across 7 describe blocks (rendering / selection state / roving tabindex / click selection / keyboard map / touch target / className passthrough). TDD gate sequence: test(09-05) RED commit 3a28936 (vite import resolution failure) -> feat(09-05) GREEN commit 0cf6c84 (23/23 passing). Full suite 500/500 across 39 test files; tsc --noEmit clean. SEG-05 zero-diff floor preserved across all 26 protected paths (only SoundPicker.tsx + its test created; zero existing-file modifications).
 
 ### Pending Todos
 
@@ -135,8 +137,8 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-05-16T13:11:19.172Z
-Stopped at: Completed 09-03-PLAN.md
+Last session: 2026-05-16T13:26:31.650Z
+Stopped at: Completed 09-05-PLAN.md
 Resume file: None
 
 **Planned Phase:** 9 (custom-composer-share-via-url) — 9 plans — 2026-05-16T12:50:39.793Z
