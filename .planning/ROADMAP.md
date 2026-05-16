@@ -1,4 +1,4 @@
-# Roadmap: Soundly Gentle Alarm
+﻿# Roadmap: Soundly Gentle Alarm
 
 ## Overview
 
@@ -109,7 +109,16 @@ The original v1.0 alarm engine, three-phase escalation, presets, PWA shell, and 
   3. The composer's "Share" button serializes the current segment list into a versioned URL hash (e.g. `/app#c=v1:240000-0,240000-0,240000-0,240000-0,60000-2`) and invokes `navigator.share(...)`; on browsers without Web Share API support it falls back to copy-to-clipboard with a confirmation toast
   4. When the app loads with a shared composition in `location.hash`, the composer mounts pre-loaded with the decoded segments (instead of the Wake Easy default); decoded configs pass through the same SEG-04 validation gate before being accepted
   5. Invalid, malformed, oversized, or unknown-version (`v2:` etc) shared URLs fall back silently to the Wake Easy default with an unobtrusive "couldn't load shared alarm" notice; the runtime never throws on tampered URL input; the encoding format and `v1:` version prefix are documented in source so future versions can break or extend explicitly
-**Plans:** TBD
+**Plans:** 9 plans
+  - [ ] 09-01-PLAN.md — shareUrl.ts encode/decode + DecodeResult Result type + tests (SHR-01..04) — Wave 1 leaf, pure lib
+  - [ ] 09-02-PLAN.md — composerReducer.ts (6-action useReducer) + composerValidation.ts + tests (COMP-04, COMP-05) — Wave 1 leaf, pure lib
+  - [ ] 09-03-PLAN.md — CustomCard.tsx (parallel-file PresetCard clone) + Toast.tsx (role=status) + tests (COMP-01 visual) — Wave 1 leaf
+  - [ ] 09-04-PLAN.md — StepperInput.tsx (D-01 adaptive step + boundary at 5:00; D-02 keyboard map) + tests (COMP-03 stepper) — Wave 2 atomic
+  - [ ] 09-05-PLAN.md — SoundPicker.tsx (role=radiogroup + roving tabindex; D-06 Alarm vs Wake label divergence; D-07 keyboard) + tests (COMP-03 picker) — Wave 2 atomic
+  - [ ] 09-06-PLAN.md — SegmentRow.tsx (Stepper + SoundPicker + Duplicate + Delete in CSS Grid; D-11 invalid border; D-12 last-segment guard) + tests (COMP-03, COMP-05) — Wave 3 composition
+  - [ ] 09-07-PLAN.md — useHashComposition.ts (synchronous hash read; post-commit replaceState clear) + tests (SHR-02, SHR-03) — Wave 3 hook
+  - [ ] 09-08-PLAN.md — Composer.tsx (native <dialog> + useReducer + share handler) + src/index.css APPEND (D-15 dialog keyframes) + tests (COMP-02, COMP-06, COMP-07, COMP-08, SHR-01) — Wave 4 modal
+  - [ ] 09-09-PLAN.md — Dashboard.tsx (4th CustomCard) + App.tsx (Composer + Toast + useHashComposition wiring) + AGGREGATED SEG-05 byte-identical guardrail (25 paths) (COMP-01, COMP-08) — Wave 5 integration
 **UI hint**: yes
 
 ### Phase 10: SEO Meta + JSON-LD + Service Worker Update Infra
@@ -155,6 +164,6 @@ Phase 10 may ship in parallel with Phases 6–9 if desired (orthogonal track); P
 | 6. AlarmSession Refactor + v1 Regression Guard | 3/3 | Shipped | v2.0 |
 | 7. Segment Engine + Triangle Sound | 5/5 | Shipped | v2.0 |
 | 8. Wake Easy Preset + Segment Countdown UI | 6/6 | Complete    | 2026-05-10 |
-| 9. Custom Composer + Share via URL | 0/0 | Planned | - |
+| 9. Custom Composer + Share via URL | 0/9 | Planned | - |
 | 10. SEO Meta + JSON-LD + SW Update Infra | 0/0 | Planned | - |
 | 11. Multi-page Split + Landing Page | 0/0 | Planned | - |
