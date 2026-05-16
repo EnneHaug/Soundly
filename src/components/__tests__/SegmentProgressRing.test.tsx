@@ -156,16 +156,17 @@ describe('SegmentProgressRing — boundary marker dots', () => {
     expect(dots.length).toBe(4);
   });
 
-  it('colors boundary dots by the ending segment endSound', () => {
-    // Wake Easy: segs 0..3 are gentle (dots after each), seg 4 is alarm (no dot after).
-    // So we should see 4 sage-colored dots.
+  it('colors all boundary dots with var(--color-sand) (uniform warm-earth pairing)', () => {
+    // Boundary dots use a uniform sand color so they contrast against the sage elapsed
+    // arc without competing for attention. Per-segment endSound info is carried by the
+    // below-ring label, not the dot color.
     const { container } = render(
       <SegmentProgressRing config={WAKE_EASY_CONFIG} currentIndex={0} progress={0} />,
     );
-    const sageDots = Array.from(container.querySelectorAll('circle')).filter(
-      (c) => c.getAttribute('fill') === 'var(--color-sage)',
+    const sandDots = Array.from(container.querySelectorAll('circle')).filter(
+      (c) => c.getAttribute('fill') === 'var(--color-sand)',
     );
-    expect(sageDots.length).toBe(4);
+    expect(sandDots.length).toBe(4);
   });
 
   it('fades past boundary dots to opacity 0.4 once the elapsed arc has crossed them', () => {
