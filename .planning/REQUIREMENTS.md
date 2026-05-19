@@ -82,11 +82,16 @@ User-composed alarms run alongside the v1.0 continuous-phase model. Quick Nap an
 
 All meta + JSON-LD lives in static HTML, never React-rendered, so OG/Twitter/iMessage scrapers see it without JavaScript.
 
-- [ ] **SEO-01**: Static `<title>` and `<meta name="description">` in the landing page's `index.html`. Distinct title/description on the app shell entry.
-- [ ] **SEO-02**: Open Graph meta tags on the landing page — `og:title`, `og:description`, `og:image` (1200×630, ≤200 KB), `og:type`, `og:url`.
-- [ ] **SEO-03**: Twitter Card meta — `summary_large_image` with title/description/image.
-- [ ] **SEO-04**: JSON-LD `WebApplication` schema in static HTML — `@context`, `@type`, `name`, `description`, `applicationCategory`, `operatingSystem`. No `aggregateRating` (Google manual-action risk on synthetic ratings).
-- [ ] **SEO-05**: `<link rel="canonical">` on the landing page pointing at the canonical URL.
+- [x] **SEO-01
+**: Static `<title>` and `<meta name="description">` in the landing page's `index.html`. Distinct title/description on the app shell entry.
+- [x] **SEO-02
+**: Open Graph meta tags on the landing page — `og:title`, `og:description`, `og:image` (1200×630, ≤200 KB), `og:type`, `og:url`.
+- [x] **SEO-03
+**: Twitter Card meta — `summary_large_image` with title/description/image.
+- [x] **SEO-04
+**: JSON-LD `WebApplication` schema in static HTML — `@context`, `@type`, `name`, `description`, `applicationCategory`, `operatingSystem`. No `aggregateRating` (Google manual-action risk on synthetic ratings).
+- [x] **SEO-05
+**: `<link rel="canonical">` on the landing page pointing at the canonical URL.
 - [ ] **SEO-06**: `public/robots.txt` with `Allow: /` and a `Sitemap:` line. (GitHub Pages constraint: subpath robots.txt is best-effort indexing only — Search Console manual sitemap submission is the primary path.)
 - [ ] **SEO-07**: `public/sitemap.xml` listing the landing URL and the `/app` deep link, generated at build time (vite-plugin-sitemap or hand-authored).
 - [ ] **SEO-08**: OG image asset uses a versioned filename (e.g. `og-image-v1.png`); deploy runbook documents Facebook Sharing Debugger force-refresh after content changes.

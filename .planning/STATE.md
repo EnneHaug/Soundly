@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: — Foundations
-status: milestone_complete
-stopped_at: Completed 09-09-PLAN.md — Phase 9 COMPLETE
-last_updated: "2026-05-16T13:59:33.610Z"
-last_activity: 2026-05-16
+status: executing
+stopped_at: Completed 10-01-PLAN.md
+last_updated: "2026-05-19T19:43:34.027Z"
+last_activity: 2026-05-19
 progress:
-  total_phases: 9
-  completed_phases: 10
-  total_plans: 32
-  completed_plans: 32
-  percent: 111
+  total_phases: 10
+  completed_phases: 9
+  total_plans: 38
+  completed_plans: 33
+  percent: 87
 ---
 
 # Project State
@@ -21,15 +21,15 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-04)
 
 **Core value:** The alarm must actually wake the user — gently first, reliably always.
-**Current focus:** Phase 09 — custom-composer-share-via-url
+**Current focus:** Phase 10 — SEO Meta + JSON-LD + Service Worker Update Infra
 
 ## Current Position
 
 Milestone: v2.0 — Custom Alarm Composer + Discoverability
-Phase: 9
-Plan: Not started
-Status: Milestone complete
-Last activity: 2026-05-16
+Phase: 10 (SEO Meta + JSON-LD + Service Worker Update Infra) — EXECUTING
+Plan: 2 of 6
+Status: Ready to execute
+Last activity: 2026-05-19
 
 v2.0 Progress: [█████░░░░░] 50% (3/6 phases shipped — 6, 7, 8)
 
@@ -83,6 +83,7 @@ v2.0 Progress: [█████░░░░░] 50% (3/6 phases shipped — 6, 7
 | Phase 09 P07 | 2m 28s | 2 tasks tasks | 2 files files |
 | Phase 09 PP08 | 14m 0s | 2 tasks tasks | 3 files files |
 | Phase 09 P09 | 5m 50s | 3 tasks | 3 files |
+| Phase 10 P10-01 | 3m 22s | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -122,6 +123,7 @@ Recent decisions affecting current work:
 - [Phase 09 P07]: useHashComposition shipped at src/hooks/useHashComposition.ts (72 lines) — first URL-routing hook in the codebase. Synchronous-read-in-useState-initializer + post-commit-clear-in-useEffect split locked per Pattern 6 / Pitfall 2 / Pitfall 5: location.hash read ONCE before first render (no Dashboard flicker), history.replaceState fires in [] -deps useEffect AFTER first commit (D-18 info-disclosure mitigation, refresh idempotency). '#c=' prefix discriminator gates BOTH decode AND clear — non-composer hashes silently ignored (not errors). Return shape { composition: SegmentConfig | null, error: DecodeResult.reason | null, clearError: () => void } projects DecodeResult into mutable state so Composer can dismiss the error toast via clearError without re-running decodeComposition. SHR-02 locked via decodeComposition's validateSegmentConfig defence-in-depth pass; SHR-03 locked via Result-type never-throws contract (binary-garbage test pins). 18-test TDD net at src/hooks/__tests__/useHashComposition.test.ts covering all 5 DecodeResult reasons (wrong_version/malformed/too_long/invalid_segment_data + failed_validation flows through same code path) across 7 describe blocks including a dedicated Pitfall-2 synchronous-read invariant assertion. Hash mocking idiom new to src/hooks/__tests__/: Object.defineProperty(window, 'location', { value: { hash, pathname, search, origin }, writable: true, configurable: true }) + setHash() helper + beforeEach replaceStateSpy + afterEach restore (cribbed from standalone.test.ts:7-14). TDD gate: test() RED commit 7a79932 (vite import resolution failure on missing hook) -> feat() GREEN commit 0c775df (18/18 passing). Full suite 543/543 across 41 test files; tsc --noEmit clean. SEG-05 zero-diff floor preserved — src/lib/shareUrl.ts AND src/hooks/useActiveAlarm.ts both git diff --quiet exit 0.
 - [Phase 09 P08]: Composer shipped at src/components/Composer.tsx (260 lines) — first modal in the codebase, native HTMLDialogElement + showModal()/close() (RESEARCH Pattern 1). 6-prop signature (open/initialConfig/onClose/onStart/onShareSuccess/onShareError) consumed by App.tsx in Plan 09-09. useReducer(composerReducer, initialConfig, lazyInit) routes initial config through 'load' action for ID normalization (Pattern 2). 4 derived-state useMemos (totalMs, validation, rowValid, isValid). Share handler: typeof navigator.canShare === 'function' && navigator.canShare(data) gate → navigator.share, else navigator.clipboard.writeText fallback; AbortError silent (Pitfall 4); URL built from origin+pathname (Pitfall 9 — honors GH Pages /Soundly/ base). Footer button class strings BYTE-IDENTICAL from Countdown.tsx:138-150 (SEG-05 protected — copy idioms FROM, never modify). Single onClose path via dlg.close() → 'close' event listener (D-14): close-X + Cancel + Escape + browser-back all flow through one invocation. src/index.css APPENDED 34 lines: dialog::backdrop scrim + dialog[open] keyframes + prefers-reduced-motion: reduce gate (D-15). 29-test TDD net at src/components/__tests__/Composer.test.tsx across 7 describe blocks; HTMLDialogElement.showModal/close polyfilled conditionally in beforeEach (jsdom v26 ships the type but not the methods). TDD gate: test() RED commit daea1b0 (vite resolve-import failure on missing ../Composer) → feat() GREEN commit 521acef (29/29 passing). Full suite 572/572 across 42 test files; tsc --noEmit clean. SEG-05 zero-diff floor preserved across all 26 protected paths.
 - [Phase 09 P09]: Phase 9 integration finale shipped — Dashboard.tsx 4th CustomCard (D-08 LOCKED order: Quick Nap → Focus → 4 x 4 → Custom) + App.tsx end-to-end useHashComposition wiring (auto-open on valid hash, Toast on decode error) + Composer-as-sibling-to-Dashboard inside the idle-mode branch + Toast-at-root for cross-branch surface. 3-way mode switch preserved verbatim; version footer bumped 1.2 → 1.3. Dashboard.test.tsx extended with 3 new tests (4th-card document order via compareDocumentPosition, CustomCard description, onCustomClick wiring); existing 5 tests threaded with onCustomClick={vi.fn()}. AGGREGATED SEG-05 zero-diff guardrail PASSES across all 26 protected paths since Phase 9 baseline (bd41685): 0 lines diff. Production build clean (236.51 kB JS); SegmentHarness absent; 6 Composer UI strings present (raw 'composerReducer'/'encodeComposition' identifiers minified by terser, so verified via user-facing strings instead). Full suite 575/575 across 42 files; tsc --noEmit clean. Phase 9 declared COMPLETE — all 12 requirements (COMP-01..08 + SHR-01..04) wired end-to-end.
+- [Phase 10 P01]: Static SEO meta block landed in index.html — 1 description, 1 canonical, 5 OG, 4 Twitter Card, 1 JSON-LD WebApplication script; title rewritten to D-01 string. All 7 D-26-preserved tags byte-identical. Placeholder canonical https://soundly.local/Soundly/ in 5 places to be swapped per Plan 05 deploy runbook. JSON-LD has 7 keys (no aggregateRating per D-13). 575/575 tests still passing.
 
 ### Pending Todos
 
@@ -146,8 +148,8 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-05-16T13:59:33.573Z
-Stopped at: Completed 09-09-PLAN.md — Phase 9 COMPLETE
+Last session: 2026-05-19T19:43:33.928Z
+Stopped at: Completed 10-01-PLAN.md
 Resume file: None
 
-**Planned Phase:** 9 (custom-composer-share-via-url) — 9 plans — 2026-05-16T12:50:39.793Z
+**Planned Phase:** 10 (SEO Meta + JSON-LD + Service Worker Update Infra) — 6 plans — 2026-05-19T17:25:08.376Z

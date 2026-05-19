@@ -171,5 +171,5 @@ Phase 10 may ship in parallel with Phases 6–9 if desired (orthogonal track); P
 | 7. Segment Engine + Triangle Sound | 5/5 | Shipped | v2.0 |
 | 8. Wake Easy Preset + Segment Countdown UI | 6/6 | Complete    | 2026-05-10 |
 | 9. Custom Composer + Share via URL | 9/9 | Complete    | 2026-05-16 |
-| 10. SEO Meta + JSON-LD + SW Update Infra | 0/0 | Planned | - |
+| 10. SEO Meta + JSON-LD + SW Update Infra | 1/6 | In Progress | - |
 | 11. Multi-page Split + Landing Page | 0/0 | Planned | - |
