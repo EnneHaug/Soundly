@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: — Foundations
 status: executing
-stopped_at: Completed 10-02-PLAN.md
-last_updated: "2026-05-19T19:49:42.456Z"
+stopped_at: Completed 10-03-PLAN.md
+last_updated: "2026-05-19T19:57:52.731Z"
 last_activity: 2026-05-19
 progress:
   total_phases: 10
   completed_phases: 9
   total_plans: 38
-  completed_plans: 34
-  percent: 89
+  completed_plans: 35
+  percent: 92
 ---
 
 # Project State
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-05-04)
 
 Milestone: v2.0 — Custom Alarm Composer + Discoverability
 Phase: 10 (SEO Meta + JSON-LD + Service Worker Update Infra) — EXECUTING
-Plan: 3 of 6
+Plan: 4 of 6
 Status: Ready to execute
 Last activity: 2026-05-19
 
@@ -85,6 +85,7 @@ v2.0 Progress: [█████░░░░░] 50% (3/6 phases shipped — 6, 7
 | Phase 09 P09 | 5m 50s | 3 tasks | 3 files |
 | Phase 10 P10-01 | 3m 22s | 1 tasks | 1 files |
 | Phase 10 P10-02 | 2m 2s | 2 tasks | 2 files |
+| Phase 10 PP10-03 | 3m 58s | 2 tasks tasks | 2 files files |
 
 ## Accumulated Context
 
@@ -126,6 +127,7 @@ Recent decisions affecting current work:
 - [Phase 09 P09]: Phase 9 integration finale shipped — Dashboard.tsx 4th CustomCard (D-08 LOCKED order: Quick Nap → Focus → 4 x 4 → Custom) + App.tsx end-to-end useHashComposition wiring (auto-open on valid hash, Toast on decode error) + Composer-as-sibling-to-Dashboard inside the idle-mode branch + Toast-at-root for cross-branch surface. 3-way mode switch preserved verbatim; version footer bumped 1.2 → 1.3. Dashboard.test.tsx extended with 3 new tests (4th-card document order via compareDocumentPosition, CustomCard description, onCustomClick wiring); existing 5 tests threaded with onCustomClick={vi.fn()}. AGGREGATED SEG-05 zero-diff guardrail PASSES across all 26 protected paths since Phase 9 baseline (bd41685): 0 lines diff. Production build clean (236.51 kB JS); SegmentHarness absent; 6 Composer UI strings present (raw 'composerReducer'/'encodeComposition' identifiers minified by terser, so verified via user-facing strings instead). Full suite 575/575 across 42 files; tsc --noEmit clean. Phase 9 declared COMPLETE — all 12 requirements (COMP-01..08 + SHR-01..04) wired end-to-end.
 - [Phase 10 P01]: Static SEO meta block landed in index.html — 1 description, 1 canonical, 5 OG, 4 Twitter Card, 1 JSON-LD WebApplication script; title rewritten to D-01 string. All 7 D-26-preserved tags byte-identical. Placeholder canonical https://soundly.local/Soundly/ in 5 places to be swapped per Plan 05 deploy runbook. JSON-LD has 7 keys (no aggregateRating per D-13). 575/575 tests still passing.
 - Plan 10-02: robots.txt + sitemap.xml hand-authored (no vite-plugin-sitemap dep per D-22); locked placeholder https://soundly.local/Soundly/ (3 occurrences total: 1 in robots.txt, 2 in sitemap.xml) for Plan 10-05 deploy-runbook swap
+- [Phase 10 P03]: SW auto-update infra wired — vite.config.ts gains registerType: 'autoUpdate' (1 line, inserted as first VitePWA option) + src/sw.ts gains import { clientsClaim } from 'workbox-core' + module-scope self.skipWaiting() + clientsClaim() append after notificationclick handler. workbox-core clientsClaim() helper variant chosen over CONTEXT D-17's original hand-written activate listener per RESEARCH Finding 2 — the helper wraps self.clients.claim() inside an activate-event listener internally (avoids 'claim called before activation' exception of naked top-level self.clients.claim()) and matches the official vite-plugin-pwa injectManifest auto-update example. Both variants accepted by D-17. devOptions.enabled: true preserved per D-19 NON-NEGOTIABLE. All 5 existing sw.ts handlers byte-identical (cleanupOutdatedCaches, precacheAndRoute, navHandler/NavigationRoute, notificationclick, declare let self). workbox-core@7.4.0 resolves transitively today; Plan 04 Task 2 pins as direct devDep. npm run build clean (dist/sw.js 17.00 kB, dist/registerSW.js 0.15 kB both emitted, 70 modules). Full suite 575/575 across 42 files. SEG-05 zero-diff floor preserved across all 26 protected paths. Pitfall 2 lesson: both changes ship in single plan execution since neither alone delivers updates to installed users.
 
 ### Pending Todos
 
@@ -150,8 +152,8 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-05-19T19:49:42.436Z
-Stopped at: Completed 10-02-PLAN.md
+Last session: 2026-05-19T19:57:52.687Z
+Stopped at: Completed 10-03-PLAN.md
 Resume file: None
 
 **Planned Phase:** 10 (SEO Meta + JSON-LD + Service Worker Update Infra) — 6 plans — 2026-05-19T17:25:08.376Z
