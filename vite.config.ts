@@ -9,6 +9,7 @@ export default defineConfig({
     react(),
     tailwindcss(),
     VitePWA({
+      registerType: 'autoUpdate',  // SEO-09 / D-16: client-side auto-update directive
       strategies: 'injectManifest',
       srcDir: 'src',
       filename: 'sw.ts',
