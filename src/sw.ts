@@ -2,6 +2,7 @@
 
 import { cleanupOutdatedCaches, createHandlerBoundToURL, precacheAndRoute } from 'workbox-precaching';
 import { NavigationRoute, registerRoute } from 'workbox-routing';
+import { clientsClaim } from 'workbox-core';
 
 declare let self: ServiceWorkerGlobalScope;
 
@@ -39,3 +40,14 @@ self.addEventListener('notificationclick', (event) => {
       })
   );
 });
+
+// ─── Phase 10 / SEO-09 — Service worker auto-update ───────────────────
+// Take control of the page immediately on activation so installed PWA
+// users receive updated meta + content on next launch without manual
+// reload. Combined with `registerType: 'autoUpdate'` in vite.config.ts.
+// `clientsClaim()` from workbox-core wraps self.clients.claim() in the
+// correct activate-event listener internally — avoids the "claim called
+// before activation" runtime exception that naked self.clients.claim()
+// at top-level produces. See workbox-core docs + RESEARCH Finding 2.
+self.skipWaiting();
+clientsClaim();
