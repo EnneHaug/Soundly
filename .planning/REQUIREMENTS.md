@@ -92,8 +92,10 @@ All meta + JSON-LD lives in static HTML, never React-rendered, so OG/Twitter/iMe
 **: JSON-LD `WebApplication` schema in static HTML — `@context`, `@type`, `name`, `description`, `applicationCategory`, `operatingSystem`. No `aggregateRating` (Google manual-action risk on synthetic ratings).
 - [x] **SEO-05
 **: `<link rel="canonical">` on the landing page pointing at the canonical URL.
-- [ ] **SEO-06**: `public/robots.txt` with `Allow: /` and a `Sitemap:` line. (GitHub Pages constraint: subpath robots.txt is best-effort indexing only — Search Console manual sitemap submission is the primary path.)
-- [ ] **SEO-07**: `public/sitemap.xml` listing the landing URL and the `/app` deep link, generated at build time (vite-plugin-sitemap or hand-authored).
+- [x] **SEO-06
+**: `public/robots.txt` with `Allow: /` and a `Sitemap:` line. (GitHub Pages constraint: subpath robots.txt is best-effort indexing only — Search Console manual sitemap submission is the primary path.)
+- [x] **SEO-07
+**: `public/sitemap.xml` listing the landing URL and the `/app` deep link, generated at build time (vite-plugin-sitemap or hand-authored).
 - [ ] **SEO-08**: OG image asset uses a versioned filename (e.g. `og-image-v1.png`); deploy runbook documents Facebook Sharing Debugger force-refresh after content changes.
 - [ ] **SEO-09**: Service worker config gains `registerType: 'autoUpdate'`, `self.skipWaiting()`, and `self.clients.claim()` so installed PWA users actually receive updated meta + content.
 
