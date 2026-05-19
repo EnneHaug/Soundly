@@ -131,7 +131,13 @@ The original v1.0 alarm engine, three-phase escalation, presets, PWA shell, and 
   3. `public/robots.txt` (with `Allow: /` and a `Sitemap:` line) and `public/sitemap.xml` (listing the landing URL and the `/app` deep link) are present in the production build; deploy runbook documents Search Console manual sitemap submission as the primary path on GitHub Pages and Facebook Sharing Debugger force-refresh after content changes
   4. `vite.config.ts` sets `registerType: 'autoUpdate'` and `src/sw.ts` calls `self.skipWaiting()` and `self.clients.claim()` so installed PWA users receive updated meta on next launch without manual user intervention
   5. The OG image asset uses a versioned filename (e.g. `og-image-v1.png`); a deploy verification confirms that sharing the live URL to Slack and iMessage renders the correct title, description, and image
-**Plans:** TBD
+**Plans:** 6 plans
+  - [ ] 10-01-PLAN.md — Static SEO meta block in index.html (title + ~15 new meta/link/script tags; SEO-01..05)
+  - [ ] 10-02-PLAN.md — public/robots.txt + public/sitemap.xml hand-authored static assets (SEO-06, SEO-07)
+  - [ ] 10-03-PLAN.md — vite.config.ts registerType: autoUpdate + src/sw.ts skipWaiting + clientsClaim append (SEO-09)
+  - [ ] 10-04-PLAN.md — scripts/generate-og-image.mjs + npm run og-image + public/og-image-v1.png + D-09 user-approval checkpoint (SEO-02, SEO-08)
+  - [ ] 10-05-PLAN.md — docs/deploy-runbook.md operator playbook (D-28 — covers URL swap, Search Console, FB Debugger, SW smoke test)
+  - [ ] 10-06-PLAN.md — tests/static-assets.test.ts source-regex + DOMParser + JSON.parse coverage for all 9 SEO-* + final dist/ build verification (D-27)
 **UI hint**: no
 
 ### Phase 11: Multi-page Split + Landing Page
