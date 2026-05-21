@@ -1015,37 +1015,37 @@ See Finding 9 above for the full table. Summary of action items for the planner:
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Q1: What is the EXACT behavior of an installed v1.0 PWA when Phase 11 ships and `manifest.scope`/`start_url` narrow to `/Soundly/app/`?**
    - What we know: SW will update via `clientsClaim()` + `autoUpdate`; `manifest.id` (Finding 4) preserves install identity if added.
    - What's unclear: Whether the installed icon's `start_url` re-resolves on next browser launch, OR whether the user must uninstall + reinstall. No official source enumerates this exact migration path for scope-narrow-with-id-added.
-   - Recommendation: **Adopt Finding 4 (add `manifest.id: '/Soundly/'`); execute the D-LAND-16 manual phone test BEFORE shipping; treat any user-visible regression as a blocking issue with `selfDestroying: true` as the nuclear-option recovery.**
+   - **RESOLVED:** Adopt Finding 4 (add `manifest.id: '/Soundly/'` per D-LAND-17 derived in Plan 11-01); execute the D-LAND-16 manual phone test BEFORE shipping; treat any user-visible regression as a blocking issue with `selfDestroying: true` as the nuclear-option recovery.
 
 2. **Q2: Is `injectManifest.globPatterns` narrowing required, or does vite-plugin-pwa auto-scope to the SW filename's directory?**
    - What we know: The SW is at `dist/sw.js` (root); the default glob picks up `dist/**`. Landing assets exist at `dist/`.
    - What's unclear: Whether vite-plugin-pwa's default `injectManifest` glob is already narrow enough to exclude root-level files like the landing's HTML/CSS by some hidden default.
-   - Recommendation: **Explicitly set `injectManifest.globPatterns: ['app/**/*.{js,css,html,svg,png,webp,woff2}']` per Pitfall B mitigation — belt-and-suspenders, even if it overlaps with a default. Verify by inspecting `dist/sw.js` `__WB_MANIFEST` content after build.**
+   - **RESOLVED:** Explicit narrowing applied in Plan 11-01 — `injectManifest.globPatterns: ['app/**/*.{js,css,html,svg,png,webp,woff2}']` per Pitfall B mitigation (belt-and-suspenders, even if it overlaps with a default). Verify by inspecting `dist/sw.js` `__WB_MANIFEST` content after build.
 
 3. **Q3: For the screenshot (D-LAND-13), is the planner expected to capture it manually, or should the plan include a `scripts/capture-screenshot.mjs` (Playwright-based) as part of the deliverable?**
    - What we know: Playwright is NOT installed (verified package.json). Adding it as a devDep for a one-shot screenshot is heavy.
    - What's unclear: User preference for one-shot manual vs. reproducible scripted capture.
-   - Recommendation: **Plan for manual capture via DevTools at 1200×800 (desktop) per D-LAND-13. Document the capture procedure in the plan + deploy runbook. Defer Playwright addition unless the user requests it.**
+   - **RESOLVED:** Manual capture via D-LAND-13 user checkpoint in Plan 11-05 Task 1 (DevTools at 1200×800 desktop). Capture procedure documented in plan + deploy runbook. No Playwright dependency added — deferred unless the user requests it.
 
 4. **Q4: Does vite-plugin-pwa auto-inject `<link rel="manifest">` into BOTH HTML entries, or only one?**
    - What we know: Currently injects into `dist/index.html` (verified, line 43). Behavior with two entries is undocumented.
    - What's unclear: After split, does the link appear in both `dist/index.html` AND `dist/app/index.html`? Or only one (which one)?
-   - Recommendation: **Add a check in the build verifier (`scripts/verify-phase-10-build.mjs` updates) to assert presence on `dist/app/index.html`. If it's NOT injected, add a manual `<link rel="manifest" href="/Soundly/manifest.webmanifest">` to `app/index.html` source per the Phase 10 D-25 fallback pattern. If it IS injected on the landing as well (harmless — browser ignores when scope mismatches), no action needed.**
+   - **RESOLVED** (deferred to runtime verifier — Plan 11-05 Task 3 asserts `<link rel="manifest">` presence in both dist/index.html AND dist/app/index.html; Phase 10 D-25 manual fallback documented in deploy runbook): Add a check in the build verifier (`scripts/verify-phase-10-build.mjs` updates) to assert presence on `dist/app/index.html`. If it's NOT injected, add a manual `<link rel="manifest" href="/Soundly/manifest.webmanifest">` to `app/index.html` source per the Phase 10 D-25 fallback pattern. If it IS injected on the landing as well (harmless — browser ignores when scope mismatches), no action needed.
 
 5. **Q5: Should the landing have its own ServiceWorker registration script, or is the auto-registered `/Soundly/registerSW.js` left untouched?**
    - What we know: vite-plugin-pwa with `registerType: 'autoUpdate'` injects `<script id="vite-plugin-pwa:register-sw" src="/Soundly/registerSW.js">` into HTML entries. The SW being registered has scope `/Soundly/` covering both `/` and `/app/`. From the LANDING, registering the SW is fine (the manifest scope narrows to `/app/` but the SW itself can have a wider scope).
    - What's unclear: Whether the landing entry should suppress the auto-register tag to keep the landing 100% network-fresh-no-SW. If suppressed, installed users still trigger SW update when they next visit `/Soundly/app/` — no harm done.
-   - Recommendation: **Allow vite-plugin-pwa to inject the register script on BOTH entries (default). The landing visit triggers a SW update check, which is benign and even desirable (faster propagation of fresh SW). If audit complaints arise about landing loading a SW for a different scope, revisit with `injectRegister: false` on the landing entry — not currently documented as supported per-entry but a custom plugin hook could achieve it.**
+   - **RESOLVED:** Leave default registration on both entries. vite-plugin-pwa injects the register script on BOTH entries (default). The landing visit triggers a SW update check, which is benign and even desirable (faster propagation of fresh SW). If audit complaints arise about landing loading a SW for a different scope, revisit with `injectRegister: false` on the landing entry — not currently documented as supported per-entry but a custom plugin hook could achieve it.
 
 6. **Q6: Should the `id` manifest field be `/Soundly/` (continuity with v1 installs) or a stable opaque string like `'soundly-v2'` (decouple from URL changes)?**
    - What we know: MDN says `id` should be a URL string OR relative URL. Apple/Chromium both accept relative strings.
    - What's unclear: Best-practice consensus is split. Some sources recommend a URL form for compatibility; some say opaque strings work.
-   - Recommendation: **Use `id: '/Soundly/'` — URL-form, maximizes Chrome/Edge compatibility, preserves continuity with v1's implicit identity. Document the choice prominently in plan + RESEARCH.md so future maintainers don't change it.**
+   - **RESOLVED:** Use `id: '/Soundly/'` (URL form chosen in Plan 11-01 for v1.0 PWA install association) — maximizes Chrome/Edge compatibility, preserves continuity with v1's implicit identity. Document the choice prominently in plan + RESEARCH.md so future maintainers don't change it.
 
 ---
 
