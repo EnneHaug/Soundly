@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: — Foundations
 status: executing
-stopped_at: Completed 11-01-PLAN.md
-last_updated: "2026-05-21T19:55:46.002Z"
+stopped_at: Completed 11-02-PLAN.md
+last_updated: "2026-05-21T20:04:22.692Z"
 last_activity: 2026-05-21
 progress:
   total_phases: 11
   completed_phases: 10
   total_plans: 43
-  completed_plans: 39
-  percent: 91
+  completed_plans: 40
+  percent: 93
 ---
 
 # Project State
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-05-04)
 
 Milestone: v2.0 — Custom Alarm Composer + Discoverability
 Phase: 11 (Multi-page Split + Landing Page) — EXECUTING
-Plan: 2 of 5
+Plan: 3 of 5
 Status: Ready to execute
 Last activity: 2026-05-21
 
@@ -91,6 +91,7 @@ v2.0 Progress: [█████░░░░░] 50% (3/6 phases shipped — 6, 7
 | Phase 10 P10-05 | 14m 0s | 1 task tasks | 1 file files |
 | Phase 10 P10-06 | 7m | 2 tasks tasks | 2 files files |
 | Phase 11 P11-01 | 4m 39s | 2 tasks | 4 files |
+| Phase 11 P11-02 | 7m | 1 task tasks | 1 file files |
 
 ## Accumulated Context
 
@@ -137,6 +138,7 @@ Recent decisions affecting current work:
 - [Phase 10 P05]: docs/deploy-runbook.md shipped (278 lines, 9 numbered sections) — closes D-28 LOCKED requirement; first top-level docs/ dir in repo; both POSIX sed + PowerShell Get-Content swap variants; Search Console manual sitemap submission documented as PRIMARY discoverability path per v2.0 Hosting decision; SW update smoke test (Finding 10) is the only end-to-end SEO-09 verification — Plan 10-06 automated tests cover source-regex tier only. Two Rule-1 auto-fixes during authoring: 'six occurrences' -> 'eight occurrences' (real count = 5+1+2), and removed duplicated og:image entry in index.html occurrence-list parenthetical (5 distinct items, not 6).
 - [Phase 10 P06]: Phase 10 verification loop closed — tests/static-assets.test.ts (245 lines; 37 it()s across 8 describes covering SEO-01..09 + D-26 + D-23) and scripts/verify-phase-10-build.mjs (105 lines; 6 build-output sections including Q3 RESOLVED <link rel='manifest'> auto-injection check). Q3 RESOLVED VERDICT: vite-plugin-pwa 0.21.2 with injectManifest auto-injects the manifest link — NO fallback CONTEXT D-25 needed. Standalone .mjs verifier replaces fragile inline node -e heredoc; PowerShell $? chain works as bash && substitute (PS 5.1 lacks &&). Full suite 612/612 (575 baseline + 37 new); tsc + vite build clean; verifier exits 0. Phase 10 declared COMPLETE — all 9 SEO-* requirements covered by source-regex tests + build verifier + Plan 10-05 operator deploy runbook.
 - [Phase 11 P01]: D-LAND-17 NEW (derived from RESEARCH Finding 4) — manifest.id LOCKED to '/Soundly/' as one-way ratchet preserving install identity of v1.0/v2.0 PWA users across the start_url narrow from /Soundly/ to /Soundly/app/. Documented in inline comment in vite.config.ts. Combined with manifest.scope:/Soundly/app/ + start_url:/Soundly/app/ + injectManifest.globPatterns scoped to app/** (Pitfall B mitigation — landing assets stay network-fresh). Multi-page build wired via build.rollupOptions.input.{main,app} with ESM-compatible __dirname shim (dirname(fileURLToPath(import.meta.url))). Pitfall A coupling: these manifest changes MUST ship in same deploy as Plan 11-04 SW rescoping. Single Rule-3 auto-fix: @types/node ^25.9.1 devDep added for tsc -b compatibility. tests/static-assets.test.ts now has 1 expected failure at line 233 (start_url assertion) for Plan 11-05 to update.
+- [Phase 11 P02]: Static landing rewrite shipped — index.html 46→395 lines hand-authored. UI-SPEC inline CSS verbatim (palette + dark + reduced-motion + mobile breakpoint); IIFE install logic with RESEARCH Finding 6 iPadOS 13+ fix inlined (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) without modifying src/platform/standalone.ts. Two Rule-1 path fixes during verify: Vite does NOT rewrite navigation hrefs (only known asset attrs for files that exist in public/), so /Soundly/app/ and /Soundly/screenshot-composer-v1.png written LITERALLY in source; same prefix discipline as the inline JS window.location.href line. Acceptance gates all pass: hero copy + install-cta IDs + maxTouchPoints + appinstalled + aria-live polite + 6 FAQ h3 + D-LAND-04 verbatim + D-LAND-12 footer + NO React refs + NO FAQPage + NO apple-* meta. dist/index.html = 16.62 KB. SEG-05 zero-diff floor preserved (only index.html touched).
 
 ### Pending Todos
 
@@ -161,8 +163,8 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-05-21T19:55:45.981Z
-Stopped at: Completed 11-01-PLAN.md
+Last session: 2026-05-21T20:04:14.115Z
+Stopped at: Completed 11-02-PLAN.md
 Resume file: None
 
 **Planned Phase:** 11 (Multi-page Split + Landing Page) — 5 plans — 2026-05-21T19:47:42.924Z
