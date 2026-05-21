@@ -63,18 +63,13 @@ authors directly in CSS without Tailwind utility translation):
 |-------|------------------|------------------|
 | xs | 0.25rem / 4px | `<summary>` marker glyph offset from text |
 | sm | 0.5rem / 8px | FAQ `<h3>` → `<p>` gap; install-confirm vertical padding |
-| md | 1rem / 16px | Inline-text rhythm; FAQ Q&A pair vertical rhythm; footer line-height padding |
-| lg | 1.5rem / 24px | Hero block side padding on mobile (`padding: 0 1.5rem`); section vertical padding |
+| md | 1rem / 16px | Inline-text rhythm; FAQ Q&A pair vertical rhythm; footer line-height padding; install button + open-app-link vertical padding |
+| lg | 1.5rem / 24px | Hero block side padding on mobile (`padding: 0 1.5rem`); section vertical padding; install button + open-app-link horizontal padding |
 | xl | 2rem / 32px | Vertical gap between hero copy block and install CTA cluster; section bottom margin between hero / screenshot / FAQ / iOS-honesty |
 | 2xl | 3rem / 48px | Vertical gap between major sections (hero → screenshot, screenshot → FAQ, FAQ → iOS honesty) on desktop; reduced to xl on mobile |
 | 3xl | 4rem / 64px | Hero top padding on desktop (above-the-fold breathing room); footer top margin |
 
 **Exceptions:**
-- Install button vertical padding = **0.85rem / ~14px** — this is intentionally OFF
-  the 4-multiple scale to land the button at exactly the same visual weight as the
-  app's primary buttons (`px-8 py-3` in Tailwind ≈ 14px effective top padding after
-  border + line-height). Documented as a deliberate one-off — DO NOT replace with
-  `1rem` (too tall) or `0.75rem` (too short). [Claude's Discretion]
 - Hero `<h1>` margin = **1rem 0 1.5rem** — asymmetric to pull the value paragraph
   visually closer to the headline while keeping comfortable space above. [Claude's
   Discretion]
@@ -83,29 +78,36 @@ authors directly in CSS without Tailwind utility translation):
 
 | Element | Min size | Implementation |
 |---------|----------|----------------|
-| `#install-btn` (Android install) | 44px tall × ≥120px wide | `padding: 0.85rem 1.5rem` + base font-size — yields ~44px tall, ~140px wide |
+| `#install-btn` (Android install) | 44px tall × ≥120px wide | `padding: 1rem 1.5rem` + 16px font-size at line-height 1.6 → ~57.6px tall, ~140px wide (well above 44px floor) |
 | `<summary>` (iOS disclosure click area) | 44px tall | `padding: 0.75rem 1rem` on the summary element |
-| `.open-app-link` (Open Soundly anchor) | 44px tall × ≥120px wide | same as install-btn |
+| `.open-app-link` (Open Soundly anchor) | 44px tall × ≥120px wide | same as install-btn (`padding: 1rem 1.5rem` → ~57.6px tall) |
 | `<a href="https://github.com/...">` (footer) | 44px tall (visually shorter is OK because it's a tertiary, low-priority link in compact footer — inline padding `0.25rem 0.5rem` keeps tap-target ≥ 32px which is acceptable for tertiary footer per W3C-tolerated exception) | inline `<a>` in footer line |
 
 ---
 
 ## Typography
 
-Type scale (5 roles — minimal because landing is content-light):
+Type scale (4 roles — minimal because landing is content-light):
 
 | Role | Size | Weight | Line Height | Selector |
 |------|------|--------|-------------|----------|
 | `h1` (hero) | `clamp(1.75rem, 5vw, 2.75rem)` — fluid 28px → 44px | 600 (semibold) | 1.2 | `.hero h1` |
 | `h2` (section heading: "Questions", "If you're on iPhone") | `1.5rem` / 24px | 600 (semibold) | 1.3 | `main h2` |
-| `h3` (FAQ question) | `1.125rem` / 18px | 600 (semibold) | 1.3 | `.faq h3` |
 | Body / paragraph | `1rem` / 16px | 400 (regular) | 1.6 (generous for reading) | `body`, `p` (default) |
 | Footer + microcopy | `0.875rem` / 14px | 400 (regular) | 1.5 | `footer`, `#install-confirm`, `.install-cta-helper` |
 
+**FAQ question (`<h3>`) is NOT a separate size role.** Per the 4-role discipline, FAQ
+questions render at **body size (1rem / 16px)** but distinguish themselves visually
+via `font-weight: 600` (semibold) + sage color (`var(--sage)` light mode,
+lifted-sage `#a4b29a` dark mode). The visual step-up from answer to question comes
+from **weight + color**, not size. WCAG contrast verification: sage `#5c6b56` on
+warm-bg `#f4f1eb` = 4.7:1 (same pairing as body sage text — verified AA in the Color
+section below).
+
 **Font weight palette: exactly 2 weights** — `400` (regular) for body / paragraphs /
-footer / install confirmation, `600` (semibold) for all headings and the install
-button label. No `700` (bold), no `300` (light) — keeps the calm typographic tone
-consistent with the app's `font-semibold` headings.
+footer / install confirmation, `600` (semibold) for all headings (including FAQ `<h3>`
+questions) and the install button label. No `700` (bold), no `300` (light) — keeps
+the calm typographic tone consistent with the app's `font-semibold` headings.
 
 **Font family:**
 ```css
@@ -136,7 +138,7 @@ block must be hand-updated):
 |------|-------------|-----------|------------------|
 | Dominant background (60%) | `#f4f1eb` (`--bg`, warm sand) | `#2a2f26` (deep forest) | `body` background; default surface |
 | Secondary surface (30%) | `#ffffff` at `0.6` alpha over `--bg` | `#3d4a38` at `0.5` alpha over dark `--bg` | Hero block sublayer (subtle), `<details>` panel interior, screenshot card backdrop |
-| Sage (heading + brand accent) | `#5c6b56` (`--sage`) | `#a4b29a` (lifted sage for AA contrast on dark bg) | h1, h2, h3, install button background, Open Soundly link background, theme-color meta |
+| Sage (heading + brand accent) | `#5c6b56` (`--sage`) | `#a4b29a` (lifted sage for AA contrast on dark bg) | h1, h2, h3 (FAQ questions), install button background, Open Soundly link background, theme-color meta |
 | Text primary (body) | `#3d4a38` (`--text-primary`) | `#d4cbbe` (warm sand for contrast on dark) | `body`, `p`, all paragraph text |
 | Text secondary (microcopy) | `#8a7e6b` (`--text-secondary`) | `#a89e8d` | Footer text, `#install-confirm`, helper microcopy |
 | Border | `#d4cbbe` (`--border`) | `#4a5443` | `<details>` border, screenshot card border |
@@ -170,7 +172,7 @@ text ≥18px or ≥14px bold):**
 | Pairing | Ratio | Status |
 |---------|-------|--------|
 | `#3d4a38` text on `#f4f1eb` bg | 9.4:1 | AA + AAA ✓ |
-| `#5c6b56` sage text on `#f4f1eb` bg | 4.7:1 | AA ✓ (just clears for body — AAA-equivalent for large text) |
+| `#5c6b56` sage text on `#f4f1eb` bg | 4.7:1 | AA ✓ (just clears for body — AAA-equivalent for large text; covers FAQ `<h3>` use at 16px semibold which qualifies as "large text" per WCAG SC 1.4.3) |
 | `#f4f1eb` text on `#5c6b56` sage bg (install button) | 4.7:1 | AA ✓ (inverse of above) |
 | `#8a7e6b` secondary text on `#f4f1eb` bg | 3.1:1 | AA for large text only ✓ — used only for footer + microcopy at 14px regular (below AA bar for body); **upgrade to `#5c6b56` if secondary text needs to be < 14px** |
 | `#c27c5a` accent on `#f4f1eb` bg | 3.8:1 | AA for large text ✓; **install-confirm uses 16px regular which is at the AA threshold — boost to `font-weight: 600` to qualify as "large text" per WCAG SC 1.4.3** |
@@ -351,7 +353,7 @@ hero block measuring ≤ 720px tall at this viewport.
 | State | Visual | Interaction |
 |-------|--------|-------------|
 | **Hidden (default)** | `hidden` attribute set; CSS `[hidden] { display: none !important; }` enforces invisibility even if a style overrides | Element exists in DOM but is unreachable by tab; ARIA-hidden by virtue of `hidden` attribute |
-| **Visible (post-`beforeinstallprompt`)** | Sage background (`#5c6b56`), white-ish text (`#f4f1eb`), 0.5rem border-radius, 0.85rem 1.5rem padding, semibold 600 weight, 16px font-size | `cursor: pointer`; tab-focusable |
+| **Visible (post-`beforeinstallprompt`)** | Sage background (`#5c6b56`), light text (`#f4f1eb`), 0.5rem border-radius, `1rem 1.5rem` padding, semibold 600 weight, 16px font-size → renders at ~57.6px tall × ~140px wide | `cursor: pointer`; tab-focusable |
 | **Hover** | `background: #4d5a48` (sage darkened ~10%); `transition: background-color 150ms ease-out` | Cursor changes to pointer; no scale change (zen aesthetic — no "bouncy" feedback) |
 | **Focus-visible** | `outline: 2px solid #5c6b56; outline-offset: 2px` (sage ring at 2px) | Only on keyboard focus; not on mouse click |
 | **Active (pressed)** | `background: #4d5a48`; **NO scale transform** (the app uses `active:scale-[0.98]` on PresetCard — landing intentionally omits this for the slower, calmer landing feel) | Touch-up triggers click |
@@ -404,7 +406,7 @@ details[open] > summary::before {
 
 | State | Visual | Interaction |
 |-------|--------|-------------|
-| **Default** | Same visual treatment as install button: sage bg, light text, 0.5rem border-radius, 0.85rem 1.5rem padding; rendered as `<a href="/app/">` (NOT `<button>` — semantic anchor for crawler link discovery + Lighthouse "Crawlable links" audit) | Tab focusable; click navigates |
+| **Default** | Same visual treatment as install button: sage bg, light text, 0.5rem border-radius, `1rem 1.5rem` padding; rendered as `<a href="/app/">` (NOT `<button>` — semantic anchor for crawler link discovery + Lighthouse "Crawlable links" audit) | Tab focusable; click navigates |
 | **Hover** | Same as install button (sage darkened ~10%) | |
 | **Focus-visible** | Sage ring at 2px, 2px offset | |
 | **Active** | Same as install button (no scale) | |
@@ -443,7 +445,7 @@ fires) for users on browsers where the event never fires]
 
 | State | Visual | Interaction |
 |-------|--------|-------------|
-| **Default** | `<h3>` question in semibold 18px sage color; `<p>` answer in regular 16px text-primary; 0.5rem gap between Q and A; 1.5rem gap between Q&A pairs | Static content; no interactivity |
+| **Default** | `<h3>` question in semibold 16px (body size) sage color; `<p>` answer in regular 16px text-primary; visual distinction via weight + color, not size; 0.5rem gap between Q and A; 1.5rem gap between Q&A pairs | Static content; no interactivity |
 
 **No expand/collapse on FAQ.** Per D-LAND-03 the FAQ is "plain HTML `<h3>` + paragraph
 Q&A" — questions and answers are always visible; no accordion. This makes the page
@@ -531,7 +533,7 @@ h1 {
 .install-cta { margin: 2rem 0 3rem; display: flex; flex-direction: column; align-items: center; gap: 1rem; }
 #install-btn, .open-app-link {
   display: inline-block;
-  padding: 0.85rem 1.5rem;
+  padding: 1rem 1.5rem;
   border: 0;
   border-radius: 0.5rem;
   background: var(--sage);
@@ -629,7 +631,9 @@ h2 {
 /* === FAQ === */
 .faq { max-width: 640px; margin-left: auto; margin-right: auto; }
 .faq h3 {
-  font-size: 1.125rem;
+  /* font-size inherits from body (1rem / 16px) — no explicit size declaration;
+     visual step-up from answer comes from weight + sage color, not size, per the
+     4-role type scale discipline. */
   font-weight: 600;
   line-height: 1.3;
   color: var(--sage);
@@ -874,7 +878,7 @@ hand-authored by the planner. No vetting gate required.
 | Field | Source | Notes |
 |-------|--------|-------|
 | Spacing scale | Inherited from Phase 8 + Phase 9 UI-SPECs (warm-earth precedent) | Re-declared as inline CSS literals because landing has no Tailwind |
-| Typography (sizes) | Claude's Discretion — minimal 5-role scale appropriate for content-light landing | Matches the app's `font-semibold` headings + `text-base` body convention |
+| Typography (sizes) | Claude's Discretion — minimal 4-role scale appropriate for content-light landing | Matches the app's `font-semibold` headings + `text-base` body convention; FAQ `<h3>` re-uses body size + weight + color rather than a fifth size |
 | Color palette | Verbatim from `src/index.css` `@theme` (warm earth, D-04 v1.0 LOCKED) + new dark-mode variants computed for AA contrast | Dark-mode hex values are NEW — `#2a2f26` bg, `#a4b29a` lifted sage, `#d49075` lifted accent; documented here for future sync to `src/index.css` if the app adds dark mode (currently the app does not — landing leads on dark mode adoption per Claude's Discretion) |
 | Accent reservation | Claude's Discretion (locked) — install confirmation only | Mirrors Phase 9's discipline of reserving accent for single "stakes" moment (Composer Start button) |
 | Hero copy | D-LAND-01 LOCKED (verbatim) | |
