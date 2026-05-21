@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: — Foundations
 status: executing
-stopped_at: Completed 11-02-PLAN.md
-last_updated: "2026-05-21T20:04:22.692Z"
+stopped_at: Completed 11-03-PLAN.md
+last_updated: "2026-05-21T20:11:45.483Z"
 last_activity: 2026-05-21
 progress:
   total_phases: 11
   completed_phases: 10
   total_plans: 43
-  completed_plans: 40
-  percent: 93
+  completed_plans: 41
+  percent: 95
 ---
 
 # Project State
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-05-04)
 
 Milestone: v2.0 — Custom Alarm Composer + Discoverability
 Phase: 11 (Multi-page Split + Landing Page) — EXECUTING
-Plan: 3 of 5
+Plan: 4 of 5
 Status: Ready to execute
 Last activity: 2026-05-21
 
@@ -92,6 +92,7 @@ v2.0 Progress: [█████░░░░░] 50% (3/6 phases shipped — 6, 7
 | Phase 10 P10-06 | 7m | 2 tasks tasks | 2 files files |
 | Phase 11 P11-01 | 4m 39s | 2 tasks | 4 files |
 | Phase 11 P11-02 | 7m | 1 task tasks | 1 file files |
+| Phase 11 P11-03 | 6m 0s | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -139,6 +140,7 @@ Recent decisions affecting current work:
 - [Phase 10 P06]: Phase 10 verification loop closed — tests/static-assets.test.ts (245 lines; 37 it()s across 8 describes covering SEO-01..09 + D-26 + D-23) and scripts/verify-phase-10-build.mjs (105 lines; 6 build-output sections including Q3 RESOLVED <link rel='manifest'> auto-injection check). Q3 RESOLVED VERDICT: vite-plugin-pwa 0.21.2 with injectManifest auto-injects the manifest link — NO fallback CONTEXT D-25 needed. Standalone .mjs verifier replaces fragile inline node -e heredoc; PowerShell $? chain works as bash && substitute (PS 5.1 lacks &&). Full suite 612/612 (575 baseline + 37 new); tsc + vite build clean; verifier exits 0. Phase 10 declared COMPLETE — all 9 SEO-* requirements covered by source-regex tests + build verifier + Plan 10-05 operator deploy runbook.
 - [Phase 11 P01]: D-LAND-17 NEW (derived from RESEARCH Finding 4) — manifest.id LOCKED to '/Soundly/' as one-way ratchet preserving install identity of v1.0/v2.0 PWA users across the start_url narrow from /Soundly/ to /Soundly/app/. Documented in inline comment in vite.config.ts. Combined with manifest.scope:/Soundly/app/ + start_url:/Soundly/app/ + injectManifest.globPatterns scoped to app/** (Pitfall B mitigation — landing assets stay network-fresh). Multi-page build wired via build.rollupOptions.input.{main,app} with ESM-compatible __dirname shim (dirname(fileURLToPath(import.meta.url))). Pitfall A coupling: these manifest changes MUST ship in same deploy as Plan 11-04 SW rescoping. Single Rule-3 auto-fix: @types/node ^25.9.1 devDep added for tsc -b compatibility. tests/static-assets.test.ts now has 1 expected failure at line 233 (start_url assertion) for Plan 11-05 to update.
 - [Phase 11 P02]: Static landing rewrite shipped — index.html 46→395 lines hand-authored. UI-SPEC inline CSS verbatim (palette + dark + reduced-motion + mobile breakpoint); IIFE install logic with RESEARCH Finding 6 iPadOS 13+ fix inlined (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) without modifying src/platform/standalone.ts. Two Rule-1 path fixes during verify: Vite does NOT rewrite navigation hrefs (only known asset attrs for files that exist in public/), so /Soundly/app/ and /Soundly/screenshot-composer-v1.png written LITERALLY in source; same prefix discipline as the inline JS window.location.href line. Acceptance gates all pass: hero copy + install-cta IDs + maxTouchPoints + appinstalled + aria-live polite + 6 FAQ h3 + D-LAND-04 verbatim + D-LAND-12 footer + NO React refs + NO FAQPage + NO apple-* meta. dist/index.html = 16.62 KB. SEG-05 zero-diff floor preserved (only index.html touched).
+- [Phase 11 P03]: App-shell entry app/index.html populated end-to-end (24→53 lines) — 4 apple-* PWA meta tags MOVED from root to app shell (Phase 10 D-26 contract: location swapped, values byte-identical; T-11-03-04 mitigated). App-shell SEO meta variant carries Phase 10 D-02..D-12 description/OG/Twitter/JSON-LD copy verbatim, with three URL adjustments — canonical, og:url, and JSON-LD url now end /Soundly/app/ (vs landing's /Soundly/); og:image and twitter:image stay at /Soundly/og-image-v1.png shared asset (D-10 versioned filename preserved). React mount preserved verbatim — Vite resolves /src/main.tsx against project root regardless of HTML file location (RESEARCH Finding 1 verified empirically by clean build). Q4 RESOLVED VERDICT: vite-plugin-pwa 0.21.2 auto-injects <link rel='manifest' href='/Soundly/manifest.webmanifest'> into dist/app/index.html (line 49) — NO Phase 10 D-25 fallback needed (mirrors Plan 10-06 finding for root entry; T-11-03-05 mitigated). Plan executed exactly as spec — zero deviations, zero Rule-1/2/3 auto-fixes. Test suite 607/612 passing; 5 expected failures in tests/static-assets.test.ts owned by Plan 11-05 reconciliation (4 apple-* path moves + 1 start_url narrow). dist/app/index.html=3.39 KB; full SEG-05 zero-diff floor preserved (only app/index.html touched). LAND-02 + LAND-06 closed.
 
 ### Pending Todos
 
@@ -163,8 +165,8 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-05-21T20:04:14.115Z
-Stopped at: Completed 11-02-PLAN.md
+Last session: 2026-05-21T20:11:45.462Z
+Stopped at: Completed 11-03-PLAN.md
 Resume file: None
 
 **Planned Phase:** 11 (Multi-page Split + Landing Page) — 5 plans — 2026-05-21T19:47:42.924Z
