@@ -4,18 +4,46 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#5c6b56" />
-    <title>Soundly — gentle alarm app</title>
-    <!--
-      Phase 11 / Plan 11-01 STUB.
-      This file is intentionally minimal in Wave 1 so the multi-page build skeleton
-      compiles. Plan 11-03 (Wave 2) replaces this with the full app shell:
-        - apple-* PWA meta block (MOVED from root index.html per Phase 10 D-26)
-        - SEO meta block (canonical/og:url point to /Soundly/app/)
-        - JSON-LD WebApplication block (url: /Soundly/app/)
-        - <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
-      See .planning/phases/11-multi-page-split-landing-page/11-PATTERNS.md
-      "Pattern Assignment 2" for the verbatim Plan 11-03 target.
-    -->
+
+    <!-- ─── Apple PWA meta (MOVED from root index.html in Phase 11) ─── -->
+    <!-- This file is the installable PWA entry now (start_url: /Soundly/app/),
+         so the apple-* tags live here per Phase 10 D-26 + RESEARCH Finding 9.
+         The landing (/Soundly/) is not installable on its own. -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Soundly" />
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+
+    <!-- ─── SEO meta (Phase 10 carry-over; app-shell variant — canonical + og:url + JSON-LD url all point to /Soundly/app/) ─── -->
+    <title>Soundly — a calmer alarm that alerts you gently</title>
+    <meta name="description" content="A free alarm app with soft sounds, vibration, or full volume — fully customizable. No accounts, no ads. Just share your setup. PWA — installs anywhere." />
+    <link rel="canonical" href="https://soundly.local/Soundly/app/" />
+
+    <!-- Open Graph (Phase 10 D-03/D-04 — app-shell variant) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Soundly — gentle alarm" />
+    <meta property="og:description" content="A free alarm app with soft sounds or vibration or full volume - fully customizable. No accounts, no ads, just share your alarm setup. Progressive Web App (PWA), install on phone or desktop." />
+    <meta property="og:image" content="https://soundly.local/Soundly/og-image-v1.png" />
+    <meta property="og:url" content="https://soundly.local/Soundly/app/" />
+
+    <!-- Twitter Card (Phase 10 D-05 — app-shell variant) -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Soundly — gentle alarm" />
+    <meta name="twitter:description" content="A free alarm app with soft sounds or vibration or full volume - fully customizable. No accounts, no ads, just share your alarm setup. Progressive Web App (PWA), install on phone or desktop." />
+    <meta name="twitter:image" content="https://soundly.local/Soundly/og-image-v1.png" />
+
+    <!-- JSON-LD WebApplication (Phase 10 D-12; url is the app-shell /Soundly/app/) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Soundly Gentle Alarm",
+      "description": "A free alarm app with soft sounds or vibration or full volume - fully customizable. No accounts, no ads, just share your alarm setup. Progressive Web App (PWA), install on phone or desktop.",
+      "applicationCategory": "UtilitiesApplication",
+      "operatingSystem": "Web Browser",
+      "url": "https://soundly.local/Soundly/app/"
+    }
+    </script>
   </head>
   <body>
     <div id="root"></div>
