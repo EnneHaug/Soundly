@@ -154,7 +154,7 @@ The original v1.0 alarm engine, three-phase escalation, presets, PWA shell, and 
   - [x] 11-01-PLAN.md — Multi-page build skeleton: vite.config.ts rollupOptions.input + manifest.id/scope/start_url + injectManifest.globPatterns + app/index.html stub (LAND-02, LAND-06)
   - [x] 11-02-PLAN.md — Wholesale landing rewrite: hero + install CTA + FAQ + iOS honesty + footer + inline CSS + inline install JS (LAND-01, LAND-03, LAND-04, LAND-05)
   - [x] 11-03-PLAN.md — App shell move: apple-* meta + SEO meta variant + JSON-LD + React mount in app/index.html (LAND-02, LAND-06)
-  - [ ] 11-04-PLAN.md — SW rescoping: NavigationRoute allowlist /Soundly/app/ + createHandlerBoundToURL + openWindow target update (LAND-02)
+  - [x] 11-04-PLAN.md — SW rescoping: NavigationRoute allowlist /Soundly/app/ + createHandlerBoundToURL + openWindow target update (LAND-02)
   - [ ] 11-05-PLAN.md — Verification gate: screenshot capture checkpoint + tests/static-assets.test.ts + scripts/verify-phase-10-build.mjs + deploy-runbook §10 + sitemap lastmod (LAND-02, LAND-06)
 **UI hint**: yes
 
@@ -177,4 +177,4 @@ Phase 10 may ship in parallel with Phases 6–9 if desired (orthogonal track); P
 | 8. Wake Easy Preset + Segment Countdown UI | 6/6 | Complete    | 2026-05-10 |
 | 9. Custom Composer + Share via URL | 9/9 | Complete    | 2026-05-16 |
 | 10. SEO Meta + JSON-LD + SW Update Infra | 6/6 | Complete    | 2026-05-21 |
-| 11. Multi-page Split + Landing Page | 3/5 | Executing | - |
+| 11. Multi-page Split + Landing Page | 4/5 | Executing | - |
