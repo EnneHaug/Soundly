@@ -42,7 +42,7 @@ The original v1.0 alarm engine, three-phase escalation, presets, PWA shell, and 
 - [x] **Phase 7: Segment Engine + Triangle Sound** — Additive engine + new sound; no UI changes; runtime validated by tests
 - [x] **Phase 8: Wake Easy Preset + Segment Countdown UI** — Third dashboard preset card + N-segment countdown UI; validates segment runtime end-to-end
 - [x] **Phase 9: Custom Composer + Share via URL** — Modal segment builder with stepper inputs and duplicate; share link round-trip
-- [ ] **Phase 10: SEO Meta + JSON-LD + Service Worker Update Infra** — Static-HTML meta, OG, Twitter, JSON-LD; SW autoUpdate + skipWaiting + clientsClaim
+- [x] **Phase 10: SEO Meta + JSON-LD + Service Worker Update Infra** — Static-HTML meta, OG, Twitter, JSON-LD; SW autoUpdate + skipWaiting + clientsClaim
 - [ ] **Phase 11: Multi-page Split + Landing Page** — Two HTML entries; hand-authored marketing landing; SW scope rescoped to `/app`; sitemap.xml; robots.txt; install CTA
 
 ## Phase Details
@@ -137,7 +137,7 @@ The original v1.0 alarm engine, three-phase escalation, presets, PWA shell, and 
   - [x] 10-03-PLAN.md — vite.config.ts registerType: autoUpdate + src/sw.ts skipWaiting + clientsClaim append (SEO-09)
   - [x] 10-04-PLAN.md — scripts/generate-og-image.mjs + npm run og-image + public/og-image-v1.png + D-09 user-approval checkpoint (SEO-02, SEO-08)
   - [x] 10-05-PLAN.md — docs/deploy-runbook.md operator playbook (D-28 — covers URL swap, Search Console, FB Debugger, SW smoke test)
-  - [ ] 10-06-PLAN.md — tests/static-assets.test.ts source-regex + DOMParser + JSON.parse coverage for all 9 SEO-* + final dist/ build verification (D-27)
+  - [x] 10-06-PLAN.md — tests/static-assets.test.ts source-regex + DOMParser + JSON.parse coverage for all 9 SEO-* + final dist/ build verification (D-27)
 **UI hint**: no
 
 ### Phase 11: Multi-page Split + Landing Page
@@ -171,5 +171,5 @@ Phase 10 may ship in parallel with Phases 6–9 if desired (orthogonal track); P
 | 7. Segment Engine + Triangle Sound | 5/5 | Shipped | v2.0 |
 | 8. Wake Easy Preset + Segment Countdown UI | 6/6 | Complete    | 2026-05-10 |
 | 9. Custom Composer + Share via URL | 9/9 | Complete    | 2026-05-16 |
-| 10. SEO Meta + JSON-LD + SW Update Infra | 5/6 | In Progress | - |
+| 10. SEO Meta + JSON-LD + SW Update Infra | 6/6 | Complete    | 2026-05-21 |
 | 11. Multi-page Split + Landing Page | 0/0 | Planned | - |
