@@ -131,7 +131,7 @@ The original v1.0 alarm engine, three-phase escalation, presets, PWA shell, and 
   3. `public/robots.txt` (with `Allow: /` and a `Sitemap:` line) and `public/sitemap.xml` (listing the landing URL and the `/app` deep link) are present in the production build; deploy runbook documents Search Console manual sitemap submission as the primary path on GitHub Pages and Facebook Sharing Debugger force-refresh after content changes
   4. `vite.config.ts` sets `registerType: 'autoUpdate'` and `src/sw.ts` calls `self.skipWaiting()` and `self.clients.claim()` so installed PWA users receive updated meta on next launch without manual user intervention
   5. The OG image asset uses a versioned filename (e.g. `og-image-v1.png`); a deploy verification confirms that sharing the live URL to Slack and iMessage renders the correct title, description, and image
-**Plans:** 6 plans
+**Plans:** 6/6 plans complete
   - [x] 10-01-PLAN.md — Static SEO meta block in index.html (title + ~15 new meta/link/script tags; SEO-01..05)
   - [x] 10-02-PLAN.md — public/robots.txt + public/sitemap.xml hand-authored static assets (SEO-06, SEO-07)
   - [x] 10-03-PLAN.md — vite.config.ts registerType: autoUpdate + src/sw.ts skipWaiting + clientsClaim append (SEO-09)
