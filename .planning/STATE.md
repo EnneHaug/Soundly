@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: — Foundations
 status: executing
-stopped_at: Completed 10-04-PLAN.md
-last_updated: "2026-05-21T16:30:21.035Z"
+stopped_at: Completed 10-05-PLAN.md
+last_updated: "2026-05-21T16:36:04.585Z"
 last_activity: 2026-05-21
 progress:
   total_phases: 10
   completed_phases: 9
   total_plans: 38
-  completed_plans: 36
-  percent: 95
+  completed_plans: 37
+  percent: 97
 ---
 
 # Project State
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-05-04)
 
 Milestone: v2.0 — Custom Alarm Composer + Discoverability
 Phase: 10 (SEO Meta + JSON-LD + Service Worker Update Infra) — EXECUTING
-Plan: 5 of 6
+Plan: 6 of 6
 Status: Ready to execute
 Last activity: 2026-05-21
 
@@ -87,6 +87,7 @@ v2.0 Progress: [█████░░░░░] 50% (3/6 phases shipped — 6, 7
 | Phase 10 P10-02 | 2m 2s | 2 tasks | 2 files |
 | Phase 10 PP10-03 | 3m 58s | 2 tasks tasks | 2 files files |
 | Phase 10 P10-04 | 2 sessions | 4 tasks tasks | 3 files files |
+| Phase 10 P10-05 | 14m 0s | 1 task tasks | 1 file files |
 
 ## Accumulated Context
 
@@ -130,6 +131,7 @@ Recent decisions affecting current work:
 - Plan 10-02: robots.txt + sitemap.xml hand-authored (no vite-plugin-sitemap dep per D-22); locked placeholder https://soundly.local/Soundly/ (3 occurrences total: 1 in robots.txt, 2 in sitemap.xml) for Plan 10-05 deploy-runbook swap
 - [Phase 10 P03]: SW auto-update infra wired — vite.config.ts gains registerType: 'autoUpdate' (1 line, inserted as first VitePWA option) + src/sw.ts gains import { clientsClaim } from 'workbox-core' + module-scope self.skipWaiting() + clientsClaim() append after notificationclick handler. workbox-core clientsClaim() helper variant chosen over CONTEXT D-17's original hand-written activate listener per RESEARCH Finding 2 — the helper wraps self.clients.claim() inside an activate-event listener internally (avoids 'claim called before activation' exception of naked top-level self.clients.claim()) and matches the official vite-plugin-pwa injectManifest auto-update example. Both variants accepted by D-17. devOptions.enabled: true preserved per D-19 NON-NEGOTIABLE. All 5 existing sw.ts handlers byte-identical (cleanupOutdatedCaches, precacheAndRoute, navHandler/NavigationRoute, notificationclick, declare let self). workbox-core@7.4.0 resolves transitively today; Plan 04 Task 2 pins as direct devDep. npm run build clean (dist/sw.js 17.00 kB, dist/registerSW.js 0.15 kB both emitted, 70 modules). Full suite 575/575 across 42 files. SEG-05 zero-diff floor preserved across all 26 protected paths. Pitfall 2 lesson: both changes ship in single plan execution since neither alone delivers updates to installed users.
 - [Phase 10 P04]: OG image generator + workbox-core direct pin shipped — scripts/generate-og-image.mjs renders 1200x630 PNG (33930 bytes, well under SEO-02 200 KB cap) via sharp + SVG (cloned from generate-icons.mjs idiom). User-approval checkpoint D-09 LOCKED honored across 2 sessions (PNG generated in session 1, user typed approve in session 2, no iterations). workbox-core ^7.4.0 promoted from transitive to direct devDep (Q1 RESOLVED) — matches sibling workbox-precaching/workbox-routing pins, immune to vite-plugin-pwa minor-version churn dropping it. Versioned filename og-image-v1.png (D-10 LOCKED) — future swaps to og-image-v2.png defeat Facebook OG cache.
+- [Phase 10 P05]: docs/deploy-runbook.md shipped (278 lines, 9 numbered sections) — closes D-28 LOCKED requirement; first top-level docs/ dir in repo; both POSIX sed + PowerShell Get-Content swap variants; Search Console manual sitemap submission documented as PRIMARY discoverability path per v2.0 Hosting decision; SW update smoke test (Finding 10) is the only end-to-end SEO-09 verification — Plan 10-06 automated tests cover source-regex tier only. Two Rule-1 auto-fixes during authoring: 'six occurrences' -> 'eight occurrences' (real count = 5+1+2), and removed duplicated og:image entry in index.html occurrence-list parenthetical (5 distinct items, not 6).
 
 ### Pending Todos
 
@@ -154,8 +156,8 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-05-21T16:30:15.447Z
-Stopped at: Completed 10-04-PLAN.md
+Last session: 2026-05-21T16:36:00.392Z
+Stopped at: Completed 10-05-PLAN.md
 Resume file: None
 
 **Planned Phase:** 10 (SEO Meta + JSON-LD + Service Worker Update Infra) — 6 plans — 2026-05-19T17:25:08.376Z
