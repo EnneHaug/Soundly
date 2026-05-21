@@ -104,11 +104,13 @@ All meta + JSON-LD lives in static HTML, never React-rendered, so OG/Twitter/iMe
 ### Landing & Routing (LAND)
 
 - [ ] **LAND-01**: Marketing landing page at `/` — hero pitch, value proposition, screenshot(s), install CTA, FAQ, footer. Hand-authored static HTML; no React.
-- [ ] **LAND-02**: Two-tier routing — landing at `/`, alarm app shell at `/app`. PWA `start_url` updates from `/` to `/app` so installed users launch into the app.
+- [x] **LAND-02
+**: Two-tier routing — landing at `/`, alarm app shell at `/app`. PWA `start_url` updates from `/` to `/app` so installed users launch into the app.
 - [ ] **LAND-03**: Install CTA — Android browsers see a `beforeinstallprompt`-driven install button; iOS Safari users see manual "Share → Add to Home Screen" instructions (no automatic prompt — iOS does not support `beforeinstallprompt`).
 - [ ] **LAND-04**: FAQ section on landing — plain HTML `<h3>` + paragraph Q&A. No `FAQPage` JSON-LD (Google deprecated rich-result eligibility for non-gov/health sites in 2023).
 - [ ] **LAND-05**: iOS honesty section explicitly states the locked-screen alarm limitation (pure PWAs cannot fire audio when iPhone is locked) and recommends home-screen install + keeping the app foregrounded for reliability.
-- [ ] **LAND-06**: Build uses Vite multi-page configuration — two HTML entries (`index.html` for landing, `app/index.html` for app shell). No router runtime dependency. Service worker scope and NavigationRoute fallback rescoped to `/app` only.
+- [x] **LAND-06
+**: Build uses Vite multi-page configuration — two HTML entries (`index.html` for landing, `app/index.html` for app shell). No router runtime dependency. Service worker scope and NavigationRoute fallback rescoped to `/app` only.
 
 ### Share via URL (SHR)
 
