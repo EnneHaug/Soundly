@@ -132,10 +132,10 @@ The original v1.0 alarm engine, three-phase escalation, presets, PWA shell, and 
   4. `vite.config.ts` sets `registerType: 'autoUpdate'` and `src/sw.ts` calls `self.skipWaiting()` and `self.clients.claim()` so installed PWA users receive updated meta on next launch without manual user intervention
   5. The OG image asset uses a versioned filename (e.g. `og-image-v1.png`); a deploy verification confirms that sharing the live URL to Slack and iMessage renders the correct title, description, and image
 **Plans:** 6 plans
-  - [ ] 10-01-PLAN.md — Static SEO meta block in index.html (title + ~15 new meta/link/script tags; SEO-01..05)
-  - [ ] 10-02-PLAN.md — public/robots.txt + public/sitemap.xml hand-authored static assets (SEO-06, SEO-07)
+  - [x] 10-01-PLAN.md — Static SEO meta block in index.html (title + ~15 new meta/link/script tags; SEO-01..05)
+  - [x] 10-02-PLAN.md — public/robots.txt + public/sitemap.xml hand-authored static assets (SEO-06, SEO-07)
   - [x] 10-03-PLAN.md — vite.config.ts registerType: autoUpdate + src/sw.ts skipWaiting + clientsClaim append (SEO-09)
-  - [ ] 10-04-PLAN.md — scripts/generate-og-image.mjs + npm run og-image + public/og-image-v1.png + D-09 user-approval checkpoint (SEO-02, SEO-08)
+  - [x] 10-04-PLAN.md — scripts/generate-og-image.mjs + npm run og-image + public/og-image-v1.png + D-09 user-approval checkpoint (SEO-02, SEO-08)
   - [ ] 10-05-PLAN.md — docs/deploy-runbook.md operator playbook (D-28 — covers URL swap, Search Console, FB Debugger, SW smoke test)
   - [ ] 10-06-PLAN.md — tests/static-assets.test.ts source-regex + DOMParser + JSON.parse coverage for all 9 SEO-* + final dist/ build verification (D-27)
 **UI hint**: no
@@ -171,5 +171,5 @@ Phase 10 may ship in parallel with Phases 6–9 if desired (orthogonal track); P
 | 7. Segment Engine + Triangle Sound | 5/5 | Shipped | v2.0 |
 | 8. Wake Easy Preset + Segment Countdown UI | 6/6 | Complete    | 2026-05-10 |
 | 9. Custom Composer + Share via URL | 9/9 | Complete    | 2026-05-16 |
-| 10. SEO Meta + JSON-LD + SW Update Infra | 2/6 | In Progress | - |
+| 10. SEO Meta + JSON-LD + SW Update Infra | 4/6 | In Progress | - |
 | 11. Multi-page Split + Landing Page | 0/0 | Planned | - |

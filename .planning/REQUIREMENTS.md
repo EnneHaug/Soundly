@@ -96,7 +96,8 @@ All meta + JSON-LD lives in static HTML, never React-rendered, so OG/Twitter/iMe
 **: `public/robots.txt` with `Allow: /` and a `Sitemap:` line. (GitHub Pages constraint: subpath robots.txt is best-effort indexing only — Search Console manual sitemap submission is the primary path.)
 - [x] **SEO-07
 **: `public/sitemap.xml` listing the landing URL and the `/app` deep link, generated at build time (vite-plugin-sitemap or hand-authored).
-- [ ] **SEO-08**: OG image asset uses a versioned filename (e.g. `og-image-v1.png`); deploy runbook documents Facebook Sharing Debugger force-refresh after content changes.
+- [x] **SEO-08
+**: OG image asset uses a versioned filename (e.g. `og-image-v1.png`); deploy runbook documents Facebook Sharing Debugger force-refresh after content changes.
 - [x] **SEO-09
 **: Service worker config gains `registerType: 'autoUpdate'`, `self.skipWaiting()`, and `self.clients.claim()` so installed PWA users actually receive updated meta + content.
 
@@ -191,13 +192,13 @@ v2.0 traceability:
 | SHR-03 | Phase 9 | Complete |
 | SHR-04 | Phase 9 | Complete |
 | SEO-01 | Phase 10 | Pending |
-| SEO-02 | Phase 10 | Pending |
+| SEO-02 | Phase 10 | Complete |
 | SEO-03 | Phase 10 | Pending |
 | SEO-04 | Phase 10 | Pending |
 | SEO-05 | Phase 10 | Pending |
 | SEO-06 | Phase 10 | Pending |
 | SEO-07 | Phase 10 | Pending |
-| SEO-08 | Phase 10 | Pending |
+| SEO-08 | Phase 10 | Complete |
 | SEO-09 | Phase 10 | Complete |
 | LAND-01 | Phase 11 | Pending |
 | LAND-02 | Phase 11 | Pending |
