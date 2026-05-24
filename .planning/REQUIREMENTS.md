@@ -206,12 +206,12 @@ v2.0 traceability:
 | SEO-07 | Phase 10 | Pending |
 | SEO-08 | Phase 10 | Complete |
 | SEO-09 | Phase 10 | Complete |
-| LAND-01 | Phase 11 | Pending |
-| LAND-02 | Phase 11 | Pending |
-| LAND-03 | Phase 11 | Pending |
-| LAND-04 | Phase 11 | Pending |
-| LAND-05 | Phase 11 | Pending |
-| LAND-06 | Phase 11 | Pending |
+| LAND-01 | Phase 11 | Complete |
+| LAND-02 | Phase 11 | Complete |
+| LAND-03 | Phase 11 | Complete |
+| LAND-04 | Phase 11 | Complete |
+| LAND-05 | Phase 11 | Complete |
+| LAND-06 | Phase 11 | Complete |
 
 **Coverage:**
 - v1.0 requirements: 17 total — all shipped ✓

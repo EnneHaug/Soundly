@@ -1,17 +1,17 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: — Foundations
-status: executing
-stopped_at: Completed 11-04-PLAN.md
-last_updated: "2026-05-21T20:18:52.109Z"
-last_activity: 2026-05-21
+milestone: v2.0
+milestone_name: — Custom Alarm Composer + Discoverability
+status: complete
+stopped_at: Completed 11-05-PLAN.md — Phase 11 COMPLETE; v2.0 milestone COMPLETE
+last_updated: "2026-05-24T11:05:00.000Z"
+last_activity: 2026-05-24
 progress:
   total_phases: 11
-  completed_phases: 10
+  completed_phases: 11
   total_plans: 43
-  completed_plans: 42
-  percent: 98
+  completed_plans: 43
+  percent: 100
 ---
 
 # Project State
@@ -21,17 +21,17 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-04)
 
 **Core value:** The alarm must actually wake the user — gently first, reliably always.
-**Current focus:** Phase 11 — Multi-page Split + Landing Page
+**Current focus:** v2.0 COMPLETE — all 11 phases shipped; ready for production deploy (Lighthouse PWA + SEO ≥ 90 gate per Phase 11 Plan 11-05 §10 manual)
 
 ## Current Position
 
-Milestone: v2.0 — Custom Alarm Composer + Discoverability
-Phase: 11 (Multi-page Split + Landing Page) — EXECUTING
-Plan: 5 of 5
-Status: Ready to execute
-Last activity: 2026-05-21
+Milestone: v2.0 — Custom Alarm Composer + Discoverability — COMPLETE
+Phase: 11 (Multi-page Split + Landing Page) — COMPLETE 2026-05-24
+Plan: 5 of 5 — COMPLETE
+Status: All 11 phases shipped; v2.0 milestone closed pending operator deploy
+Last activity: 2026-05-24
 
-v2.0 Progress: [█████░░░░░] 50% (3/6 phases shipped — 6, 7, 8)
+v2.0 Progress: [██████████] 100% (6/6 phases shipped — 6, 7, 8, 9, 10, 11)
 
 ## Performance Metrics
 
@@ -94,6 +94,7 @@ v2.0 Progress: [█████░░░░░] 50% (3/6 phases shipped — 6, 7
 | Phase 11 P11-02 | 7m | 1 task tasks | 1 file files |
 | Phase 11 P11-03 | 6m 0s | 1 tasks | 1 files |
 | Phase 11 P11-04 | 3min | 1 tasks | 1 files |
+| Phase 11 P11-05 | ~50min | 6 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -143,6 +144,7 @@ Recent decisions affecting current work:
 - [Phase 11 P02]: Static landing rewrite shipped — index.html 46→395 lines hand-authored. UI-SPEC inline CSS verbatim (palette + dark + reduced-motion + mobile breakpoint); IIFE install logic with RESEARCH Finding 6 iPadOS 13+ fix inlined (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) without modifying src/platform/standalone.ts. Two Rule-1 path fixes during verify: Vite does NOT rewrite navigation hrefs (only known asset attrs for files that exist in public/), so /Soundly/app/ and /Soundly/screenshot-composer-v1.png written LITERALLY in source; same prefix discipline as the inline JS window.location.href line. Acceptance gates all pass: hero copy + install-cta IDs + maxTouchPoints + appinstalled + aria-live polite + 6 FAQ h3 + D-LAND-04 verbatim + D-LAND-12 footer + NO React refs + NO FAQPage + NO apple-* meta. dist/index.html = 16.62 KB. SEG-05 zero-diff floor preserved (only index.html touched).
 - [Phase 11 P03]: App-shell entry app/index.html populated end-to-end (24→53 lines) — 4 apple-* PWA meta tags MOVED from root to app shell (Phase 10 D-26 contract: location swapped, values byte-identical; T-11-03-04 mitigated). App-shell SEO meta variant carries Phase 10 D-02..D-12 description/OG/Twitter/JSON-LD copy verbatim, with three URL adjustments — canonical, og:url, and JSON-LD url now end /Soundly/app/ (vs landing's /Soundly/); og:image and twitter:image stay at /Soundly/og-image-v1.png shared asset (D-10 versioned filename preserved). React mount preserved verbatim — Vite resolves /src/main.tsx against project root regardless of HTML file location (RESEARCH Finding 1 verified empirically by clean build). Q4 RESOLVED VERDICT: vite-plugin-pwa 0.21.2 auto-injects <link rel='manifest' href='/Soundly/manifest.webmanifest'> into dist/app/index.html (line 49) — NO Phase 10 D-25 fallback needed (mirrors Plan 10-06 finding for root entry; T-11-03-05 mitigated). Plan executed exactly as spec — zero deviations, zero Rule-1/2/3 auto-fixes. Test suite 607/612 passing; 5 expected failures in tests/static-assets.test.ts owned by Plan 11-05 reconciliation (4 apple-* path moves + 1 start_url narrow). dist/app/index.html=3.39 KB; full SEG-05 zero-diff floor preserved (only app/index.html touched). LAND-02 + LAND-06 closed.
 - [Phase 11 P04]: src/sw.ts rescoped at 3 sites — NavigationRoute gains { allowlist: [/^\/Soundly\/app\//] } (anchored regex per T-11-04-03 defense-in-depth); createHandlerBoundToURL target /Soundly/index.html -> /Soundly/app/index.html; notificationclick openWindow target /Soundly/ -> /Soundly/app/. All Phase 10 D-17 SEO-09 preservation items byte-identical (cleanupOutdatedCaches, precacheAndRoute, skipWaiting, clientsClaim, notificationclick handler body). Pitfall A coupling honored — both halves (Plan 11-01 manifest + this plan's SW rescope) now resident on main as single deploy unit; dist/sw.js verified to contain allowlist substring (3-layer defense = inline comment-coupling + Plan 11-05 deploy runbook addendum + Plan 11-05 verifier check). File 54 -> 65 lines (+19/-8). Build clean (236.52 kB JS / 17.04 kB sw.mjs / 5 precache entries 3.31 KiB). Tests at static-assets.test.ts:202-204 + :233 remain failing as documented (owned by Plan 11-05 reconciliation, 4 total pre-existing expected failures). LAND-02 closed at SW navigation-routing layer.
+- [Phase 11 P05]: Verification gate that closes Phase 11 — Composer screenshot captured at 44012 bytes (43.0 KB) per D-LAND-13 (USER checkpoint approved; PNG header + size + lowercase-extension all verified). tests/static-assets.test.ts +29 Phase 11 tests across 5 edit classes (612 → 641 passing); scripts/verify-phase-10-build.mjs extended 106 → 165 lines with 4 additive edits including Pitfall A coupling gate that asserts BOTH dist/app/index.html AND dist/sw.js 'allowlist' substring; docs/deploy-runbook.md §1 placeholder table updated to 4 files/13 occurrences + §3.1 multi-page build verification inserted + §10 SW-rescoping addendum appended (D-LAND-16); public/sitemap.xml lastmod bumped 2026-05-16 → 2026-05-24. Q4 RESOLVED VERDICT — vite-plugin-pwa 0.21.2 auto-injects <link rel='manifest'> on dist/app/index.html (no Phase 10 D-25 fallback needed; mirrors Plan 10-06 Q3 verdict for landing). One Rule-1 auto-fix during Task 2: landing 'preserved tags (D-26)' describe asserted 4 apple-* tags that MOVED to app/index.html per Finding 9 / Pitfall G; block rewritten with positive charset/viewport/theme-color + negative apple-* assertion (active enforcement of the move). Final acceptance gate all 4 commands exit 0 (vitest 641/641 / tsc clean / build clean / verifier exits 0 with Phase 10 + Phase 11 ALL OK). LAND-02 + LAND-06 closed at dist + operator-runbook tiers. Phase 11 declared COMPLETE; v2.0 milestone (6/6 phases) COMPLETE pending operator deploy + Lighthouse PWA+SEO ≥ 90 manual gate.
 
 ### Pending Todos
 
@@ -167,8 +169,18 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-05-21T20:18:34.722Z
-Stopped at: Completed 11-04-PLAN.md
+Last session: 2026-05-24T11:05:00.000Z
+Stopped at: Completed 11-05-PLAN.md — Phase 11 COMPLETE; v2.0 milestone COMPLETE
 Resume file: None
 
-**Planned Phase:** 11 (Multi-page Split + Landing Page) — 5 plans — 2026-05-21T19:47:42.924Z
+**Phase 11 (Multi-page Split + Landing Page) COMPLETE — 5/5 plans shipped on 2026-05-24**
+**v2.0 (Custom Alarm Composer + Discoverability) milestone COMPLETE — 6/6 phases (6–11) shipped**
+
+Post-deploy operator gates queued (per docs/deploy-runbook.md):
+- §1 placeholder URL swap (4 files / 13 occurrences)
+- §5 view-source SEO meta verification
+- §6 Search Console manual sitemap submission
+- §7 Facebook Sharing Debugger force-refresh
+- §8 SW update smoke test
+- §10 Phase 11 SW-rescoping verification (D-LAND-16) on installed device
+- Lighthouse PWA + SEO ≥ 90 mobile audit on both `/Soundly/` and `/Soundly/app/`
