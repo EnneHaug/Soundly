@@ -14,6 +14,14 @@ concurrency:
   group: pages
   cancel-in-progress: true
 
+env:
+  # Canonical deploy URL — substituted into HTML/robots/sitemap before build.
+  # Source of truth on main is the placeholder `https://soundly.local/Soundly/`
+  # (per docs/deploy-runbook.md §1); CI swaps to this value at build time so
+  # the deployed artifact carries the real URL without polluting main commits.
+  # Trailing slash required — must match Vite `base` in vite.config.ts.
+  CANONICAL_URL: https://ennehaug.github.io/Soundly/
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -24,7 +32,29 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: Swap placeholder canonical URL (per docs/deploy-runbook.md §1)
+        run: |
+          set -euo pipefail
+          for f in index.html app/index.html public/robots.txt public/sitemap.xml; do
+            sed -i "s|https://soundly.local/Soundly/|${CANONICAL_URL}|g" "$f"
+          done
+          # Sanity check — placeholder MUST NOT survive into the build
+          if grep -r "soundly.local" index.html app/index.html public/robots.txt public/sitemap.xml; then
+            echo "::error::Placeholder soundly.local still present after swap — deploy blocked"
+            exit 1
+          fi
       - run: npm run build
+      - name: Verify build artifact carries real canonical URL
+        run: |
+          set -euo pipefail
+          # Must NOT contain the placeholder anywhere in dist/
+          if grep -r "soundly.local" dist/; then
+            echo "::error::Placeholder leaked into dist/ — deploy blocked"
+            exit 1
+          fi
+          # Must contain the real URL in both HTML entries
+          grep -q "${CANONICAL_URL}" dist/index.html || { echo "::error::Landing missing canonical URL"; exit 1; }
+          grep -q "${CANONICAL_URL}app/" dist/app/index.html || { echo "::error::App shell missing /app/ canonical URL"; exit 1; }
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
