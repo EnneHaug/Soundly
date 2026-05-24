@@ -16,11 +16,12 @@ All committed SEO files use the literal placeholder string
 `https://soundly.local/Soundly/`. Before deploying, replace it with your
 actual deploy URL across three files.
 
-**Three files, eight occurrences:**
+**Four files, thirteen occurrences (post-Phase-11 split):**
 
 | File | Occurrences | What gets replaced |
 |------|-------------|--------------------|
-| `index.html` | 5 (canonical link, og:url, og:image, twitter:image, JSON-LD url) | All `https://soundly.local/Soundly/...` substrings |
+| `index.html` (landing, Phase 11) | 5 (canonical + og:url + og:image + twitter:image + JSON-LD url — all `/Soundly/`) | All `https://soundly.local/Soundly/...` substrings |
+| `app/index.html` (app shell, Phase 11) | 5 (canonical + og:url + JSON-LD url use `/Soundly/app/`; og:image + twitter:image still reference `/Soundly/og-image-v1.png`) | All `https://soundly.local/Soundly/...` and `https://soundly.local/Soundly/app/...` substrings |
 | `public/robots.txt` | 1 (Sitemap: line) | The full sitemap URL |
 | `public/sitemap.xml` | 2 (both `<loc>` elements) | Both URLs |
 
@@ -30,12 +31,12 @@ actual deploy URL across three files.
 # 1. Set your actual deploy URL (MUST end with trailing slash + match the Vite `base` from vite.config.ts)
 NEW_URL="https://username.github.io/Soundly/"
 
-# 2. Find/replace across the three files (creates .bak files; cleaned up below)
+# 2. Find/replace across the four files (creates .bak files; cleaned up below)
 sed -i.bak "s|https://soundly.local/Soundly/|${NEW_URL}|g" \
-  index.html public/robots.txt public/sitemap.xml
+  index.html app/index.html public/robots.txt public/sitemap.xml
 
 # 3. Clean up sed backup files
-rm -f index.html.bak public/robots.txt.bak public/sitemap.xml.bak
+rm -f index.html.bak app/index.html.bak public/robots.txt.bak public/sitemap.xml.bak
 
 # 4. Sanity check — should print NO matches
 grep -r "soundly.local" . --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=.planning
@@ -45,11 +46,11 @@ grep -r "soundly.local" . --exclude-dir=node_modules --exclude-dir=.git --exclud
 
 ```powershell
 $NEW_URL = "https://username.github.io/Soundly/"
-foreach ($file in @("index.html", "public/robots.txt", "public/sitemap.xml")) {
+foreach ($file in @("index.html", "app/index.html", "public/robots.txt", "public/sitemap.xml")) {
   (Get-Content $file -Raw) -replace 'https://soundly\.local/Soundly/', $NEW_URL | Set-Content $file -NoNewline
 }
 # Sanity check — should return nothing
-Select-String -Path "index.html","public/robots.txt","public/sitemap.xml" -Pattern "soundly.local"
+Select-String -Path "index.html","app/index.html","public/robots.txt","public/sitemap.xml" -Pattern "soundly.local"
 ```
 
 **DO NOT commit the swapped state to main.** Make the swap on the deploy
@@ -123,6 +124,31 @@ test $(stat -c%s dist/og-image-v1.png 2>/dev/null || stat -f%z dist/og-image-v1.
 $size = (Get-Item dist/og-image-v1.png).Length
 if ($size -le 204800) { Write-Output "OG size OK ($size bytes)" } else { Write-Error "OG image exceeds 200 KB: $size bytes" }
 ```
+
+### 3.1 Phase 11 — verify multi-page build emits both entries
+
+```bash
+# POSIX:
+test -f dist/index.html && test -f dist/app/index.html && echo "Phase 11 dual-entry build OK"
+```
+
+```powershell
+# PowerShell:
+if ((Test-Path dist/index.html) -and (Test-Path dist/app/index.html)) {
+  Write-Output "Phase 11 dual-entry build OK"
+} else {
+  Write-Error "Multi-page build did NOT emit both entries — verify vite.config.ts build.rollupOptions.input"
+}
+```
+
+If either is missing, re-check `vite.config.ts`:
+- `build.rollupOptions.input.main` must resolve `index.html`
+- `build.rollupOptions.input.app` must resolve `app/index.html`
+- Both source files must exist at the repo root (NOT under `src/`)
+
+Then run `node scripts/verify-phase-10-build.mjs` — exits 0 means Phase 11 build
+artifacts are correct (`dist/app/index.html` SEO meta + JSON-LD + manifest link +
+`dist/sw.js` allowlist for the SW rescope all verified together — Pitfall A gate).
 
 ---
 
@@ -274,4 +300,56 @@ transition period.
 
 ---
 
-*Phase 10 deploy runbook. Updated: see `git log -1 -- docs/deploy-runbook.md`.*
+## 10. Phase 11 — Verify SW rescoping on installed device (D-LAND-16)
+
+**When to run:** After deploying the first Phase 11 build to production, on a
+phone that has the v1.0 or v2.0 (pre-Phase-11) PWA already installed.
+
+**Coupling reminder (Pitfall A — high risk):** Phase 11 manifest changes (`id`,
+`scope`, `start_url` from Plan 11-01) and SW rescoping (`NavigationRoute`
+allowlist from Plan 11-04) MUST ship in the same deploy. The
+`scripts/verify-phase-10-build.mjs` enforces this at build time by asserting
+BOTH `dist/app/index.html` exists (manifest changes work) AND `dist/sw.js`
+contains `allowlist` (SW rescope shipped). If either is missing, the
+verifier fails and the deploy is blocked. Manual verification on a real
+device is the final gate.
+
+**Manual smoke test:**
+
+1. On a phone with the pre-Phase-11 PWA installed (v1.0 or v2.0 pre-deploy):
+   - Open the installed PWA from the home-screen icon
+   - First launch may still show the OLD SW serving OLD `/Soundly/index.html`
+     (D-LAND-15 — accepted one-time transition)
+   - Force-close + reopen the PWA (swipe away from app switcher, then re-launch)
+2. **Expected second launch:** the PWA should open `/Soundly/app/` directly per
+   the new `start_url`. The home-screen icon's destination has updated.
+3. **Verify offline:** enable airplane mode + relaunch the PWA — alarm app
+   continues to load (the SW precaches `app/**` per Plan 11-01 globPatterns).
+4. **Verify landing serves from network:** in a regular browser (NOT the
+   installed PWA), visit `https://<your-deploy-url>/` — landing renders;
+   DevTools → Network → confirm the response is NOT served by the SW
+   (Status column should say "200" without the SW indicator).
+5. **Verify installed users see no install CTA:** in the installed PWA,
+   navigate to the landing URL — the install button + iOS panel + Open Soundly
+   link should NOT appear (D-LAND-08 — `display-mode: standalone` strips the
+   entire `#install-cta` container).
+
+**If the installed PWA loses its install identity** (re-prompts to install,
+icon goes stale): the cause is most likely a missing `manifest.id`. Confirm
+`vite.config.ts` contains `id: '/Soundly/'` per Plan 11-01 / D-LAND-17 /
+RESEARCH Finding 4. The `id` field is a one-way ratchet — never change it
+in subsequent deploys.
+
+**If the SW rescoping doesn't propagate** (installed users keep landing on the
+old React shell at `/Soundly/`): force-close the app fully (iOS especially
+keeps inactive SW workers alive longer than expected), confirm
+`registerType: 'autoUpdate'` (vite.config.ts) AND `self.skipWaiting()` +
+`clientsClaim()` (src/sw.ts) all present — this is the Phase 10 SEO-09
+update infrastructure that Phase 11's rescoping depends on.
+
+See: Plan 11-01 + Plan 11-04 for the manifest + SW source changes that
+this section verifies.
+
+---
+
+*Phase 10 + Phase 11 deploy runbook. Updated: see `git log -1 -- docs/deploy-runbook.md`.*
