@@ -150,7 +150,7 @@ The original v1.0 alarm engine, three-phase escalation, presets, PWA shell, and 
   3. The landing page install CTA detects platform and display mode: Android Chrome users see a `beforeinstallprompt`-driven install button; iOS Safari users see manual "Share → Add to Home Screen" instructions (no automatic prompt — iOS does not support `beforeinstallprompt`); installed users (`display-mode: standalone`) see no install UI
   4. The landing FAQ is plain HTML `<h3>` + paragraph Q&A (no `FAQPage` JSON-LD); an iOS honesty section explicitly states the locked-screen limitation ("pure PWAs cannot fire audio when iPhone is locked") and recommends home-screen install plus keeping the app foregrounded for reliability
   5. End-to-end deploy verification: a fresh visitor to `/` sees the marketing page (no app bundle download); clicking "Open App" navigates to `/app` and the alarm app loads; an installed PWA opens directly to `/app`; both pages pass Lighthouse PWA + SEO checks at 90+ on mobile
-**Plans:** 5 plans
+**Plans:** 5/5 plans complete
   - [x] 11-01-PLAN.md — Multi-page build skeleton: vite.config.ts rollupOptions.input + manifest.id/scope/start_url + injectManifest.globPatterns + app/index.html stub (LAND-02, LAND-06)
   - [x] 11-02-PLAN.md — Wholesale landing rewrite: hero + install CTA + FAQ + iOS honesty + footer + inline CSS + inline install JS (LAND-01, LAND-03, LAND-04, LAND-05)
   - [x] 11-03-PLAN.md — App shell move: apple-* meta + SEO meta variant + JSON-LD + React mount in app/index.html (LAND-02, LAND-06)
