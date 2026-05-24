@@ -102,4 +102,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-21 — Phase 10 complete: SEO Meta + JSON-LD + SW Update Infra shipped (30/30 codebase must-haves verified; 5 post-deploy gates in 10-HUMAN-UAT.md). SEG-05 v1 byte-identical floor preserved across all 20 protected paths. Composer modal + share-via-URL complete.*
+*Last updated: 2026-05-24 — Phase 11 complete: Multi-page Split + Landing Page shipped (33/33 codebase must-haves; 12 post-deploy/on-device gates in 11-HUMAN-UAT.md). Build emits two HTML entries: static landing at / + React app shell at /app/. PWA manifest scope rescoped with manifest.id preserving v1.0 install identity; SW NavigationRoute allowlist-narrowed. Tests 641/641. v2.0 milestone codebase-complete.*
